@@ -53,6 +53,27 @@ export default function RootLayout({
           }}
           strategy="afterInteractive"
         />
+        <Script
+          id="facebook-pixel-script"
+          dangerouslySetInnerHTML={{
+            __html: `
+              fbq('track', 'PageView', {
+                content_ids: ['6080425'],
+                content_type: 'product',
+                value: 39.90,
+                currency: 'BRL'
+              });
+              
+              fbq('track', 'ViewContent', {
+                content_ids: ['6080425'],
+                content_type: 'product',
+                value: 39.90,
+                currency: 'BRL'
+              });
+            `,
+          }}
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
