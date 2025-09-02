@@ -74,6 +74,12 @@ function App() {
                 alt="E-book Sistema de Controle de Trips" 
                 className="mx-auto max-w-full h-auto rounded-lg shadow-lg"
                 style={{ maxWidth: '200px' }}
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
               />
             </div>
 
@@ -223,6 +229,12 @@ function App() {
                     alt="Travamento das ponteiras causado por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
+                    draggable="false"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
                   />
                 </div>
                 <div>
@@ -232,6 +244,12 @@ function App() {
                     alt="Frutos deformados e manchados por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
+                    draggable="false"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
                   />
                 </div>
                 <div>
@@ -241,6 +259,12 @@ function App() {
                     alt="Viroses que matam as plantas causadas por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
+                    draggable="false"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
                   />
                 </div>
               </div>
