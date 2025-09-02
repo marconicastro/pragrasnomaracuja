@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sistema de Controle de Trips - Economize até R$ 5.000 por Hectare",
-  description: "Método validado pela EMBRAPA que elimina o trips de vez em 28 dias. Sistema de 4 fases com 94% de sucesso e economia de até R$ 5.000 por hectare.",
+  description: "Método validado pela EMBRAPA que elimina o trips de vez em 28 dias. Sistema de 4 fases com 94% de sucesso e economia de até R$ 5.000 por Hectare.",
   keywords: ["trips", "controle de trips", "maracujá", "agricultura", "EMBRAPA", "defensivos", "pragas", "sistema 4 fases"],
   openGraph: {
     title: "Sistema de Controle de Trips - Economize até R$ 5.000 por Hectare",
@@ -41,31 +41,20 @@ export default function RootLayout({
           defer
         />
 
-        {/* SCRIPT FINAL DO PIXEL DO FACEBOOK (CORRIGIDO) */}
+        {/* SCRIPT DO PIXEL DA UTMIFY */}
         <Script
-          id="facebook-pixel"
-          strategy="afterInteractive"
+          id="utmify-pixel-script"
           dangerouslySetInnerHTML={{
             __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1403975024017865');
-              fbq('track', 'PageView');
-
-              fbq('track', 'ViewContent', {
-                content_ids: ['6080425'],
-                content_type: 'product',
-                value: 39.90,
-                currency: 'BRL'
-              });
+              window.pixelId = "68aef5df7fe9644ed8977c6d";
+              var a = document.createElement("script");
+              a.setAttribute("async", "");
+              a.setAttribute("defer", "");
+              a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+              document.head.appendChild(a);
             `,
           }}
+          strategy="afterInteractive"
         />
       </head>
       <body
