@@ -41,10 +41,9 @@ export default function RootLayout({
           defer
         />
 
-        {/* SCRIPT DA UTM FIRE PARA PIXEL (Com o ID dela) */}
+        {/* SCRIPT DO PIXEL DA UTMIFY */}
         <Script
-          id="utm-fire-pixel-loader"
-          strategy="afterInteractive"
+          id="utmify-pixel-script"
           dangerouslySetInnerHTML={{
             __html: `
               window.pixelId = "68aef5df7fe9644ed8977c6d";
@@ -55,33 +54,7 @@ export default function RootLayout({
               document.head.appendChild(a);
             `,
           }}
-        />
-
-        {/* SCRIPT DO PIXEL DO FACEBOOK (Completo e otimizado) */}
-        <Script
-          id="facebook-pixel-script"
           strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1403975024017865');
-              fbq('track', 'PageView');
-
-              fbq('track', 'ViewContent', {
-                content_ids: ['6080425'],
-                content_type: 'product',
-                value: 39.90,
-                currency: 'BRL'
-              });
-            `,
-          }}
         />
       </head>
       <body
@@ -93,3 +66,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+
