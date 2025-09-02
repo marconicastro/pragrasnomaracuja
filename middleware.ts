@@ -12,11 +12,17 @@ export function middleware(request: NextRequest) {
   const hasValidAccess = url.searchParams.get(ACCESS_KEY) === EXPECTED_VALUE;
   
   // Se não tiver o parâmetro válido, redirecionar com o parâmetro
+  // MAS PRESERVANDO PARÂMETROS DE UTM EXISTENTES!
   if (!hasValidAccess && url.pathname === '/') {
-    const newUrl = new URL('http://localhost:3000/');
+    const newUrl = new URL(url);
+    
+    // Adicionar parâmetro de acesso SEM LIMPAR OS PARÂMETROS EXISTENTES
     newUrl.searchParams.set(ACCESS_KEY, EXPECTED_VALUE);
+    
+    // Adicionar timestamp apenas para controle
     newUrl.searchParams.set('_t', Date.now().toString());
     
+    console.log('Redirecionando de', url.toString(), 'para', newUrl.toString());
     return NextResponse.redirect(newUrl);
   }
   
