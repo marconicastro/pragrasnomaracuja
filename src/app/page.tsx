@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, X, AlertTriangle, Clock, Shield, Star, Rocket, Phone, Mail, TrendingUp, Target, Zap, Award, Users, DollarSign, ArrowRight, PlayCircle, Download } from 'lucide-react';
 
-export default function App() {
+function App() {
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 47,
@@ -592,7 +592,7 @@ export default function App() {
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 sm:py-6 px-4 sm:px-6 rounded-lg text-base sm:text-xl transform hover:scale-105 transition-all duration-200 shadow-2xl inline-flex items-center justify-center gap-2 sm:gap-3"
                 >
                   <DollarSign className="w-4 h-4 sm:w-6 sm:h-6" />
-                  COMPRE SEU E-BOOK AGORA!!
+                  GARANTIR ACESSO POR R$ 39,90
                 </a>
 
                 <div className="text-center text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4 space-y-1">
@@ -631,7 +631,7 @@ export default function App() {
                 className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-sm sm:text-lg w-full sm:w-auto"
               >
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                COMPRE SEU E-BOOK AGORA!!
+                GARANTIR AGORA
               </Button>
             </div>
 
@@ -656,3 +656,4 @@ export default function App() {
   );
 }
 
+export default App;
