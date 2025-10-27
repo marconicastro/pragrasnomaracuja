@@ -3,13 +3,61 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, X, AlertTriangle, Clock, Shield, Star, Rocket, Phone, Mail, TrendingUp, Target, Zap, Award, Users, DollarSign, ArrowRight, PlayCircle, Download } from 'lucide-react';
+import PreCheckoutModal from '@/components/PreCheckoutModal';
+import OptimizedImage from '@/components/OptimizedImage';
+import { fireScrollDepthDefinitivo, fireViewContentDefinitivo, fireCTAClickDefinitivo } from '@/lib/meta-pixel-definitivo';
+import { fireLeadDefinitivo, fireInitiateCheckoutDefinitivo } from '@/lib/meta-pixel-definitivo';
+import { saveUserData, getPersistedUserData, formatUserDataForMeta } from '@/lib/userDataPersistence';
+import { getCurrentModeDefinitivo } from '@/lib/meta-pixel-definitivo';
+import DebugPersistence from '@/components/DebugPersistence';
 
-function App() {
+export default function App() {
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 47,
     seconds: 0
   });
+
+  // Estado para controlar o modal de pré-checkout
+  const [isPreCheckoutModalOpen, setIsPreCheckoutModalOpen] = useState(false);
+
+  // Estado para controlar eventos de scroll já disparados
+  const [scrollEventsFired, setScrollEventsFired] = useState({
+    '50': false,
+    '75': false
+  });
+
+  // Estado para controle de ViewContent (EVITAR DUPLICIDADE)
+  const [viewContentFired, setViewContentFired] = useState(false);
+
+  // Estado para dados do usuário (agora com persistência)
+  const [userData, setUserData] = useState<{
+    email?: string;
+    phone?: string;
+    fullName?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
+  }>({});
+
+  // Estado para o modo de operação (SISTEMA DEFINITIVO)
+  const [currentMode, setCurrentMode] = useState(getCurrentModeDefinitivo());
+
+  // Inicializar dados persistidos ao montar o componente
+  useEffect(() => {
+    const persistedData = getPersistedUserData();
+    if (persistedData) {
+      setUserData({
+        email: persistedData.email,
+        phone: persistedData.phone,
+        fullName: persistedData.fullName,
+        city: persistedData.city,
+        state: persistedData.state,
+        cep: persistedData.cep
+      });
+      console.log('🎯 Dados persistidos carregados no estado do componente');
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,12 +76,227 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const scrollToCheckout = () => {
+  // useEffect para rastreamento de scroll
+  useEffect(() => {
+    const handleScroll = async () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPosition = window.scrollY;
+      const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
+
+      // Disparar evento de 50% do scroll
+      if (scrollPercentage >= 50 && !scrollEventsFired['50']) {
+        await fireScrollDepthDefinitivo(50);
+        setScrollEventsFired(prev => ({ ...prev, '50': true }));
+      }
+
+      // Disparar evento de 75% do scroll
+      if (scrollPercentage >= 75 && !scrollEventsFired['75']) {
+        await fireScrollDepthDefinitivo(75);
+        setScrollEventsFired(prev => ({ ...prev, '75': true }));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [scrollEventsFired]);
+
+  // useEffect para ViewContent baseado em timing (EVITAR DUPLICIDADE)
+  useEffect(() => {
+    // Disparar ViewContent após 15 segundos na página (indica interesse real)
+    const viewContentTimer = setTimeout(async () => {
+      if (!viewContentFired) {
+        await fireViewContentDefinitivo({
+          content_name: 'Sistema 4 Fases - Ebook Trips',
+          content_ids: ['339591'],
+          value: 39.90,
+          currency: 'BRL',
+          content_type: 'product',
+          trigger_type: 'timing',
+          time_on_page: 15
+        });
+        
+        setViewContentFired(true);
+        console.log('🎯 ViewContent disparado por timing (15s) - Sistema Definitivo');
+      }
+    }, 15000); // 15 segundos
+
+    // Disparar ViewContent ao atingir 25% de scroll (engajamento inicial)
+    const handleScrollForViewContent = async () => {
+      if (!viewContentFired) {
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPosition = window.scrollY;
+        const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
+
+        if (scrollPercentage >= 25) {
+          await fireViewContentDefinitivo({
+            content_name: 'Sistema 4 Fases - Ebook Trips',
+            content_ids: ['339591'],
+            value: 39.90,
+            currency: 'BRL',
+            content_type: 'product',
+            trigger_type: 'scroll',
+            scroll_depth: 25
+          });
+          
+          setViewContentFired(true);
+          console.log('🎯 ViewContent disparado por scroll (25%) - Sistema Definitivo');
+          
+          // Remover listener após disparar
+          window.removeEventListener('scroll', handleScrollForViewContent);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollForViewContent);
+
+    return () => {
+      clearTimeout(viewContentTimer);
+      window.removeEventListener('scroll', handleScrollForViewContent);
+    };
+  }, [viewContentFired]);
+
+  // Função para abrir o modal de pré-checkout
+  const openPreCheckoutModal = (event) => {
+    event.preventDefault();
+    setIsPreCheckoutModalOpen(true);
+  };
+
+  // Função para processar os dados do pré-checkout e redirecionar
+  const handlePreCheckoutSubmit = async (formData) => {
+    console.log('🚀 Dados recebidos do formulário:', formData);
+    
+    // Processamento rápido dos dados essenciais
+    const cleanFullName = formData.fullName
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[^a-zA-ZÀ-ÿ\s'-]/g, '')
+      .replace(/^-+|-+$/g, '')
+      .replace(/^'+|'+$/g, '');
+    
+    // Formatação rápida do telefone
+    const phoneClean = formData.phone.replace(/\D/g, '');
+    
+    // Salvar dados PERSISTENTEMENTE (com consentimento implícito ao preencher formulário)
+    const userDataToSave = {
+      email: formData.email,
+      phone: phoneClean,
+      fullName: cleanFullName,
+      city: formData.city?.trim(),
+      state: formData.state?.trim(),
+      cep: formData.cep?.replace(/\D/g, '')
+    };
+    
+    saveUserData(userDataToSave, true); // Consentimento verdadeiro ao preencher formulário
+    
+    // Atualizar estado local
+    setUserData(userDataToSave);
+    
+    console.log('💾 Dados salvos persistentemente:', userDataToSave);
+    
+    // Capturar apenas parâmetros essenciais para o checkout
+    const additionalParams: Record<string, string> = {};
+    additionalParams['name'] = cleanFullName;
+    additionalParams['email'] = formData.email;
+    
+    // Formatação rápida do telefone (já existe phoneClean do estado userData)
+    if (phoneClean.length >= 10 && phoneClean.length <= 11) {
+      const ddd = phoneClean.substring(0, 2);
+      const numeroCompleto = phoneClean.substring(2);
+      
+      if (numeroCompleto.length === 9) {
+        const primeiraParte = numeroCompleto.substring(0, 5);
+        const segundaParte = numeroCompleto.substring(5);
+        additionalParams['phone_number'] = `${ddd} ${primeiraParte}-${segundaParte}`;
+      } else if (numeroCompleto.length === 8) {
+        const primeiraParte = numeroCompleto.substring(0, 4);
+        const segundaParte = numeroCompleto.substring(4);
+        additionalParams['phone_number'] = `${ddd} ${primeiraParte}-${segundaParte}`;
+      }
+    }
+
+    // Adicionar dados de localização se existirem
+    if (formData.city?.trim()) additionalParams['city'] = formData.city.trim();
+    if (formData.state?.trim()) additionalParams['state'] = formData.state.trim();
+    if (formData.cep?.replace(/\D/g, '').length === 8) {
+      additionalParams['zip'] = formData.cep.replace(/\D/g, '');
+    }
+
+    // Disparar evento Lead com sistema definitivo
+    await fireLeadDefinitivo({
+      content_name: 'Lead - Formulário Preenchido',
+      content_category: 'Formulário',
+      value: 15.00,
+      currency: 'BRL',
+      user_data: {
+        em: formData.email,
+        ph: phoneClean,
+        fn: cleanFullName
+      }
+    });
+
+    // Disparar evento InitiateCheckout com sistema definitivo
+    await fireInitiateCheckoutDefinitivo({
+      value: 39.90,
+      currency: 'BRL',
+      content_name: 'Sistema 4 Fases - Ebook Trips',
+      content_ids: ['339591'],
+      content_type: 'product',
+      user_data: {
+        em: formData.email,
+        ph: phoneClean,
+        fn: cleanFullName,
+        // Dados adicionais para enriquecer EQM (se disponíveis)
+        ...(formData.city && { ct: formData.city.trim() }),
+        ...(formData.state && { st: formData.state.trim() }),
+        ...(formData.cep && { zip: formData.cep.replace(/\D/g, '') })
+      }
+    });
+
+    // Construir URL final rapidamente
+    // LINK ATUALIZADO: https://go.allpes.com.br/r1wl4qyyfv (novo link de pagamento)
+    const finalUrlString = `https://go.allpes.com.br/r1wl4qyyfv?${new URLSearchParams(additionalParams).toString()}`;
+    
+    // Simular processamento
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Fechar modal e redirecionar
+    setIsPreCheckoutModalOpen(false);
+    window.location.href = finalUrlString;
+  };
+
+  const scrollToCheckout = async () => {
+    // Disparar evento específico de CTA
+    await fireCTAClickDefinitivo('Quero Economizar', {
+      content_ids: ['339591'],
+      value: 39.90,
+      currency: 'BRL',
+      content_type: 'product',
+      cta_type: 'main_checkout_scroll',
+      action: 'scroll_to_checkout'
+    });
+    
     document.getElementById('checkout').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Função principal de checkout (REDIRECIONAMENTO)
+  const handleCheckoutRedirect = async (event) => {
+    // Disparar evento específico de CTA final
+    await fireCTAClickDefinitivo('Final Checkout', {
+      content_ids: ['339591'],
+      value: 39.90,
+      currency: 'BRL',
+      content_type: 'product',
+      cta_type: 'final_checkout_modal',
+      action: 'open_modal'
+    });
+    
+    // Redirecionar para o novo fluxo com modal
+    openPreCheckoutModal(event);
   };
 
   return (
     <div className="min-h-screen bg-white">
+      
       {/* Barra de Urgência - Otimizada para Mobile */}
       <div className="bg-red-600 text-white py-2 px-2 sm:px-4 text-center animate-pulse">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm font-bold">
@@ -67,19 +330,17 @@ function App() {
               <span className="text-green-600">COM O TRIPS!</span>
             </h1>
 
-            {/* Logo do E-book */}
+            {/* Logo do E-book - Otimizado */}
             <div className="mb-4 sm:mb-6">
-              <img 
+              <OptimizedImage 
                 src="/ebook-logo.webp" 
                 alt="E-book Sistema de Controle de Trips" 
                 className="mx-auto max-w-full h-auto rounded-lg shadow-lg"
                 style={{ maxWidth: '200px' }}
-                draggable="false"
-                onContextMenu={(e) => e.preventDefault()}
-                onDragStart={(e) => e.preventDefault()}
-                onCopy={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onPaste={(e) => e.preventDefault()}
+                priority={true}
+                width={200}
+                height={200}
+                fetchPriority="high"
               />
             </div>
 
@@ -133,6 +394,8 @@ function App() {
               </div>
               <div className="text-xs sm:text-sm mt-2">💳 Ou 12x de R$ 3,99 sem juros</div>
             </div>
+            
+  
           </div>
         </div>
       </div>
@@ -224,47 +487,38 @@ function App() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm sm:text-lg font-semibold">
                 <div>
                   <div>😰 Travamento das ponteiras</div>
-                  <img 
+                  <OptimizedImage 
                     src="/travamento-ponteiras.jpg" 
                     alt="Travamento das ponteiras causado por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
-                    draggable="false"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    onCopy={(e) => e.preventDefault()}
-                    onCut={(e) => e.preventDefault()}
-                    onPaste={(e) => e.preventDefault()}
+                    width={200}
+                    height={267}
+                    loading="lazy"
                   />
                 </div>
                 <div>
                   <div>🤢 Frutos deformados e manchados</div>
-                  <img 
+                  <OptimizedImage 
                     src="/frutos-manchados.jpg" 
                     alt="Frutos deformados e manchados por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
-                    draggable="false"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    onCopy={(e) => e.preventDefault()}
-                    onCut={(e) => e.preventDefault()}
-                    onPaste={(e) => e.preventDefault()}
+                    width={200}
+                    height={267}
+                    loading="lazy"
                   />
                 </div>
                 <div>
                   <div>💀 Viroses que matam a plantação</div>
-                  <img 
+                  <OptimizedImage 
                     src="/viroses-plantas.jpg" 
                     alt="Viroses que matam as plantas causadas por trips" 
                     className="mt-2 sm:mt-3 mx-auto max-w-full h-auto rounded-lg shadow-md"
                     style={{ maxWidth: '200px' }}
-                    draggable="false"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    onCopy={(e) => e.preventDefault()}
-                    onCut={(e) => e.preventDefault()}
-                    onPaste={(e) => e.preventDefault()}
+                    width={200}
+                    height={267}
+                    loading="lazy"
                   />
                 </div>
               </div>
@@ -303,7 +557,7 @@ function App() {
                     <div className="bg-green-500 text-white w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base">1</div>
                     <h4 className="font-bold text-green-700 text-sm sm:text-base">FASE OVOS (Dias 1-7)</h4>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-700">Produto específico que penetra nos tecidos e elimina ovos antes da eclosão</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Eliminação dos ovos antes da eclosão com produto ovicida específico</p>
                 </div>
 
                 {/* Fase 2 */}
@@ -410,11 +664,11 @@ function App() {
                   </div>
                 </div>
                 <p className="text-gray-700 italic mb-3 sm:mb-4 text-xs sm:text-sm">
-                  "Em 28 dias eliminei o trips que me atormentava há 3 anos. Economizei R$ 8.000 
-                  só na primeira safra e minha produção aumentou 73%!"
+                  "Economizei R$ 3.500 em defensivos! O trips sumiu em 21 dias e não voltou mais. 
+                  Minha produção aumentou 89% na safra seguinte."
                 </p>
                 <div className="bg-green-100 p-2 sm:p-3 rounded text-green-800 font-semibold text-xs sm:text-sm">
-                  💰 Economia: R$ 8.000 | 📈 Aumento: 73%
+                  💰 Economia: R$ 3.500 | 📈 Aumento: 89%
                 </div>
               </div>
 
@@ -422,11 +676,11 @@ function App() {
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg border-2 border-blue-200">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
-                    AS
+                    MS
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-800 text-sm sm:text-base">Ana Santos</h4>
-                    <p className="text-gray-600 text-xs sm:text-sm">8 hectares - São Paulo</p>
+                    <h4 className="font-bold text-gray-800 text-sm sm:text-base">Maria Silva</h4>
+                    <p className="text-gray-600 text-xs sm:text-sm">8 hectares - Ceará</p>
                   </div>
                   <div className="flex text-yellow-400 ml-auto">
                     {[...Array(5)].map((_, i) => (
@@ -435,11 +689,11 @@ function App() {
                   </div>
                 </div>
                 <p className="text-gray-700 italic mb-3 sm:mb-4 text-xs sm:text-sm">
-                  "Estava gastando R$ 1.500/mês em defensivos sem resultado. Com o sistema, 
-                  gasto R$ 300 e tenho controle total. Frutos perfeitos!"
+                  "Estava gastando R$ 1.200 por hectare com trips. Agora gasto R$ 180 e tenho 
+                  controle total. Lucro líquido subiu R$ 8.160!"
                 </p>
                 <div className="bg-blue-100 p-2 sm:p-3 rounded text-blue-800 font-semibold text-xs sm:text-sm">
-                  💰 Economia: R$ 14.400/ano | 🎯 Controle: 100%
+                  💰 Economia mensal: R$ 8.160 | 🎯 Controle: 100%
                 </div>
               </div>
 
@@ -447,11 +701,11 @@ function App() {
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg border-2 border-purple-200">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
-                    CR
+                    AS
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-800 text-sm sm:text-base">Carlos Ribeiro</h4>
-                    <p className="text-gray-600 text-xs sm:text-sm">25 hectares - Minas Gerais</p>
+                    <h4 className="font-bold text-gray-800 text-sm sm:text-base">Antônio Santos</h4>
+                    <p className="text-gray-600 text-xs sm:text-sm">22 hectares - Pernambuco</p>
                   </div>
                   <div className="flex text-yellow-400 ml-auto">
                     {[...Array(5)].map((_, i) => (
@@ -585,14 +839,17 @@ function App() {
                 </div>
 
                 {/* CTA Final - Responsivo */}
+                {/* LINK ATUALIZADO: https://go.allpes.com.br/r1wl4qyyfv (novo link de pagamento) */}
                 <a 
-                  href="https://pay.hotmart.com/I101398692S" 
+                  href="https://go.allpes.com.br/r1wl4qyyfv" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 sm:py-6 px-4 sm:px-6 rounded-lg text-base sm:text-xl transform hover:scale-105 transition-all duration-200 shadow-2xl inline-flex items-center justify-center gap-2 sm:gap-3"
+                  id="botao-compra-allpes" 
+                  onClick={handleCheckoutRedirect}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-6 sm:py-8 px-4 sm:px-6 rounded-lg text-xl sm:text-2xl md:text-3xl transform hover:scale-105 transition-all duration-300 shadow-2xl inline-flex items-center justify-center gap-3 sm:gap-4"
                 >
-                  <DollarSign className="w-4 h-4 sm:w-6 sm:h-6" />
-                  GARANTIR ACESSO POR R$ 39,90
+                  <DollarSign className="w-6 h-6 sm:w-8 sm:h-8" />
+                  COMPRAR AGORA
                 </a>
 
                 <div className="text-center text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4 space-y-1">
@@ -635,7 +892,7 @@ function App() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 text-xs sm:text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 text-xs sm:text-sm mb-4 sm:mb-6">
               <div>
                 <h4 className="font-bold mb-1 sm:mb-2">📞 Contato</h4>
                 <p className="text-green-200">maracujalucrativo@gmail.com</p>
@@ -649,11 +906,65 @@ function App() {
                 <p className="text-green-200">Termos • Privacidade • Reembolso</p>
               </div>
             </div>
+            
+            {/* Ferramentas de Diagnóstico - Apenas para desenvolvimento */}
+            <div className="border-t border-green-700 pt-4 mt-4">
+              <h4 className="font-bold mb-2 text-green-200">🔧 Ferramentas de Diagnóstico</h4>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <a 
+                  href="/debug" 
+                  className="text-green-200 hover:text-white underline text-xs"
+                  target="_blank"
+                >
+                  Debug Dashboard
+                </a>
+                <span className="text-green-400">•</span>
+                <a 
+                  href="/trigger-diagnostic" 
+                  className="text-green-200 hover:text-white underline text-xs"
+                  target="_blank"
+                >
+                  Trigger Diagnostic
+                </a>
+                <span className="text-green-400">•</span>
+                <a 
+                  href="/deep-diagnostic" 
+                  className="text-green-200 hover:text-white underline text-xs"
+                  target="_blank"
+                >
+                  Deep Diagnostic
+                </a>
+                <span className="text-green-400">•</span>
+                <a 
+                  href="/checkout-test" 
+                  className="text-green-200 hover:text-white underline text-xs"
+                  target="_blank"
+                >
+                  Checkout Test
+                </a>
+                <span className="text-green-400">•</span>
+                <a 
+                  href="/cookie-diagnostic" 
+                  className="text-green-200 hover:text-white underline text-xs"
+                  target="_blank"
+                >
+                  Cookie Diagnostic
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      
+      {/* Modal de Pré-Checkout */}
+      <PreCheckoutModal
+        isOpen={isPreCheckoutModalOpen}
+        onClose={() => setIsPreCheckoutModalOpen(false)}
+        onSubmit={handlePreCheckoutSubmit}
+      />
+
+      {/* Componente de Debug (apenas desenvolvimento) */}
+      {process.env.NODE_ENV === 'development' && <DebugPersistence />}
     </div>
   );
 }
-
-export default App;
