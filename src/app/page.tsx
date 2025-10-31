@@ -13,7 +13,7 @@ import {
   trackCTAClick,
   trackLead,
   trackInitiateCheckout
-} from '@/lib/trackingService';
+} from '@/lib/metaPixelTracking';
 
 export default function App() {
   const [timeLeft, setTimeLeft] = useState({
@@ -62,10 +62,8 @@ export default function App() {
     }
   }, []);
 
-  // Disparar PageView quando a página carrega
-  useEffect(() => {
-    trackPageView();
-  }, []);
+  // PageView é disparado automaticamente pelo MetaPixelStape component
+  // Não precisa disparar manualmente aqui
 
   useEffect(() => {
     const timer = setInterval(() => {
