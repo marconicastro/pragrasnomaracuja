@@ -7,13 +7,12 @@ import PreCheckoutModal from '@/components/PreCheckoutModal';
 import OptimizedImage from '@/components/OptimizedImage';
 import { saveUserData, getPersistedUserData } from '@/lib/userDataPersistence';
 import {
-  trackPageView,
-  trackViewContent,
-  trackScrollDepth,
-  trackCTAClick,
-  trackLead,
-  trackInitiateCheckout
-} from '@/lib/metaPixelTracking';
+  trackViewContentElite,
+  trackScrollDepthElite,
+  trackCTAClickElite,
+  trackLeadElite,
+  trackInitiateCheckoutElite
+} from '@/lib/eliteMetaPixelTracking';
 
 export default function App() {
   const [timeLeft, setTimeLeft] = useState({
@@ -91,13 +90,13 @@ export default function App() {
 
       // Disparar evento de 50% do scroll
       if (scrollPercentage >= 50 && !scrollEventsFired['50']) {
-        await trackScrollDepth(50);
+        await trackScrollDepthElite(50);
         setScrollEventsFired(prev => ({ ...prev, '50': true }));
       }
 
       // Disparar evento de 75% do scroll
       if (scrollPercentage >= 75 && !scrollEventsFired['75']) {
-        await trackScrollDepth(75);
+        await trackScrollDepthElite(75);
         setScrollEventsFired(prev => ({ ...prev, '75': true }));
       }
     };
@@ -111,7 +110,7 @@ export default function App() {
     // Disparar ViewContent após 15 segundos na página (indica interesse real)
     const viewContentTimer = setTimeout(async () => {
       if (!viewContentFired) {
-        await trackViewContent({
+        await trackViewContentElite({
           trigger_type: 'timing',
           time_on_page: 15
         });
@@ -129,7 +128,7 @@ export default function App() {
         const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
 
         if (scrollPercentage >= 25) {
-          await trackViewContent({
+          await trackViewContentElite({
             trigger_type: 'scroll',
             scroll_depth: 25
           });
@@ -217,7 +216,7 @@ export default function App() {
       additionalParams['zip'] = formData.cep.replace(/\D/g, '');
     }
 
-    // Preparar dados do usuário para tracking
+    // Preparar dados do usuário para tracking ELITE
     const nameParts = cleanFullName.split(' ');
     const trackingUserData = {
       email: formData.email,
@@ -226,15 +225,14 @@ export default function App() {
       lastName: nameParts.slice(1).join(' '),
       city: formData.city?.trim(),
       state: formData.state?.trim(),
-      zip: formData.cep?.replace(/\D/g, ''),
-      country: 'br'
+      zip: formData.cep?.replace(/\D/g, '')
     };
 
-    // Disparar evento Lead
-    await trackLead(trackingUserData);
+    // Disparar evento Lead (ELITE - com advanced matching)
+    await trackLeadElite(trackingUserData);
 
-    // Disparar evento InitiateCheckout
-    await trackInitiateCheckout(trackingUserData);
+    // Disparar evento InitiateCheckout (ELITE - com attribution)
+    await trackInitiateCheckoutElite(trackingUserData);
 
     // Construir URL final rapidamente
     // LINK ATUALIZADO: https://go.allpes.com.br/r1wl4qyyfv (novo link de pagamento)
@@ -250,7 +248,7 @@ export default function App() {
 
   const scrollToCheckout = async () => {
     // Disparar evento específico de CTA
-    await trackCTAClick('Quero Economizar', {
+    await trackCTAClickElite('Quero Economizar', {
       cta_type: 'main_checkout_scroll',
       action: 'scroll_to_checkout'
     });
@@ -261,7 +259,7 @@ export default function App() {
   // Função principal de checkout (REDIRECIONAMENTO)
   const handleCheckoutRedirect = async (event: React.MouseEvent) => {
     // Disparar evento específico de CTA final
-    await trackCTAClick('Final Checkout', {
+    await trackCTAClickElite('Final Checkout', {
       cta_type: 'final_checkout_modal',
       action: 'open_modal'
     });

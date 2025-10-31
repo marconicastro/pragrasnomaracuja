@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import MetaPixelStape from '@/components/MetaPixelStape';
+import EliteMetaPixel from '@/components/EliteMetaPixel';
+import ConsentBanner from '@/components/ConsentBanner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,7 +19,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <MetaPixelStape />
+        <EliteMetaPixel />
+        <ConsentBanner />
         {children}
       </body>
     </html>
