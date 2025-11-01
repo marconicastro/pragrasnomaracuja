@@ -330,9 +330,11 @@ export async function sendOfflinePurchase(
     fbc?: string;
     firstName?: string;
     lastName?: string;
-    phone?: string;
-    city?: string;
-    state?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
   
@@ -360,8 +362,13 @@ export async function sendOfflinePurchase(
     // Adicionar dados persistidos (CR?TICO para atribui??o!)
     if (userData.fbp) user_data.fbp = userData.fbp;
     if (userData.fbc) user_data.fbc = userData.fbc;
-    if (userData.city) user_data.ct = hashSHA256(userData.city);
-    if (userData.state) user_data.st = hashSHA256(userData.state);
+    
+    // Geolocaliza??o (do Lead salvo)
+    if (userData.city) user_data.ct = hashSHA256(userData.city.toLowerCase());
+    if (userData.state) user_data.st = hashSHA256(userData.state.toLowerCase());
+    if (userData.zip) user_data.zp = hashSHA256(userData.zip.replace(/\D/g, ''));
+    // Pa?s sempre BR (ou do userData se houver)
+    user_data.country = 'br';
     
     // Preparar evento - SEMPRE usar timestamp ATUAL (melhor prática)
     // Para eventos server-side, o ideal é enviar o timestamp de quando o webhook é processado
@@ -382,8 +389,10 @@ export async function sendOfflinePurchase(
     if (user_data.ph) dataQualityScore += 15;
     if (user_data.fn) dataQualityScore += 10;
     if (user_data.ln) dataQualityScore += 10;
-    if (user_data.ct) dataQualityScore += 5;
-    if (user_data.st) dataQualityScore += 5;
+    if (user_data.ct) dataQualityScore += 5;   // City
+    if (user_data.st) dataQualityScore += 5;   // State
+    if (user_data.zp) dataQualityScore += 3;   // ZIP
+    if (user_data.country) dataQualityScore += 2; // Country
     if (user_data.fbp) dataQualityScore += 20; // CRÍTICO!
     if (user_data.fbc) dataQualityScore += 20; // CRÍTICO!
     
