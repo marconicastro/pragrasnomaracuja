@@ -363,12 +363,12 @@ export async function sendOfflinePurchase(
     if (userData.fbp) user_data.fbp = userData.fbp;
     if (userData.fbc) user_data.fbc = userData.fbc;
     
-    // Geolocaliza??o (do Lead salvo) - N?O HASHEAR! Meta rejeita se hashear!
-    if (userData.city) user_data.ct = userData.city.toLowerCase();
-    if (userData.state) user_data.st = userData.state.toLowerCase();
-    if (userData.zip) user_data.zp = userData.zip.replace(/\D/g, '');
-    // Pa?s sempre BR (ou do userData se houver) - N?O HASHEAR!
-    user_data.country = 'br';
+    // Geolocaliza??o (do Lead salvo) - DEVE HASHEAR! (todos os user_data exceto fbp/fbc/external_id)
+    if (userData.city) user_data.ct = hashSHA256(userData.city.toLowerCase());
+    if (userData.state) user_data.st = hashSHA256(userData.state.toLowerCase());
+    if (userData.zip) user_data.zp = hashSHA256(userData.zip.replace(/\D/g, ''));
+    // Pa?s sempre BR (DEVE HASHEAR!)
+    user_data.country = hashSHA256('br');
     
     // Preparar evento - SEMPRE usar timestamp ATUAL (melhor prática)
     // Para eventos server-side, o ideal é enviar o timestamp de quando o webhook é processado
