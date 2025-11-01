@@ -171,7 +171,7 @@ const customData: Record<string, any> = {
   // Dados obrigat?rios (sempre presentes)
   value: purchaseData.value,
   currency: purchaseData.currency,
-  content_ids: ['339591'],
+  content_ids: ['hacr962'],
   order_id: purchaseData.orderId
 };
 

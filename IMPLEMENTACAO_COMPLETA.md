@@ -1011,7 +1011,7 @@ Tempo de otimiza??o:
   // Custom Data
   value: 39.9,
   currency: 'BRL',
-  content_ids: ['339591'],
+  content_ids: ['hacr962'],
   content_type: 'product',
   content_name: 'Sistema 4 Fases - Ebook Trips',
   
@@ -1104,7 +1104,7 @@ Tempo de otimiza??o:
   custom_data: {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     order_id: 'AUAe5xK',
     num_items: 1
   }

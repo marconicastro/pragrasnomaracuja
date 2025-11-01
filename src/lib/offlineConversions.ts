@@ -396,7 +396,7 @@ export async function sendOfflinePurchase(
       value: purchaseData.value,
       currency: purchaseData.currency,
       content_type: 'product',
-      content_ids: ['339591'],
+      content_ids: ['hacr962'],
       content_name: 'Sistema 4 Fases - Ebook Trips',
       content_category: 'digital_product',
       num_items: 1,

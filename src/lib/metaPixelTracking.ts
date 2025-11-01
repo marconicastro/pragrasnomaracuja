@@ -72,7 +72,7 @@ export function trackPageView(customParams: Record<string, any> = {}) {
   return trackMetaEvent('PageView', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     ...customParams
@@ -86,7 +86,7 @@ export function trackViewContent(customParams: Record<string, any> = {}) {
   return trackMetaEvent('ViewContent', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
@@ -190,7 +190,7 @@ export function trackInitiateCheckout(
   return trackMetaEvent('InitiateCheckout', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     num_items: 1,
@@ -223,7 +223,7 @@ export function trackPurchase(
   return trackMetaEvent('Purchase', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     num_items: 1,

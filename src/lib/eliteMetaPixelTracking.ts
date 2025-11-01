@@ -321,7 +321,7 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   return trackEliteEvent('PageView', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
@@ -336,7 +336,7 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   return trackEliteEvent('ViewContent', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
@@ -384,7 +384,7 @@ export async function trackAddToCartElite(
   return trackEliteEvent('AddToCart', {
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_type: 'product',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     value: 39.9,
     currency: 'BRL',
     // Par?metros adicionais
@@ -463,7 +463,7 @@ export async function trackInitiateCheckoutElite(
   return trackEliteEvent('InitiateCheckout', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     num_items: 1,
@@ -498,7 +498,7 @@ export async function trackPurchaseElite(
   return trackEliteEvent('Purchase', {
     value: 39.9,
     currency: 'BRL',
-    content_ids: ['339591'],
+    content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
     num_items: 1,
