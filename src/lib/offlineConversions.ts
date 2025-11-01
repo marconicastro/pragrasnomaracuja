@@ -1,5 +1,5 @@
 /**
- * ?? Offline Conversions - Purchase via Webhook Cakto
+ * 📤 Offline Conversions - Purchase via Webhook Cakto
  * 
  * Sistema para capturar convers?es que acontecem FORA do site
  * (checkout externo Cakto) e enviar via Meta Conversions API (CAPI)
@@ -206,7 +206,7 @@ export async function getUserDataByEmailOrPhone(
       if (userData) {
         matchedBy = 'phone';
         console.log('? User data encontrado por TELEFONE:', phone);
-        console.warn('?? Email diferente! Checkout:', email, '| Original:', userData.email);
+        console.warn('📤 Email diferente! Checkout:', email, '| Original:', userData.email);
       }
     }
     
@@ -391,8 +391,9 @@ export async function sendOfflinePurchase(
       }]
     };
     
-    // Enviar para Stape CAPIG
-    console.log('?? Enviando Purchase via Stape CAPI:', {
+    // Enviar DIRETO para Meta Conversions API (sem Stape)
+    // MOTIVO: Mais simples, mais confiável, funciona 100%
+    console.log('📤 Enviando Purchase via Meta CAPI (direto):', {
       orderId: purchaseData.orderId,
       email: purchaseData.email,
       value: purchaseData.value,
@@ -400,31 +401,33 @@ export async function sendOfflinePurchase(
       hasFbc: !!userData.fbc
     });
     
-    // Endpoint do Stape CAPIG 
-    // Formato: POST com pixel_id e access_token como query params
-    const stapeEndpoint = `${stapeUrl}?pixel_id=${pixelId}`;
-    
-    // Adicionar access token se dispon?vel
+    // Obter access token (obrigatório para CAPI direto)
     const accessToken = process.env.META_ACCESS_TOKEN;
-    const finalUrl = accessToken ? `${stapeEndpoint}&access_token=${accessToken}` : stapeEndpoint;
     
-    const response = await fetch(finalUrl, {
+    if (!accessToken) {
+      console.error('⚠️ META_ACCESS_TOKEN não configurado');
+      throw new Error('META_ACCESS_TOKEN não configurado');
+    }
+    
+    // Endpoint do Meta Conversions API (direto)
+    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+    
+    const response = await fetch(metaEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; VercelBot/1.0; +https://vercel.com)'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Stape CAPI error: ${response.status} - ${errorText}`);
+      throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
     
-    console.log('? Offline Purchase enviado via Stape CAPI:', {
+    console.log('✅ Offline Purchase enviado via Meta CAPI (direto):', {
       orderId: purchaseData.orderId,
       eventID,
       response: result
@@ -451,7 +454,7 @@ export async function processCaktoWebhook(
 ): Promise<{ success: boolean; message: string }> {
   
   try {
-    console.log('?? Webhook Cakto recebido:', {
+    console.log('📤 Webhook Cakto recebido:', {
       event: payload.event,
       orderId: payload.data.refId,
       email: payload.data.customer.email,
@@ -461,7 +464,7 @@ export async function processCaktoWebhook(
     
     // Validar se ? um evento de compra aprovada
     if (payload.event !== 'purchase_approved') {
-      console.log(`?? Evento "${payload.event}" ignorado (n?o ? purchase_approved)`);
+      console.log(`📤 Evento "${payload.event}" ignorado (n?o ? purchase_approved)`);
       return {
         success: true,
         message: `Evento ${payload.event} recebido mas ignorado`
@@ -470,7 +473,7 @@ export async function processCaktoWebhook(
     
     // Validar se o pagamento foi confirmado
     if (payload.data.status !== 'paid') {
-      console.log(`?? Status "${payload.data.status}" ignorado (n?o ? paid)`);
+      console.log(`📤 Status "${payload.data.status}" ignorado (n?o ? paid)`);
       return {
         success: true,
         message: `Status ${payload.data.status} ignorado`
@@ -507,11 +510,11 @@ export async function processCaktoWebhook(
     );
     
     if (!userData) {
-      console.warn('?? User data N?O encontrado:', {
+      console.warn('📤 User data N?O encontrado:', {
         email: purchaseData.email,
         phone: purchaseData.phone
       });
-      console.warn('?? Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
+      console.warn('📤 Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
     } else {
       console.log('? User data encontrado:', {
         matchedBy: userData.matchedBy,
@@ -522,7 +525,7 @@ export async function processCaktoWebhook(
       
       // Alerta se encontrou por telefone (email diferente)
       if (userData.matchedBy === 'phone') {
-        console.log('?? Match por TELEFONE! Usu?rio usou email diferente no checkout');
+        console.log('📤 Match por TELEFONE! Usu?rio usou email diferente no checkout');
       }
     }
     
