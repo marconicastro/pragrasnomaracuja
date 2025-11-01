@@ -363,10 +363,25 @@ export async function sendOfflinePurchase(
     if (userData.city) user_data.ct = hashSHA256(userData.city);
     if (userData.state) user_data.st = hashSHA256(userData.state);
     
-    // Preparar evento
-    const eventTime = purchaseData.timestamp 
-      ? Math.floor(purchaseData.timestamp / 1000) 
-      : Math.floor(Date.now() / 1000);
+    // Preparar evento - VALIDAR TIMESTAMP
+    let eventTime: number;
+    
+    if (purchaseData.timestamp) {
+      const timestampInSeconds = Math.floor(purchaseData.timestamp / 1000);
+      const now = Math.floor(Date.now() / 1000);
+      const sevenDaysInSeconds = 7 * 24 * 60 * 60;
+      
+      // Meta só aceita eventos com menos de 7 dias
+      if (now - timestampInSeconds > sevenDaysInSeconds) {
+        console.warn('⚠️ Timestamp muito antigo (>7 dias), usando timestamp atual');
+        console.warn(`Original: ${new Date(purchaseData.timestamp).toISOString()}`);
+        eventTime = now;
+      } else {
+        eventTime = timestampInSeconds;
+      }
+    } else {
+      eventTime = Math.floor(Date.now() / 1000);
+    }
     
     const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
     
