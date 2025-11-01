@@ -485,14 +485,27 @@ export async function sendOfflinePurchase(
         hasFbc: !!userData.fbc
       });
       
-      // Endpoint correto do Stape CAPIG
-      const stapeEndpoint = `${stapeUrl}/v15.0/${pixelId}/events`;
+      // CAPIG usa endpoint diferente do Server Container!
+      // Formato CAPIG: /facebook/{pixel_id}
+      // (NÃO é /v15.0/{pixel_id}/events - isso é Server Container)
+      const stapeEndpoint = `${stapeUrl}/facebook/${pixelId}`;
+      
+      // CAPIG pode usar API Key opcional no header
+      const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Se tiver CAPIG API Key configurada, adicionar
+      if (capigApiKey) {
+        headers['x-stape-capig-key'] = capigApiKey;
+        console.log('🔑 CAPIG API Key incluída no header');
+      }
       
       response = await fetch(stapeEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify(payload)
       });
       
