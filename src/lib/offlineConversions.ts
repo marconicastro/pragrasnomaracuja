@@ -400,7 +400,9 @@ export async function sendOfflinePurchase(
       hasFbc: !!userData.fbc
     });
     
-    const response = await fetch(`${stapeUrl}/v15.0/${pixelId}/events`, {
+    // Endpoint do Stape CAPIG (envia direto, sem /v15.0/pixelId)
+    // O Stape CAPIG processa e encaminha para o Meta automaticamente
+    const response = await fetch(stapeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
