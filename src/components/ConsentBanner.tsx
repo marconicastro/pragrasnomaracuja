@@ -5,20 +5,20 @@ import { Button } from '@/components/ui/button';
 import { hasConsent, saveConsent } from '@/lib/advancedDataPersistence';
 
 /**
- * ?? LGPD/GDPR Compliant Consent Banner
+ * 🍪 LGPD/GDPR Compliant Consent Banner
  * 
- * Gerencia consentimento do usu?rio para tracking
+ * Gerencia consentimento do usuário para tracking
  */
 
 export default function ConsentBanner() {
   const [show, setShow] = useState(false);
   
   useEffect(() => {
-    // Verificar se j? tem consentimento
+    // Verificar se já tem consentimento
     const hasAnalyticsConsent = hasConsent('analytics');
     
     if (!hasAnalyticsConsent) {
-      // Mostrar banner ap?s 1 segundo
+      // Mostrar banner após 1 segundo
       setTimeout(() => setShow(true), 1000);
     }
   }, []);
@@ -45,13 +45,13 @@ export default function ConsentBanner() {
           
           <div className="flex-1">
             <h3 className="font-bold text-lg mb-2">
-              ?? Cookies e Privacidade
+              🍪 Cookies e Privacidade
             </h3>
             <p className="text-sm text-gray-300">
-              Usamos cookies e tecnologias similares para melhorar sua experi?ncia, 
-              personalizar conte?do e analisar o tr?fego do site. Ao clicar em "Aceitar", 
-              voc? concorda com o uso de cookies conforme nossa{' '}
-              <a href="/privacidade" className="underline">Pol?tica de Privacidade</a>.
+              Usamos cookies e tecnologias similares para melhorar sua experiência, 
+              personalizar conteúdo e analisar o tráfego do site. Ao clicar em "Aceitar", 
+              você concorda com o uso de cookies conforme nossa{' '}
+              <a href="/privacidade" className="underline">Política de Privacidade</a>.
             </p>
           </div>
           
