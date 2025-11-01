@@ -355,6 +355,12 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     }
   }
   
+  // SEMPRE adicionar country BR como fallback (99% dos users s?o BR)
+  if (!user_data.country) {
+    user_data.country = 'br';
+    sources.push('default_country_br');
+  }
+  
   // 5. Browser fingerprint (SOMENTE se disponivel - client-side only!)
   const fingerprint = getBrowserFingerprint();
   if (fingerprint) {
