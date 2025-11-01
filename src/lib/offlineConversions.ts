@@ -363,25 +363,16 @@ export async function sendOfflinePurchase(
     if (userData.city) user_data.ct = hashSHA256(userData.city);
     if (userData.state) user_data.st = hashSHA256(userData.state);
     
-    // Preparar evento - VALIDAR TIMESTAMP
-    let eventTime: number;
+    // Preparar evento - SEMPRE usar timestamp ATUAL (melhor prática)
+    // Para eventos server-side, o ideal é enviar o timestamp de quando o webhook é processado
+    const now = Math.floor(Date.now() / 1000);
+    const eventTime = now;
     
-    if (purchaseData.timestamp) {
-      const timestampInSeconds = Math.floor(purchaseData.timestamp / 1000);
-      const now = Math.floor(Date.now() / 1000);
-      const sevenDaysInSeconds = 7 * 24 * 60 * 60;
-      
-      // Meta só aceita eventos com menos de 7 dias
-      if (now - timestampInSeconds > sevenDaysInSeconds) {
-        console.warn('⚠️ Timestamp muito antigo (>7 dias), usando timestamp atual');
-        console.warn(`Original: ${new Date(purchaseData.timestamp).toISOString()}`);
-        eventTime = now;
-      } else {
-        eventTime = timestampInSeconds;
-      }
-    } else {
-      eventTime = Math.floor(Date.now() / 1000);
-    }
+    console.log('🕐 Timestamp do evento:', {
+      unix: eventTime,
+      iso: new Date(eventTime * 1000).toISOString(),
+      local: new Date(eventTime * 1000).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    });
     
     const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
     
