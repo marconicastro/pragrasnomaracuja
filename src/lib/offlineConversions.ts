@@ -440,6 +440,23 @@ export async function sendOfflinePurchase(
       console.log('ℹ️ Attribution data não disponível (user não tinha Lead salvo)');
     }
     
+    // SOMENTE adicionar UTMs SE tiver dados REAIS do Lead
+    if (userDataTyped && userDataTyped.utmFirstSource) {
+      // UTM data existe - adicionar tudo
+      customData.utm_first_source = userDataTyped.utmFirstSource;
+      customData.utm_first_medium = userDataTyped.utmFirstMedium;
+      customData.utm_first_campaign = userDataTyped.utmFirstCampaign;
+      customData.utm_last_source = userDataTyped.utmLastSource;
+      customData.utm_last_medium = userDataTyped.utmLastMedium;
+      customData.utm_last_campaign = userDataTyped.utmLastCampaign;
+      customData.utm_touch_count = userDataTyped.utmTouchCount;
+      customData.utm_channels = userDataTyped.utmChannels;
+      
+      console.log('✅ UTM data do Lead encontrada e adicionada ao Purchase!');
+    } else {
+      console.log('ℹ️ UTM data não disponível (user não tinha UTMs no Lead)');
+    }
+    
     // Metadata sobre match (SOMENTE se matched)
     if (userDataTyped && userDataTyped.matchedBy) {
       customData.fb_matched_by = userDataTyped.matchedBy;

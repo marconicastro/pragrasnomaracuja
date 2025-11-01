@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
       // Attribution data
       attributionJourney, firstTouchSource, firstTouchMedium,
       lastTouchSource, lastTouchMedium, touchpointCount,
-      timeToConvert, hasPaidClick
+      timeToConvert, hasPaidClick,
+      // UTM data (NOVO!)
+      utmFirstSource, utmFirstMedium, utmFirstCampaign,
+      utmLastSource, utmLastMedium, utmLastCampaign,
+      utmTouchCount, utmChannels
     } = data;
     
     if (!email) {
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
       city,
       state,
       zip,
-      // Attribution data (NOVO!)
+      // Attribution data
       attributionJourney,
       firstTouchSource,
       firstTouchMedium,
@@ -45,7 +49,16 @@ export async function POST(request: NextRequest) {
       lastTouchMedium,
       touchpointCount,
       timeToConvert,
-      hasPaidClick
+      hasPaidClick,
+      // UTM data (NOVO!)
+      utmFirstSource,
+      utmFirstMedium,
+      utmFirstCampaign,
+      utmLastSource,
+      utmLastMedium,
+      utmLastCampaign,
+      utmTouchCount,
+      utmChannels
     });
     
     if (success) {
