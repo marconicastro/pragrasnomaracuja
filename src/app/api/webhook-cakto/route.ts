@@ -146,16 +146,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// M?todo GET para verifica📨o de sa?de
+// Método GET para verificação de saúde + DEBUG
 export async function GET() {
+  const secret = process.env.CAKTO_WEBHOOK_SECRET;
+  
   return NextResponse.json({
     status: 'ok',
     endpoint: '/api/webhook-cakto',
     message: 'Webhook Cakto endpoint is running',
+    timestamp: new Date().toISOString(),
     config: {
-      hasSecret: !!process.env.CAKTO_WEBHOOK_SECRET,
+      hasSecret: !!secret,
+      secretLength: secret ? secret.length : 0,
+      secretPreview: secret ? `${secret.substring(0, 8)}...${secret.substring(secret.length - 4)}` : 'NOT_SET',
       hasStapeUrl: !!process.env.NEXT_PUBLIC_STAPE_CONTAINER_URL,
-      hasPixelId: !!process.env.NEXT_PUBLIC_META_PIXEL_ID
+      hasPixelId: !!process.env.NEXT_PUBLIC_META_PIXEL_ID,
+      nodeEnv: process.env.NODE_ENV
+    },
+    debug: {
+      allEnvVarsCount: Object.keys(process.env).length,
+      hasCAKTO: Object.keys(process.env).some(k => k.includes('CAKTO'))
     }
   });
 }
