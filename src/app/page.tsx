@@ -134,7 +134,7 @@ export default function App() {
           });
           
           setViewContentFired(true);
-          console.log('🎯 ViewContent disparado por scroll (25%)');'
+          console.log('🎯 ViewContent disparado por scroll (25%)');
           
           // Remover listener após disparar
           window.removeEventListener('scroll', handleScrollForViewContent);
