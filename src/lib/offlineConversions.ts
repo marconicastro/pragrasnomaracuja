@@ -390,6 +390,56 @@ export async function sendOfflinePurchase(
     // Test Event Code (opcional - para aparecer em Test Events do Meta)
     const testEventCode = process.env.META_TEST_EVENT_CODE;
     
+    // Preparar custom_data - APENAS campos com dados REAIS (ZERO fake!)
+    const customData: Record<string, any> = {
+      // Dados obrigatórios do produto
+      value: purchaseData.value,
+      currency: purchaseData.currency,
+      content_type: 'product',
+      content_ids: ['339591'],
+      content_name: 'Sistema 4 Fases - Ebook Trips',
+      content_category: 'digital_product',
+      num_items: 1,
+      order_id: purchaseData.orderId,
+      // Metadata Elite
+      fb_data_quality_score: dataQualityScore,
+      fb_tracking_version: '2.0_elite',
+      fb_event_source: 'webhook_cakto',
+      fb_purchase_type: 'offline_conversion'
+    };
+    
+    // SOMENTE adicionar attribution SE tiver dados REAIS do Lead
+    const userDataTyped = userData as any;
+    
+    if (userDataTyped && userDataTyped.firstTouchSource) {
+      // Attribution data existe - adicionar tudo
+      customData.fb_first_touch_source = userDataTyped.firstTouchSource;
+      customData.fb_first_touch_medium = userDataTyped.firstTouchMedium;
+      customData.fb_last_touch_source = userDataTyped.lastTouchSource;
+      customData.fb_last_touch_medium = userDataTyped.lastTouchMedium;
+      customData.fb_touchpoint_count = userDataTyped.touchpointCount;
+      customData.fb_time_to_convert = userDataTyped.timeToConvert ? Math.floor(userDataTyped.timeToConvert / 1000) : 0;
+      customData.fb_has_paid_click = userDataTyped.hasPaidClick;
+      
+      // Attribution journey completa
+      if (userDataTyped.attributionJourney && userDataTyped.attributionJourney !== '{}') {
+        customData.fb_attribution_journey = userDataTyped.attributionJourney;
+      }
+      
+      console.log('✅ Attribution data do Lead encontrada e adicionada ao Purchase!');
+    } else {
+      console.log('ℹ️ Attribution data não disponível (user não tinha Lead salvo)');
+    }
+    
+    // Metadata sobre match (SOMENTE se matched)
+    if (userDataTyped && userDataTyped.matchedBy) {
+      customData.fb_matched_by = userDataTyped.matchedBy;
+    }
+    
+    // Indicadores de fbp/fbc (SOMENTE se presentes)
+    if (userData.fbp) customData.fb_has_fbp = true;
+    if (userData.fbc) customData.fb_has_fbc = true;
+    
     const payload: any = {
       data: [{
         event_name: 'Purchase',
@@ -398,34 +448,7 @@ export async function sendOfflinePurchase(
         event_source_url: 'https://pay.cakto.com.br',
         action_source: 'website',
         user_data,
-        custom_data: {
-          value: purchaseData.value,
-          currency: purchaseData.currency,
-          content_type: 'product',
-          content_ids: ['339591'],
-          content_name: 'Sistema 4 Fases - Ebook Trips',
-          content_category: 'digital_product',
-          num_items: 1,
-          order_id: purchaseData.orderId,
-          // ADICIONAR: Campos Elite que estavam faltando
-          fb_data_quality_score: dataQualityScore,
-          fb_tracking_version: '2.0_elite',
-          fb_event_source: 'webhook_cakto',
-          // Attribution data (do Lead salvo - CRÍTICO!)
-          fb_first_touch_source: (userData as any).firstTouchSource || 'unknown',
-          fb_first_touch_medium: (userData as any).firstTouchMedium || 'unknown',
-          fb_last_touch_source: (userData as any).lastTouchSource || 'unknown',
-          fb_last_touch_medium: (userData as any).lastTouchMedium || 'unknown',
-          fb_touchpoint_count: (userData as any).touchpointCount || 0,
-          fb_time_to_convert: (userData as any).timeToConvert ? Math.floor((userData as any).timeToConvert / 1000) : 0,
-          fb_has_paid_click: (userData as any).hasPaidClick || false,
-          fb_attribution_journey: (userData as any).attributionJourney || '{}',
-          // Metadata adicional
-          fb_purchase_type: 'offline_conversion',
-          fb_has_fbp: !!userData.fbp,
-          fb_has_fbc: !!userData.fbc,
-          fb_matched_by: (userData as any).matchedBy || 'unknown'
-        }
+        custom_data: customData
       }]
     };
     
