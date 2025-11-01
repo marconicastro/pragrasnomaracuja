@@ -24,6 +24,11 @@ import {
   getMetaCookies
 } from './advancedDataPersistence';
 
+import {
+  enrichColdEvent,
+  type EnrichedEventData
+} from './coldEventsEnrichment';
+
 declare global {
   interface Window {
     fbq: (command: string, eventName: string, parameters?: any, options?: any) => void;
@@ -65,9 +70,27 @@ function log(level: 'debug' | 'info' | 'warn' | 'error', ...args: any[]) {
 // ===== ADVANCED MATCHING =====
 
 /**
- * Prepara Advanced Matching com TODOS os campos poss?veis
+ * Prepara Advanced Matching com TODOS os campos possiveis
+ * 
+ * ESTRATEGIA INTELIGENTE:
+ * - Warm events (Lead, InitiateCheckout, Purchase): usa dados completos do formulario
+ * - Cold events (PageView, ViewContent, etc): usa enrichment automatico
  */
-function prepareAdvancedMatching(): Record<string, any> {
+async function prepareAdvancedMatching(isColdEvent: boolean = false): Promise<Record<string, any>> {
+  // Se for evento FRIO (sem user data completo), usa enrichment
+  if (isColdEvent) {
+    const enriched = await enrichColdEvent();
+    
+    log('debug', 'COLD EVENT enriched:', {
+      fields: Object.keys(enriched.user_data).length,
+      score: enriched.dataQualityScore,
+      sources: enriched.enrichmentSources.join(', ')
+    });
+    
+    return enriched.user_data;
+  }
+  
+  // Se for evento QUENTE (com user data), usa dados completos
   const userData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
   
@@ -80,7 +103,6 @@ function prepareAdvancedMatching(): Record<string, any> {
   // PII (Meta vai hashear automaticamente)
   if (userData?.email) matching.em = userData.email.toLowerCase().trim();
   if (userData?.phone) {
-    // Formato E.164: +55 11 99999-9999 ? 5511999999999
     const phoneClean = userData.phone.replace(/\D/g, '');
     matching.ph = phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`;
   }
@@ -89,28 +111,18 @@ function prepareAdvancedMatching(): Record<string, any> {
   if (userData?.firstName) matching.fn = userData.firstName.toLowerCase().trim();
   if (userData?.lastName) matching.ln = userData.lastName.toLowerCase().trim();
   
-  // Localiza??o
+  // Localizacao
   if (userData?.city) matching.ct = userData.city.toLowerCase().trim();
   if (userData?.state) matching.st = userData.state.toLowerCase().trim();
   if (userData?.zip) matching.zp = userData.zip.replace(/\D/g, '');
   if (userData?.country) matching.country = userData.country.toLowerCase();
-  
-  // G?nero (se tiver)
-  // matching.ge = 'm' ou 'f'
-  
-  // Data de nascimento (se tiver)
-  // matching.db = '19900101'
   
   // Meta identifiers
   if (metaCookies.fbp) matching.fbp = metaCookies.fbp;
   if (metaCookies.fbc) matching.fbc = metaCookies.fbc;
   if (userData?.external_id) matching.external_id = userData.external_id;
   
-  // Client info (ser? adicionado pelo Stape automaticamente)
-  // matching.client_ip_address = '' (Stape pega)
-  // matching.client_user_agent = '' (Stape pega)
-  
-  log('debug', '?? Advanced Matching preparado:', {
+  log('debug', 'Advanced Matching preparado (warm):', {
     fields: Object.keys(matching).length,
     hasEmail: !!matching.em,
     hasPhone: !!matching.ph,
@@ -197,6 +209,7 @@ export async function trackEliteEvent(
     orderId?: string;
     skipAttribution?: boolean;
     skipValidation?: boolean;
+    isColdEvent?: boolean;
   }
 ): Promise<{
   success: boolean;
@@ -206,25 +219,28 @@ export async function trackEliteEvent(
 }> {
   
   try {
-    log('info', `?? Tracking Elite: ${eventName}`);
+    log('info', `Tracking Elite: ${eventName}`);
     
-    // Verificar se Meta Pixel est? carregado
+    // Verificar se Meta Pixel esta carregado
     if (typeof window === 'undefined' || !window.fbq) {
-      log('warn', '?? Meta Pixel n?o carregado');
-      return { success: false, eventId: '', warnings: ['Meta Pixel n?o carregado'] };
+      log('warn', 'Meta Pixel nao carregado');
+      return { success: false, eventId: '', warnings: ['Meta Pixel nao carregado'] };
     }
     
     // 1. Gerar Event ID
     const eventID = generateEventId(eventName, options?.orderId);
     
-    // 2. Preparar Advanced Matching
+    // 2. Preparar Advanced Matching (COM ENRICHMENT para eventos frios!)
+    const isColdEvent = options?.isColdEvent ?? false;
     const advancedMatching = CONFIG.enableAdvancedMatching 
-      ? prepareAdvancedMatching() 
+      ? await prepareAdvancedMatching(isColdEvent) 
       : {};
     
-    // 3. Obter user data completo
+    // 3. Obter user data completo (para calcular score)
     const userData = getAdvancedUserData();
-    const dataQualityScore = userData?.dataQualityScore || 0;
+    const dataQualityScore = isColdEvent 
+      ? Object.keys(advancedMatching).length * 7
+      : (userData?.dataQualityScore || 0);
     
     // 4. Enrichir com atribui??o
     let enrichedParams = !options?.skipAttribution 
@@ -296,10 +312,9 @@ export async function trackEliteEvent(
 // ===== SPECIFIC EVENTS (Elite Versions) =====
 
 /**
- * ?? PageView (Elite)
+ * PageView (Elite) - COLD EVENT com enrichment automatico
  */
 export async function trackPageViewElite(customParams: Record<string, any> = {}) {
-  // Capturar atribui??o da p?gina
   const touchpoint = captureAttribution();
   addAttributionTouchpoint(touchpoint);
   
@@ -311,11 +326,11 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
     ...customParams
-  }, 'standard');
+  }, 'standard', { isColdEvent: true });
 }
 
 /**
- * ??? ViewContent (Elite)
+ * ViewContent (Elite) - COLD EVENT com enrichment automatico
  */
 export async function trackViewContentElite(customParams: Record<string, any> = {}) {
   return trackEliteEvent('ViewContent', {
@@ -326,11 +341,11 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
     ...customParams
-  }, 'standard');
+  }, 'standard', { isColdEvent: true });
 }
 
 /**
- * ?? ScrollDepth (Elite Custom)
+ * ScrollDepth (Elite Custom) - COLD EVENT com enrichment automatico
  */
 export async function trackScrollDepthElite(
   percent: number,
@@ -340,11 +355,11 @@ export async function trackScrollDepthElite(
     percent,
     scroll_depth: percent,
     ...customParams
-  }, 'custom', { skipAttribution: true }); // Scroll n?o precisa de attribution
+  }, 'custom', { skipAttribution: true, isColdEvent: true });
 }
 
 /**
- * ??? CTAClick (Elite Custom)
+ * CTAClick (Elite Custom) - COLD EVENT com enrichment automatico
  */
 export async function trackCTAClickElite(
   buttonText: string,
@@ -354,7 +369,7 @@ export async function trackCTAClickElite(
     button_text: buttonText,
     content_name: `CTA: ${buttonText}`,
     ...customParams
-  }, 'custom');
+  }, 'custom', { isColdEvent: true });
 }
 
 /**
