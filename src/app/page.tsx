@@ -15,6 +15,9 @@ import {
 } from '@/lib/eliteMetaPixelTracking';
 
 export default function App() {
+  // URL do checkout Cakto (variável de ambiente)
+  const CHECKOUT_URL = process.env.NEXT_PUBLIC_CAKTO_CHECKOUT_URL || 'https://pay.cakto.com.br/hacr962_605077';
+  
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
     minutes: 47,
@@ -260,9 +263,8 @@ export default function App() {
     // Disparar evento InitiateCheckout (ELITE - com attribution)
     await trackInitiateCheckoutElite(trackingUserData);
 
-    // Construir URL final rapidamente
-    // LINK ATUALIZADO: https://go.allpes.com.br/r1wl4qyyfv (novo link de pagamento)
-    const finalUrlString = `https://go.allpes.com.br/r1wl4qyyfv?${new URLSearchParams(additionalParams).toString()}`;
+    // Construir URL do checkout usando variável de ambiente
+    const finalUrlString = `${CHECKOUT_URL}?${new URLSearchParams(additionalParams).toString()}`;
     
     // Simular processamento
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -839,9 +841,8 @@ export default function App() {
                 </div>
 
                 {/* CTA Final - Responsivo */}
-                {/* LINK ATUALIZADO: https://go.allpes.com.br/r1wl4qyyfv (novo link de pagamento) */}
                 <a 
-                  href="https://go.allpes.com.br/r1wl4qyyfv" 
+                  href={CHECKOUT_URL}
                   target="_blank" 
                   rel="noopener noreferrer"
                   id="botao-compra-allpes" 
