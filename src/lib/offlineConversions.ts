@@ -485,22 +485,27 @@ export async function sendOfflinePurchase(
         hasFbc: !!userData.fbc
       });
       
-      // CAPIG usa endpoint diferente do Server Container!
-      // Formato CAPIG: /facebook/{pixel_id}
-      // (NÃO é /v15.0/{pixel_id}/events - isso é Server Container)
-      const stapeEndpoint = `${stapeUrl}/facebook/${pixelId}`;
+      // CAPIG: Tentar múltiplos formatos de endpoint
+      // Formato 1: /facebook/{pixel_id}
+      // Formato 2: /stape-api/{capig_id}/v1/facebook
+      // Formato 3: URL base do Stape (sa.stape.co)
       
-      // CAPIG pode usar API Key opcional no header
+      // Usar URL personalizada se disponível, senão sa.stape.co
+      const capigIdentifier = process.env.STAPE_CAPIG_IDENTIFIER || 'odvkmmpw';
       const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
+      
+      // TENTAR FORMATO 1: /facebook/{pixel_id}
+      let stapeEndpoint = `${stapeUrl}/facebook/${pixelId}`;
+      
+      console.log('🔄 Tentativa 1 - Endpoint:', stapeEndpoint);
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
       
-      // Se tiver CAPIG API Key configurada, adicionar
       if (capigApiKey) {
         headers['x-stape-capig-key'] = capigApiKey;
-        console.log('🔑 CAPIG API Key incluída no header');
+        console.log('🔑 CAPIG API Key incluída');
       }
       
       response = await fetch(stapeEndpoint, {
@@ -509,13 +514,31 @@ export async function sendOfflinePurchase(
         body: JSON.stringify(payload)
       });
       
-      if (response.ok) {
-        viaStape = true;
-        console.log('✅ SUCCESS: Purchase enviado via Stape CAPIG (IP/UA real mantido!)');
-      } else {
-        error404Details = `Stape error: ${response.status} - ${await response.text()}`;
-        throw new Error(error404Details);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`❌ Tentativa 1 falhou: ${response.status} - ${errorText}`);
+        
+        // TENTAR FORMATO 2: sa.stape.co com identifier
+        const stapeBaseUrl = 'https://sa.stape.co';
+        stapeEndpoint = `${stapeBaseUrl}/stape-api/${capigIdentifier}/v1/facebook`;
+        
+        console.log('🔄 Tentativa 2 - Endpoint:', stapeEndpoint);
+        
+        response = await fetch(stapeEndpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          error404Details = `Todas tentativas falharam. Último: ${response.status} - ${await response.text()}`;
+          throw new Error(error404Details);
+        }
       }
+      
+      // Se chegou aqui, deu certo!
+      viaStape = true;
+      console.log('✅ SUCCESS: Purchase enviado via Stape CAPIG (IP/UA real mantido!)');
       
     } catch (stapeError: any) {
       console.warn('⚠️ Stape CAPIG falhou, tentando fallback para Meta direto...');
