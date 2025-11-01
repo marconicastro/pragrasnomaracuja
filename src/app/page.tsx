@@ -287,11 +287,17 @@ export default function App() {
 
   // Função principal de checkout (REDIRECIONAMENTO)
   const handleCheckoutRedirect = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    
+    console.log('🛒 Botão COMPRAR AGORA clicado - disparando AddToCart...');
+    
     // Disparar AddToCart para botão "COMPRAR AGORA"
-    await trackAddToCartElite('COMPRAR AGORA', {
+    const result = await trackAddToCartElite('COMPRAR AGORA', {
       cta_type: 'final_checkout_modal',
       action: 'open_modal'
     });
+    
+    console.log('🛒 AddToCart resultado:', result);
     
     // Redirecionar para o novo fluxo com modal
     openPreCheckoutModal(event);
@@ -842,17 +848,15 @@ export default function App() {
                 </div>
 
                 {/* CTA Final - Responsivo */}
-                <a 
-                  href={CHECKOUT_URL}
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   id="botao-compra-allpes" 
                   onClick={handleCheckoutRedirect}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-6 sm:py-8 px-4 sm:px-6 rounded-lg text-xl sm:text-2xl md:text-3xl transform hover:scale-105 transition-all duration-300 shadow-2xl inline-flex items-center justify-center gap-3 sm:gap-4"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-6 sm:py-8 px-4 sm:px-6 rounded-lg text-xl sm:text-2xl md:text-3xl transform hover:scale-105 transition-all duration-300 shadow-2xl inline-flex items-center justify-center gap-3 sm:gap-4 border-0 cursor-pointer"
                 >
                   <DollarSign className="w-6 h-6 sm:w-8 sm:h-8" />
                   COMPRAR AGORA
-                </a>
+                </button>
 
                 <div className="text-center text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4 space-y-1">
                   <p>🔒 Compra 100% segura e protegida</p>
