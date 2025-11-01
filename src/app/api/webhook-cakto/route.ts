@@ -7,9 +7,9 @@ import { getUserTracking } from '@/lib/userTrackingStore';
 import { sendOfflinePurchase } from '@/lib/offlineConversions';
 
 /**
- * ?? Webhook Cakto - Offline Conversions (Purchase)
+ * 📨 Webhook Cakto - Offline Conversions (Purchase)
  * 
- * Recebe notifica??es de compras aprovadas do checkout Cakto
+ * Recebe notifica📨es de compras aprovadas do checkout Cakto
  * e envia Purchase para Meta via Stape CAPI com fbp/fbc persistidos.
  * 
  * Endpoint: POST /api/webhook-cakto
@@ -24,10 +24,30 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    // 1. Parse do payload
-    const payload: CaktoWebhookPayload = await request.json();
+    // 1. Verificar se h? body
+    const text = await request.text();
     
-    console.log('?? Webhook Cakto recebido:', {
+    if (!text || text.trim() === '') {
+      console.error('📨 Webhook recebeu payload vazio');
+      return NextResponse.json(
+        { error: 'Empty payload' },
+        { status: 400 }
+      );
+    }
+    
+    // 2. Parse do payload
+    let payload: CaktoWebhookPayload;
+    try {
+      payload = JSON.parse(text);
+    } catch (parseError) {
+      console.error('📨 Erro ao fazer parse do JSON:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
+    
+    console.log('📨 Webhook Cakto recebido:', {
       event: payload.event,
       timestamp: new Date().toISOString()
     });
@@ -36,7 +56,7 @@ export async function POST(request: NextRequest) {
     const expectedSecret = process.env.CAKTO_WEBHOOK_SECRET;
     
     if (!expectedSecret) {
-      console.error('? CAKTO_WEBHOOK_SECRET n?o configurado');
+      console.error('⚠️ CAKTO_WEBHOOK_SECRET não configurado');
       return NextResponse.json(
         { error: 'Webhook secret not configured' },
         { status: 500 }
@@ -46,7 +66,7 @@ export async function POST(request: NextRequest) {
     const isValid = validateCaktoWebhook(payload, expectedSecret);
     
     if (!isValid) {
-      console.error('? Webhook inv?lido (secret incorreto)');
+      console.error('⚠️ Webhook inv?lido (secret incorreto)');
       return NextResponse.json(
         { error: 'Invalid webhook signature' },
         { status: 401 }
@@ -103,8 +123,8 @@ export async function POST(request: NextRequest) {
         processedIn: `${duration}ms`
       }, { status: 200 });
     } else {
-      // Mesmo em erro, retornar 200 para n?o fazer retry
-      // (erro j? foi logado, n?o adianta tentar novamente)
+      // Mesmo em erro, retornar 200 para não fazer retry
+      // (erro j? foi logado, não adianta tentar novamente)
       return NextResponse.json({
         success: false,
         message: result.message,
@@ -115,7 +135,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     const duration = Date.now() - startTime;
     
-    console.error('? Erro fatal ao processar webhook:', error);
+    console.error('⚠️ Erro fatal ao processar webhook:', error);
     
     // Retornar 200 mesmo em erro para evitar retries desnecess?rios
     return NextResponse.json({
@@ -126,7 +146,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// M?todo GET para verifica??o de sa?de
+// M?todo GET para verifica📨o de sa?de
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
