@@ -31,7 +31,7 @@
 
 ---
 
-### 2. Data Quality Score
+### 3. Data Quality Score
 
 | Evento | Score | Campos |
 |--------|-------|--------|
@@ -49,7 +49,7 @@
 
 ---
 
-### 3. Eventos Implementados
+### 4. Eventos Implementados
 
 **Client-Side (6 eventos):**
 1. ? PageView - Auto (ao carregar)
@@ -66,7 +66,7 @@
 
 ---
 
-### 4. Attribution Multi-Touch
+### 5. Attribution Multi-Touch
 
 **Campos Capturados:**
 - ? fb_first_touch_source
@@ -84,7 +84,7 @@
 
 ---
 
-### 5. Cold Events Enrichment (5 Camadas)
+### 6. Cold Events Enrichment (5 Camadas)
 
 **Camada 1 - Dados Persistidos:**
 - ? localStorage (user retornando)
@@ -109,7 +109,7 @@
 
 ---
 
-### 6. Offline Conversions (Cakto)
+### 7. Offline Conversions (Cakto)
 
 **Webhook:** `/api/webhook-cakto`
 - ? Valida??o de secret
@@ -127,7 +127,7 @@
 
 ---
 
-### 7. Data Persistence (Vercel KV)
+### 8. Data Persistence (Vercel KV)
 
 **O Que ? Salvo:**
 - ? email, phone, firstName, lastName
@@ -147,7 +147,7 @@
 
 ---
 
-### 8. ZERO Dados Fake
+### 9. ZERO Dados Fake
 
 **Regras Aplicadas:**
 - ? SE n?o tem dado ? N?O envia (omite campo)
