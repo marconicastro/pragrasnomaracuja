@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
-  validateCaktoWebhook, 
-  processCaktoWebhook,
+  validateCaktoWebhook,
   type CaktoWebhookPayload 
 } from '@/lib/offlineConversions';
+import { getUserTracking } from '@/lib/userTrackingStore';
+import { sendOfflinePurchase } from '@/lib/offlineConversions';
 
 /**
  * ?? Webhook Cakto - Offline Conversions (Purchase)
@@ -52,8 +53,36 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 3. Processar webhook
-    const result = await processCaktoWebhook(payload);
+    // 3. Processar webhook (inline - sem Prisma)
+    // Validar evento
+    if (payload.event !== 'purchase_approved' || payload.data.status !== 'paid') {
+      return NextResponse.json({
+        success: true,
+        message: `Evento ${payload.event} ignorado`
+      });
+    }
+    
+    // Buscar user data
+    const userData = await getUserTracking(
+      payload.data.customer.email,
+      payload.data.customer.phone
+    );
+    
+    // Extrair dados
+    const nameParts = payload.data.customer.name.split(' ');
+    const purchaseData = {
+      orderId: payload.data.refId,
+      email: payload.data.customer.email,
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(' ') || undefined,
+      phone: payload.data.customer.phone,
+      value: payload.data.amount,
+      currency: 'BRL',
+      timestamp: payload.data.paidAt ? new Date(payload.data.paidAt).getTime() : Date.now()
+    };
+    
+    // Enviar Purchase
+    const result = await sendOfflinePurchase(purchaseData, userData || {});
     
     // 4. Log de performance
     const duration = Date.now() - startTime;
