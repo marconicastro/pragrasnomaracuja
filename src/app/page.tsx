@@ -213,6 +213,10 @@ export default function App() {
       const metaCookies = getMetaCookies();
       const attribution = getAttributionInsights();
       
+      // Obter UTMs (se disponíveis)
+      const { getUTMAttribution } = await import('@/lib/utmTracking');
+      const utmAttribution = getUTMAttribution();
+      
       await fetch('/api/save-tracking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -226,7 +230,7 @@ export default function App() {
           city: trackingUserData.city,
           state: trackingUserData.state,
           zip: trackingUserData.zip,
-          // ADICIONAR: Attribution data para usar no Purchase
+          // Attribution data
           attributionJourney: attribution ? JSON.stringify(attribution) : undefined,
           firstTouchSource: attribution?.firstTouch.source,
           firstTouchMedium: attribution?.firstTouch.medium,
@@ -234,7 +238,16 @@ export default function App() {
           lastTouchMedium: attribution?.lastTouch.medium,
           touchpointCount: attribution?.touchpointCount,
           timeToConvert: attribution?.timeToConvert,
-          hasPaidClick: attribution?.hasPaidClick
+          hasPaidClick: attribution?.hasPaidClick,
+          // UTM data (NOVO!)
+          utmFirstSource: utmAttribution?.firstTouch.utm_source,
+          utmFirstMedium: utmAttribution?.firstTouch.utm_medium,
+          utmFirstCampaign: utmAttribution?.firstTouch.utm_campaign,
+          utmLastSource: utmAttribution?.lastTouch.utm_source,
+          utmLastMedium: utmAttribution?.lastTouch.utm_medium,
+          utmLastCampaign: utmAttribution?.lastTouch.utm_campaign,
+          utmTouchCount: utmAttribution?.touchCount,
+          utmChannels: utmAttribution?.channels.join(',')
         })
       });
       
