@@ -4,6 +4,8 @@
  * Sistema para capturar convers?es que acontecem FORA do site
  * (checkout externo Cakto) e enviar via Meta Conversions API (CAPI)
  * com atribui??o correta usando fbp/fbc persistidos.
+ * 
+ * MELHORIA: Busca por email + telefone (fallback se email for diferente)
  */
 
 import crypto from 'crypto';
@@ -103,15 +105,54 @@ export function validateCaktoWebhook(
   }
 }
 
+// ===== UTILITIES =====
+
+/**
+ * Normaliza telefone para busca consistente
+ * Remove formata??o e garante que comece com 55 (Brasil)
+ */
+function normalizePhone(phone: string): string {
+  // Remove tudo que n?o ? n?mero
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // Se j? come?a com 55, retorna
+  if (cleaned.startsWith('55')) {
+    return cleaned;
+  }
+  
+  // Se tem 11 ou 10 d?gitos (DDD + n?mero), adiciona 55
+  if (cleaned.length >= 10 && cleaned.length <= 11) {
+    return `55${cleaned}`;
+  }
+  
+  // Se tem 13 ou 12 d?gitos e come?a com 55, retorna
+  if (cleaned.length >= 12 && cleaned.startsWith('55')) {
+    return cleaned;
+  }
+  
+  // Caso contr?rio, retorna como est? (melhor que falhar)
+  return cleaned;
+}
+
 // ===== USER DATA LOOKUP =====
 
 /**
- * Busca dados persistidos do usu?rio por email
+ * Busca dados persistidos do usu?rio por email E telefone
  * 
- * IMPORTANTE: Precisa dos dados que foram salvos quando o usu?rio
- * preencheu o formul?rio (Lead/InitiateCheckout)
+ * ESTRAT?GIA INTELIGENTE:
+ * 1. Tenta buscar por email (prioridade)
+ * 2. Se n?o encontrar, busca por telefone (fallback)
+ * 3. Retorna primeiro match encontrado
+ * 
+ * IMPORTANTE: Usu?rio pode usar email diferente no checkout!
+ * Por isso a busca por telefone ? CR?TICA.
+ * 
+ * NOTA: Esta fun??o roda no servidor (API route), ent?o pode usar Prisma
  */
-export function getUserDataByEmail(email: string): {
+export async function getUserDataByEmailOrPhone(
+  email: string,
+  phone?: string
+): Promise<{
   fbp?: string;
   fbc?: string;
   firstName?: string;
@@ -120,14 +161,149 @@ export function getUserDataByEmail(email: string): {
   city?: string;
   state?: string;
   zip?: string;
-} | null {
+  matchedBy?: 'email' | 'phone';
+} | null> {
   
-  // TODO: Implementar busca no banco de dados (Prisma)
-  // Por enquanto, retornar null
-  // Ser? implementado na pr?xima etapa
+  try {
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    
+    let userData = null;
+    let matchedBy: 'email' | 'phone' | undefined;
+    
+    // 1. PRIORIDADE: Busca por email
+    if (email) {
+      userData = await prisma.userTracking.findUnique({
+        where: { email: email.toLowerCase().trim() }
+      });
+      
+      if (userData) {
+        matchedBy = 'email';
+        console.log('? User data encontrado por EMAIL:', email);
+      }
+    }
+    
+    // 2. FALLBACK: Busca por telefone (se n?o encontrou por email)
+    if (!userData && phone) {
+      const normalizedPhone = normalizePhone(phone);
+      
+      // Busca no banco (precisa normalizar o phone do banco tamb?m)
+      const allUsers = await prisma.userTracking.findMany({
+        where: {
+          phone: {
+            not: null
+          }
+        }
+      });
+      
+      // Compara telefones normalizados
+      userData = allUsers.find(user => {
+        if (!user.phone) return false;
+        const dbPhone = normalizePhone(user.phone);
+        return dbPhone === normalizedPhone;
+      }) || null;
+      
+      if (userData) {
+        matchedBy = 'phone';
+        console.log('? User data encontrado por TELEFONE:', phone);
+        console.warn('?? Email diferente! Checkout:', email, '| Original:', userData.email);
+      }
+    }
+    
+    await prisma.$disconnect();
+    
+    if (!userData) {
+      console.warn('? User data N?O encontrado:', { email, phone });
+      return null;
+    }
+    
+    return {
+      fbp: userData.fbp || undefined,
+      fbc: userData.fbc || undefined,
+      firstName: userData.firstName || undefined,
+      lastName: userData.lastName || undefined,
+      phone: userData.phone || undefined,
+      city: userData.city || undefined,
+      state: userData.state || undefined,
+      zip: userData.zip || undefined,
+      matchedBy
+    };
+    
+  } catch (error) {
+    console.error('? Erro ao buscar user data:', error);
+    return null;
+  }
+}
+
+/**
+ * Alias para compatibilidade (busca s? por email)
+ * @deprecated Use getUserDataByEmailOrPhone() para melhor matching
+ */
+export async function getUserDataByEmail(email: string) {
+  return getUserDataByEmailOrPhone(email);
+}
+
+/**
+ * Salva dados do usu?rio no banco (chamado quando Lead acontece)
+ * 
+ * NOTA: Esta fun??o roda no servidor (API route)
+ */
+export async function saveUserTrackingData(data: {
+  email: string;
+  fbp?: string;
+  fbc?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}): Promise<boolean> {
   
-  console.warn('?? getUserDataByEmail ainda n?o implementado (precisa banco)');
-  return null;
+  try {
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    
+    await prisma.userTracking.upsert({
+      where: { email: data.email.toLowerCase().trim() },
+      create: {
+        email: data.email.toLowerCase().trim(),
+        fbp: data.fbp,
+        fbc: data.fbc,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        country: 'br'
+      },
+      update: {
+        fbp: data.fbp || undefined,
+        fbc: data.fbc || undefined,
+        firstName: data.firstName || undefined,
+        lastName: data.lastName || undefined,
+        phone: data.phone || undefined,
+        city: data.city || undefined,
+        state: data.state || undefined,
+        zip: data.zip || undefined
+      }
+    });
+    
+    await prisma.$disconnect();
+    
+    console.log('? User tracking data salvo:', {
+      email: data.email,
+      hasFbp: !!data.fbp,
+      hasFbc: !!data.fbc
+    });
+    
+    return true;
+    
+  } catch (error) {
+    console.error('? Erro ao salvar user tracking data:', error);
+    return false;
+  }
 }
 
 // ===== SHA-256 HASHING =====
@@ -270,6 +446,7 @@ export async function processCaktoWebhook(
       event: payload.event,
       orderId: payload.data.refId,
       email: payload.data.customer.email,
+      phone: payload.data.customer.phone,
       status: payload.data.status
     });
     
@@ -314,17 +491,30 @@ export async function processCaktoWebhook(
     }
     
     // Buscar dados persistidos do usu?rio (fbp/fbc)
-    const userData = getUserDataByEmail(purchaseData.email);
+    // BUSCA POR EMAIL E TELEFONE (fallback se email for diferente!)
+    const userData = await getUserDataByEmailOrPhone(
+      purchaseData.email,
+      purchaseData.phone
+    );
     
     if (!userData) {
-      console.warn('?? User data n?o encontrado para:', purchaseData.email);
+      console.warn('?? User data N?O encontrado:', {
+        email: purchaseData.email,
+        phone: purchaseData.phone
+      });
       console.warn('?? Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
     } else {
       console.log('? User data encontrado:', {
+        matchedBy: userData.matchedBy,
         email: purchaseData.email,
         hasFbp: !!userData.fbp,
         hasFbc: !!userData.fbc
       });
+      
+      // Alerta se encontrou por telefone (email diferente)
+      if (userData.matchedBy === 'phone') {
+        console.log('?? Match por TELEFONE! Usu?rio usou email diferente no checkout');
+      }
     }
     
     // Enviar Purchase via Stape CAPI

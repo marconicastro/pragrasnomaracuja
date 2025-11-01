@@ -49,4 +49,5 @@ model UserTracking {
   updatedAt DateTime @updatedAt
   
   @@index([email])
+  @@index([phone])
 }
