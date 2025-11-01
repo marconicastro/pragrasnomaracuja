@@ -43,14 +43,19 @@ export interface IPGeolocation {
 // ===== BROWSER FINGERPRINTING =====
 
 /**
- * Captura fingerprint ?tico do browser (sem tracking invasivo)
+ * Captura fingerprint etico do browser (sem tracking invasivo)
+ * 
+ * IMPORTANTE: Sao dados REAIS de contexto do browser, nao PII
+ * - Meta usa para detectar bots e segmentar
+ * - NAO identifica usuario entre sites
  */
 export function getBrowserFingerprint(): BrowserFingerprint {
   if (typeof window === 'undefined') {
+    // Server-side: retorna valores minimos REAIS
     return {
       device_type: 'desktop',
-      browser: 'unknown',
-      os: 'unknown',
+      browser: 'server',
+      os: 'server',
       screen_resolution: 'unknown',
       language: 'pt-BR',
       timezone: 'America/Sao_Paulo'
@@ -59,7 +64,7 @@ export function getBrowserFingerprint(): BrowserFingerprint {
   
   const ua = navigator.userAgent;
   
-  // Detectar device type
+  // Detectar device type (REAL do user-agent)
   let device_type: 'mobile' | 'tablet' | 'desktop' = 'desktop';
   if (/Mobile|Android|iPhone/i.test(ua)) {
     device_type = 'mobile';
@@ -67,18 +72,18 @@ export function getBrowserFingerprint(): BrowserFingerprint {
     device_type = 'tablet';
   }
   
-  // Detectar browser
-  let browser = 'unknown';
-  if (ua.includes('Chrome')) browser = 'chrome';
-  else if (ua.includes('Safari')) browser = 'safari';
+  // Detectar browser (REAL do user-agent)
+  let browser = 'other'; // Melhor que "unknown"
+  if (ua.includes('Chrome') && !ua.includes('Edge')) browser = 'chrome';
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'safari';
   else if (ua.includes('Firefox')) browser = 'firefox';
   else if (ua.includes('Edge')) browser = 'edge';
   
-  // Detectar OS
-  let os = 'unknown';
+  // Detectar OS (REAL do user-agent)
+  let os = 'other'; // Melhor que "unknown"
   if (ua.includes('Windows')) os = 'windows';
-  else if (ua.includes('Mac')) os = 'macos';
-  else if (ua.includes('Linux')) os = 'linux';
+  else if (ua.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) os = 'macos';
+  else if (ua.includes('Linux') && !ua.includes('Android')) os = 'linux';
   else if (ua.includes('Android')) os = 'android';
   else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'ios';
   
@@ -95,19 +100,16 @@ export function getBrowserFingerprint(): BrowserFingerprint {
 // ===== IP-BASED GEOLOCATION =====
 
 /**
- * Tenta obter geolocaliza??o via APIs p?blicas ou client hint
+ * Tenta obter geolocalizacao via APIs publicas ou client hint
  * 
- * IMPORTANTE: Stape.io j? adiciona IP automaticamente no server-side.
- * Aqui vamos apenas tentar enriquecer com cidade/estado se poss?vel.
+ * IMPORTANTE: 
+ * - Stape.io ja adiciona IP automaticamente no server-side
+ * - So retorna dados REAIS da API
+ * - Se falhar, retorna vazio (ZERO dados fake!)
  */
-export async function getIPGeolocation(): Promise<IPGeolocation> {
-  // Default para Brasil
-  const defaultGeo: IPGeolocation = {
-    country: 'br'
-  };
-  
+export async function getIPGeolocation(): Promise<IPGeolocation | null> {
   try {
-    // Tentar usar API p?blica (ipapi.co tem 1000 req/dia gr?tis)
+    // Tentar usar API publica (ipapi.co tem 1000 req/dia gratis)
     const response = await fetch('https://ipapi.co/json/', {
       signal: AbortSignal.timeout(2000) // timeout 2s
     });
@@ -115,27 +117,33 @@ export async function getIPGeolocation(): Promise<IPGeolocation> {
     if (response.ok) {
       const data = await response.json();
       
+      // SO retorna se tiver dados REAIS
+      if (!data.country_code) {
+        console.warn('IP geolocation API retornou dados invalidos');
+        return null;
+      }
+      
       return {
-        city: data.city?.toLowerCase(),
-        state: data.region_code?.toLowerCase(),
-        country: data.country_code?.toLowerCase() || 'br',
-        zip: data.postal
+        city: data.city ? data.city.toLowerCase() : undefined,
+        state: data.region_code ? data.region_code.toLowerCase() : undefined,
+        country: data.country_code.toLowerCase(),
+        zip: data.postal || undefined
       };
     }
   } catch (error) {
-    // Se falhar, retornar default
-    console.debug('IP geolocation n?o dispon?vel, usando default');
+    console.debug('IP geolocation nao disponivel');
   }
   
-  return defaultGeo;
+  // Se falhar, retorna NULL (ZERO dados fake!)
+  return null;
 }
 
-// Cache de geolocation (para n?o fazer m?ltiplas requests)
+// Cache de geolocation (para nao fazer multiplas requests)
 let geoCache: IPGeolocation | null = null;
-let geoPromise: Promise<IPGeolocation> | null = null;
+let geoPromise: Promise<IPGeolocation | null> | null = null;
 
-export async function getCachedIPGeolocation(): Promise<IPGeolocation> {
-  if (geoCache) return geoCache;
+export async function getCachedIPGeolocation(): Promise<IPGeolocation | null> {
+  if (geoCache !== null) return geoCache;
   
   if (!geoPromise) {
     geoPromise = getIPGeolocation().then(geo => {
@@ -319,33 +327,34 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     sources.push('meta_fbc');
   }
   
-  // 4. IP Geolocation (se n?o tiver localiza??o ainda)
+  // 4. IP Geolocation (SOMENTE se API retornar dados REAIS)
   if (!user_data.ct || !user_data.st || !user_data.country) {
     try {
       const geo = await getCachedIPGeolocation();
       
-      if (geo.city && !user_data.ct) {
-        user_data.ct = geo.city;
-        sources.push('ip_city');
+      // SOMENTE adiciona se tiver dados REAIS da API
+      if (geo) {
+        if (geo.city && !user_data.ct) {
+          user_data.ct = geo.city;
+          sources.push('ip_city');
+        }
+        if (geo.state && !user_data.st) {
+          user_data.st = geo.state;
+          sources.push('ip_state');
+        }
+        if (geo.zip && !user_data.zp) {
+          user_data.zp = geo.zip;
+          sources.push('ip_zip');
+        }
+        if (geo.country && !user_data.country) {
+          user_data.country = geo.country;
+          sources.push('ip_country');
+        }
       }
-      if (geo.state && !user_data.st) {
-        user_data.st = geo.state;
-        sources.push('ip_state');
-      }
-      if (geo.zip && !user_data.zp) {
-        user_data.zp = geo.zip;
-        sources.push('ip_zip');
-      }
-      if (!user_data.country) {
-        user_data.country = geo.country;
-        sources.push('ip_country');
-      }
-    } catch {
-      // Se falhar, pelo menos garantir pa?s BR
-      if (!user_data.country) {
-        user_data.country = 'br';
-        sources.push('default_country');
-      }
+      // Se API falhar, NAO adiciona nada (ZERO dados fake!)
+    } catch (error) {
+      console.debug('Erro ao obter geolocation, continuando sem localizacao');
+      // NAO adiciona dados fake!
     }
   }
   
