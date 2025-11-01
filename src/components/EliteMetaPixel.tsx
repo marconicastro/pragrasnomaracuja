@@ -43,7 +43,17 @@ export default function EliteMetaPixel({
       return;
     }
     
-    // Inicializar sistema avan?ado de persist?ncia
+    // 1. Inicializar UTM Tracking (PRIMEIRO!)
+    if (typeof window !== 'undefined') {
+      import('@/lib/utmTracking').then(({ initUTMTracking }) => {
+        const capturedUTMs = initUTMTracking();
+        if (capturedUTMs) {
+          console.log('?? UTMs capturados:', capturedUTMs);
+        }
+      });
+    }
+    
+    // 2. Inicializar sistema avan?ado de persist?ncia
     const journey = initializeAdvancedPersistence();
     
     console.log('?? Iniciando ELITE Meta Pixel System...');

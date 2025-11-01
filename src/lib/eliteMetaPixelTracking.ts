@@ -25,6 +25,11 @@ import {
 } from './advancedDataPersistence';
 
 import {
+  formatUTMsForMeta,
+  getUTMAttribution
+} from './utmTracking';
+
+import {
   enrichColdEvent,
   type EnrichedEventData
 } from './coldEventsEnrichment';
@@ -264,6 +269,15 @@ export async function trackEliteEvent(
     let enrichedParams = !options?.skipAttribution 
       ? enrichWithAttribution(customParams)
       : customParams;
+    
+    // 4.5 Adicionar UTMs (se dispon?veis)
+    const utmParams = formatUTMsForMeta();
+    if (Object.keys(utmParams).length > 0) {
+      enrichedParams = {
+        ...enrichedParams,
+        ...utmParams
+      };
+    }
     
     // 5. Adicionar user_data ao evento (se tiver)
     if (Object.keys(advancedMatching).length > 0) {

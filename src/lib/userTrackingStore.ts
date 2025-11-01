@@ -28,6 +28,15 @@ export interface UserTrackingData {
   touchpointCount?: number;
   timeToConvert?: number;
   hasPaidClick?: boolean;
+  // UTM data (para manter no Purchase)
+  utmFirstSource?: string;
+  utmFirstMedium?: string;
+  utmFirstCampaign?: string;
+  utmLastSource?: string;
+  utmLastMedium?: string;
+  utmLastCampaign?: string;
+  utmTouchCount?: number;
+  utmChannels?: string; // comma-separated
   // Timestamps
   createdAt: number;
   updatedAt: number;
