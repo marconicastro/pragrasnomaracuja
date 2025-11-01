@@ -33,6 +33,10 @@ export interface BrowserFingerprint {
   timezone: string;
 }
 
+// Tipos permitidos (valores REAIS apenas!)
+// 'other' = detectado do UA mas n?o ? chrome/safari/firefox/edge (REAL!)
+// Se n?o conseguir detectar, retorna vazio (n?o adiciona campo)
+
 export interface IPGeolocation {
   city?: string;
   state?: string;
@@ -49,17 +53,10 @@ export interface IPGeolocation {
  * - Meta usa para detectar bots e segmentar
  * - NAO identifica usuario entre sites
  */
-export function getBrowserFingerprint(): BrowserFingerprint {
+export function getBrowserFingerprint(): BrowserFingerprint | null {
   if (typeof window === 'undefined') {
-    // Server-side: retorna valores minimos REAIS
-    return {
-      device_type: 'desktop',
-      browser: 'server',
-      os: 'server',
-      screen_resolution: 'unknown',
-      language: 'pt-BR',
-      timezone: 'America/Sao_Paulo'
-    };
+    // Server-side: NAO retorna fingerprint (ZERO fake!)
+    return null;
   }
   
   const ua = navigator.userAgent;
@@ -358,13 +355,15 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     }
   }
   
-  // 5. Browser fingerprint (dados de contexto)
+  // 5. Browser fingerprint (SOMENTE se disponivel - client-side only!)
   const fingerprint = getBrowserFingerprint();
-  user_data.fb_device_type = fingerprint.device_type;
-  user_data.fb_browser = fingerprint.browser;
-  user_data.fb_os = fingerprint.os;
-  user_data.fb_language = fingerprint.language;
-  sources.push('browser_fingerprint');
+  if (fingerprint) {
+    user_data.fb_device_type = fingerprint.device_type;
+    user_data.fb_browser = fingerprint.browser;
+    user_data.fb_os = fingerprint.os;
+    user_data.fb_language = fingerprint.language;
+    sources.push('browser_fingerprint');
+  }
   
   // 6. Calcular Data Quality Score
   const dataQualityScore = calculateColdEventQuality(user_data);

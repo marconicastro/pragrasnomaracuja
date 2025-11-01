@@ -151,7 +151,7 @@ export function captureAttribution(): AttributionTouchpoint {
       timestamp: Date.now(),
       source: 'direct',
       medium: 'none',
-      eventType: 'unknown',
+      eventType: 'page_visit', // Server-side = page visit inicial
       url: ''
     };
   }

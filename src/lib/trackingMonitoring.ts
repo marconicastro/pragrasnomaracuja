@@ -187,24 +187,22 @@ export function withMonitoring<T extends (...args: any[]) => Promise<any>>(
     try {
       const result = await fn(...args);
       
-      logEvent({
-        eventId: result.eventId || 'unknown',
-        eventName,
-        success: result.success,
-        timestamp: Date.now(),
-        warnings: result.warnings,
-        dataQualityScore: result.dataQualityScore
-      });
+      // SOMENTE loga se tiver eventId REAL
+      if (result.eventId) {
+        logEvent({
+          eventId: result.eventId,
+          eventName,
+          success: result.success,
+          timestamp: Date.now(),
+          warnings: result.warnings,
+          dataQualityScore: result.dataQualityScore
+        });
+      }
       
       return result;
     } catch (error: any) {
-      logEvent({
-        eventId: 'error',
-        eventName,
-        success: false,
-        timestamp: Date.now(),
-        warnings: [error.message]
-      });
+      // Log de erro SEM eventId (n?o ? um evento real)
+      console.error(`? ${eventName} falhou:`, error.message);
       
       throw error;
     }

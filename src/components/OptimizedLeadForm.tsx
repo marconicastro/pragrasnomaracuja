@@ -299,7 +299,8 @@ function getFormPosition() {
   const forms = document.querySelectorAll('form');
   const targetForm = forms[forms.length - 1];
   
-  if (!targetForm) return 'unknown';
+  // Se não encontrar form, retorna undefined (ZERO fake!)
+  if (!targetForm) return undefined;
   
   const rect = targetForm.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -358,21 +359,23 @@ function getLeadSource() {
 
 function getBrowserName() {
   const userAgent = navigator.userAgent;
-  if (userAgent.includes('Chrome')) return 'chrome';
+  if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) return 'chrome';
   if (userAgent.includes('Firefox')) return 'firefox';
-  if (userAgent.includes('Safari')) return 'safari';
+  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'safari';
   if (userAgent.includes('Edge')) return 'edge';
-  return 'unknown';
+  // Se não detectar nenhum conhecido, retorna 'other' (REAL - existe mas não é dos principais)
+  return 'other';
 }
 
 function getOperatingSystem() {
   const userAgent = navigator.userAgent;
   if (userAgent.includes('Windows')) return 'windows';
-  if (userAgent.includes('Mac')) return 'macos';
-  if (userAgent.includes('Linux')) return 'linux';
+  if (userAgent.includes('Mac') && !userAgent.includes('iPhone') && !userAgent.includes('iPad')) return 'macos';
+  if (userAgent.includes('Linux') && !userAgent.includes('Android')) return 'linux';
   if (userAgent.includes('Android')) return 'android';
-  if (userAgent.includes('iOS')) return 'ios';
-  return 'unknown';
+  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'ios';
+  // Se não detectar nenhum conhecido, retorna 'other' (REAL - existe mas não é dos principais)
+  return 'other';
 }
 
 // Funções de cálculo (simplificadas para o componente)
