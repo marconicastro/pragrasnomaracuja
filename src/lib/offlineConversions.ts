@@ -385,7 +385,10 @@ export async function sendOfflinePurchase(
     
     const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
     
-    const payload = {
+    // Test Event Code (opcional - para aparecer em Test Events do Meta)
+    const testEventCode = process.env.META_TEST_EVENT_CODE;
+    
+    const payload: any = {
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
@@ -405,6 +408,12 @@ export async function sendOfflinePurchase(
         }
       }]
     };
+    
+    // Adicionar test_event_code se configurado (para debug no Meta Events Manager)
+    if (testEventCode) {
+      payload.test_event_code = testEventCode;
+      console.log('🧪 Test Event Code ativado:', testEventCode);
+    }
     
     // ESTRATÉGIA: Tentar Stape CAPIG primeiro (mantém IP/UA real)
     // Se falhar, fallback para Meta direto (garante envio)
