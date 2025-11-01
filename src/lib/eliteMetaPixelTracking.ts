@@ -427,16 +427,20 @@ export async function trackLeadElite(
   },
   customParams: Record<string, any> = {}
 ) {
-  // Salvar user data completo
+  // Obter dados existentes (incluindo city/state/zip da API de IP!)
+  const existingData = getAdvancedUserData();
+  
+  // Salvar user data completo (MERGE com dados existentes!)
   const savedData = saveAdvancedUserData({
     email: userData.email,
     phone: userData.phone,
     firstName: userData.firstName,
     lastName: userData.lastName,
     fullName: `${userData.firstName} ${userData.lastName}`,
-    city: userData.city,
-    state: userData.state,
-    zip: userData.zip,
+    // Priorizar dados do formul?rio, mas manter os existentes se n?o informado
+    city: userData.city || existingData?.city,
+    state: userData.state || existingData?.state,
+    zip: userData.zip || existingData?.zip,
     country: 'br'
   }, true);
   
@@ -465,16 +469,20 @@ export async function trackInitiateCheckoutElite(
   },
   customParams: Record<string, any> = {}
 ) {
-  // Salvar/atualizar user data
+  // Obter dados existentes (incluindo city/state/zip da API de IP!)
+  const existingData = getAdvancedUserData();
+  
+  // Salvar/atualizar user data (MERGE com dados existentes!)
   saveAdvancedUserData({
     email: userData.email,
     phone: userData.phone,
     firstName: userData.firstName,
     lastName: userData.lastName,
     fullName: `${userData.firstName} ${userData.lastName}`,
-    city: userData.city,
-    state: userData.state,
-    zip: userData.zip,
+    // Priorizar dados do formul?rio, mas manter os existentes se n?o informado
+    city: userData.city || existingData?.city,
+    state: userData.state || existingData?.state,
+    zip: userData.zip || existingData?.zip,
     country: 'br'
   }, true);
   
