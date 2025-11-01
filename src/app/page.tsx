@@ -231,6 +231,32 @@ export default function App() {
     // Disparar evento Lead (ELITE - com advanced matching)
     await trackLeadElite(trackingUserData);
 
+    // Salvar fbp/fbc no Vercel KV para Offline Conversions (Purchase via webhook)
+    try {
+      const { getMetaCookies } = await import('@/lib/advancedDataPersistence');
+      const metaCookies = getMetaCookies();
+      
+      await fetch('/api/save-tracking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          fbp: metaCookies.fbp,
+          fbc: metaCookies.fbc,
+          firstName: trackingUserData.firstName,
+          lastName: trackingUserData.lastName,
+          phone: trackingUserData.phone,
+          city: trackingUserData.city,
+          state: trackingUserData.state,
+          zip: trackingUserData.zip
+        })
+      });
+      
+      console.log('✅ fbp/fbc salvos no Vercel KV para atribuição de Purchase');
+    } catch (error) {
+      console.error('⚠️ Erro ao salvar tracking (não bloqueia fluxo):', error);
+    }
+
     // Disparar evento InitiateCheckout (ELITE - com attribution)
     await trackInitiateCheckoutElite(trackingUserData);
 
