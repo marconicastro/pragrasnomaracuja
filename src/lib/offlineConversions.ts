@@ -391,49 +391,88 @@ export async function sendOfflinePurchase(
       }]
     };
     
-    // Enviar DIRETO para Meta Conversions API (sem Stape)
-    // MOTIVO: Mais simples, mais confiável, funciona 100%
-    console.log('📤 Enviando Purchase via Meta CAPI (direto):', {
-      orderId: purchaseData.orderId,
-      email: purchaseData.email,
-      value: purchaseData.value,
-      hasFbp: !!userData.fbp,
-      hasFbc: !!userData.fbc
-    });
+    // ESTRATÉGIA: Tentar Stape CAPIG primeiro (mantém IP/UA real)
+    // Se falhar, fallback para Meta direto (garante envio)
     
-    // Obter access token (obrigatório para CAPI direto)
-    const accessToken = process.env.META_ACCESS_TOKEN;
+    let response;
+    let viaStape = false;
+    let error404Details = '';
     
-    if (!accessToken) {
-      console.error('⚠️ META_ACCESS_TOKEN não configurado');
-      throw new Error('META_ACCESS_TOKEN não configurado');
-    }
-    
-    // Endpoint do Meta Conversions API (direto)
-    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
-    
-    const response = await fetch(metaEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
+    // TENTATIVA 1: Via Stape CAPIG (MELHOR - mantém IP/UA real + fbp/fbc)
+    try {
+      console.log('📤 Tentando enviar via Stape CAPIG:', {
+        orderId: purchaseData.orderId,
+        stapeUrl,
+        hasFbp: !!userData.fbp,
+        hasFbc: !!userData.fbc
+      });
+      
+      // Endpoint correto do Stape CAPIG
+      const stapeEndpoint = `${stapeUrl}/v15.0/${pixelId}/events`;
+      
+      response = await fetch(stapeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        viaStape = true;
+        console.log('✅ SUCCESS: Purchase enviado via Stape CAPIG (IP/UA real mantido!)');
+      } else {
+        error404Details = `Stape error: ${response.status} - ${await response.text()}`;
+        throw new Error(error404Details);
+      }
+      
+    } catch (stapeError: any) {
+      console.warn('⚠️ Stape CAPIG falhou, tentando fallback para Meta direto...');
+      console.warn('Detalhes:', stapeError.message);
+      
+      // TENTATIVA 2: Fallback para Meta direto (FUNCIONA mas perde IP/UA)
+      const accessToken = process.env.META_ACCESS_TOKEN;
+      
+      if (!accessToken) {
+        throw new Error('Stape falhou E META_ACCESS_TOKEN não configurado. Não é possível enviar Purchase.');
+      }
+      
+      console.log('📤 Tentando enviar via Meta CAPI direto (fallback)...');
+      
+      const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+      
+      response = await fetch(metaEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Ambos falharam! Stape: ${error404Details} | Meta: ${response.status} - ${errorText}`);
+      }
+      
+      console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (fallback OK, mas sem IP/UA real)');
     }
     
     const result = await response.json();
     
-    console.log('✅ Offline Purchase enviado via Meta CAPI (direto):', {
+    console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
+      via: viaStape ? 'Stape CAPIG (🎯 IP/UA real!)' : 'Meta direto (fallback)',
       response: result
     });
     
-    return { success: true };
+    return { 
+      success: true,
+      viaStape,
+      message: viaStape 
+        ? 'Purchase enviado via Stape CAPIG - IP/UA real mantido!' 
+        : 'Purchase enviado via Meta direto (fallback) - Stape não respondeu'
+    };
     
   } catch (error: any) {
     console.error('? Erro ao enviar offline purchase:', error);
