@@ -400,12 +400,19 @@ export async function sendOfflinePurchase(
       hasFbc: !!userData.fbc
     });
     
-    // Endpoint do Stape CAPIG (envia direto, sem /v15.0/pixelId)
-    // O Stape CAPIG processa e encaminha para o Meta automaticamente
-    const response = await fetch(stapeUrl, {
+    // Endpoint do Stape CAPIG 
+    // Formato: POST com pixel_id e access_token como query params
+    const stapeEndpoint = `${stapeUrl}?pixel_id=${pixelId}`;
+    
+    // Adicionar access token se dispon?vel
+    const accessToken = process.env.META_ACCESS_TOKEN;
+    const finalUrl = accessToken ? `${stapeEndpoint}&access_token=${accessToken}` : stapeEndpoint;
+    
+    const response = await fetch(finalUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; VercelBot/1.0; +https://vercel.com)'
       },
       body: JSON.stringify(payload)
     });
