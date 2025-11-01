@@ -359,24 +359,39 @@ export async function trackScrollDepthElite(
 }
 
 /**
- * CTAClick (Elite) - Agora usando AddToCart (standard event)
- * MOTIVO: Eventos custom podem n?o ser enviados pelo Stape CAPIG
- * AddToCart funciona perfeitamente para tracking de CTAs
+ * CTAClick (Elite Custom) - COLD EVENT com enrichment autom?tico
+ * Para CTAs secund?rios (scroll, etc)
  */
 export async function trackCTAClickElite(
   buttonText: string,
   customParams: Record<string, any> = {}
 ) {
-  return trackEliteEvent('AddToCart', {
+  return trackEliteEvent('CTAClick', {
+    button_text: buttonText,
     content_name: `CTA: ${buttonText}`,
-    content_type: 'cta_button',
-    value: 0, // Sem valor monet?rio, apenas tracking de inten??o
+    ...customParams
+  }, 'custom', { isColdEvent: true });
+}
+
+/**
+ * ?? AddToCart (Elite) - APENAS para bot?o "COMPRAR AGORA"
+ * Evento STANDARD enviado pelo Stape CAPIG
+ */
+export async function trackAddToCartElite(
+  buttonText: string = 'COMPRAR AGORA',
+  customParams: Record<string, any> = {}
+) {
+  return trackEliteEvent('AddToCart', {
+    content_name: 'Sistema 4 Fases - Ebook Trips',
+    content_type: 'product',
+    content_ids: ['339591'],
+    value: 39.9,
     currency: 'BRL',
-    // Par?metros custom para identificar que ? um CTA
-    cta_type: 'button',
+    // Par?metros adicionais
+    cta_type: 'purchase_button',
     cta_text: buttonText,
     ...customParams
-  }, 'standard', { isColdEvent: true }); // MUDOU: 'standard' ao inv?s de 'custom'
+  }, 'standard', { isColdEvent: true });
 }
 
 /**

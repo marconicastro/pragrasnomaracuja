@@ -10,6 +10,7 @@ import {
   trackViewContentElite,
   trackScrollDepthElite,
   trackCTAClickElite,
+  trackAddToCartElite,
   trackLeadElite,
   trackInitiateCheckoutElite
 } from '@/lib/eliteMetaPixelTracking';
@@ -286,8 +287,8 @@ export default function App() {
 
   // Função principal de checkout (REDIRECIONAMENTO)
   const handleCheckoutRedirect = async (event: React.MouseEvent) => {
-    // Disparar evento específico de CTA final
-    await trackCTAClickElite('Final Checkout', {
+    // Disparar AddToCart para botão "COMPRAR AGORA"
+    await trackAddToCartElite('COMPRAR AGORA', {
       cta_type: 'final_checkout_modal',
       action: 'open_modal'
     });
