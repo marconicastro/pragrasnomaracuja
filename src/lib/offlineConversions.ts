@@ -1,8 +1,8 @@
 /**
- * ?? Offline Conversions - Purchase via Webhook
+ * ?? Offline Conversions - Purchase via Webhook Cakto
  * 
  * Sistema para capturar convers?es que acontecem FORA do site
- * (checkout externo) e enviar via Meta Conversions API (CAPI)
+ * (checkout externo Cakto) e enviar via Meta Conversions API (CAPI)
  * com atribui??o correta usando fbp/fbc persistidos.
  */
 
@@ -11,14 +11,52 @@ import crypto from 'crypto';
 // ===== INTERFACES =====
 
 export interface CaktoWebhookPayload {
-  // Estrutura ser? preenchida quando recebermos a documenta??o
+  secret: string;
   event: string;
-  transaction_id?: string;
-  customer_email?: string;
-  customer_name?: string;
-  amount?: number;
-  status?: string;
-  [key: string]: any;
+  data: {
+    id: string;
+    refId: string;
+    customer: {
+      name: string;
+      birthDate?: string | null;
+      email: string;
+      phone: string;
+      docNumber?: string;
+    };
+    affiliate?: string;
+    offer: {
+      id: string;
+      name: string;
+      price: number;
+    };
+    offer_type: string;
+    product: {
+      name: string;
+      id: string;
+      short_id: string;
+      supportEmail: string;
+      type: string;
+      invoiceDescription: string;
+    };
+    parent_order?: string;
+    checkoutUrl?: string | null;
+    status: string;
+    baseAmount: number;
+    discount?: string | null;
+    amount: number;
+    fees: number;
+    paymentMethod: string;
+    paymentMethodName?: string;
+    installments: number;
+    utm_source?: string | null;
+    utm_medium?: string | null;
+    utm_campaign?: string | null;
+    sck?: string | null;
+    fbc?: string | null;
+    fbp?: string | null;
+    paidAt?: string | null;
+    createdAt: string;
+  };
 }
 
 export interface OfflinePurchaseData {
@@ -35,33 +73,32 @@ export interface OfflinePurchaseData {
 // ===== WEBHOOK VALIDATION =====
 
 /**
- * Valida assinatura do webhook Cakto
+ * Valida webhook Cakto
  * 
- * AGUARDANDO: Documenta??o da Cakto para saber como validar
+ * A Cakto envia o campo "secret" no payload que deve ser comparado
+ * com a chave secreta configurada no .env
  */
 export function validateCaktoWebhook(
-  payload: any,
-  signature: string,
-  secret: string
+  payload: CaktoWebhookPayload,
+  expectedSecret: string
 ): boolean {
   try {
-    // TODO: Implementar valida??o conforme documenta??o Cakto
-    // Exemplo gen?rico (pode variar):
-    // const expectedSignature = crypto
-    //   .createHmac('sha256', secret)
-    //   .update(JSON.stringify(payload))
-    //   .digest('hex');
-    // 
-    // return crypto.timingSafeEqual(
-    //   Buffer.from(signature),
-    //   Buffer.from(expectedSignature)
-    // );
+    if (!payload.secret) {
+      console.error('? Webhook sem campo "secret"');
+      return false;
+    }
     
-    console.warn('?? Valida??o de webhook ainda n?o implementada (aguardando docs)');
-    return true; // Tempor?rio
+    // Compara??o segura
+    if (payload.secret !== expectedSecret) {
+      console.error('? Secret inv?lido no webhook');
+      return false;
+    }
+    
+    console.log('? Webhook Cakto validado com sucesso');
+    return true;
     
   } catch (error) {
-    console.error('Erro ao validar webhook:', error);
+    console.error('? Erro ao validar webhook:', error);
     return false;
   }
 }
@@ -85,16 +122,11 @@ export function getUserDataByEmail(email: string): {
   zip?: string;
 } | null {
   
-  // TODO: Implementar busca real
-  // Op??es:
-  // 1. localStorage (se webhook vier do browser - improv?vel)
-  // 2. Banco de dados (melhor op??o)
-  // 3. API externa
-  
-  console.warn('?? Busca de user data ainda n?o implementada');
-  
+  // TODO: Implementar busca no banco de dados (Prisma)
   // Por enquanto, retornar null
-  // Ser? implementado quando soubermos a estrutura do webhook
+  // Ser? implementado na pr?xima etapa
+  
+  console.warn('?? getUserDataByEmail ainda n?o implementado (precisa banco)');
   return null;
 }
 
@@ -141,14 +173,17 @@ export async function sendOfflinePurchase(
       em: hashSHA256(purchaseData.email),
     };
     
-    if (userData.fbp) user_data.fbp = userData.fbp;
-    if (userData.fbc) user_data.fbc = userData.fbc;
-    if (userData.phone) {
-      const phoneClean = userData.phone.replace(/\D/g, '');
+    // Adicionar dados do formul?rio (se tiver)
+    if (purchaseData.firstName) user_data.fn = hashSHA256(purchaseData.firstName);
+    if (purchaseData.lastName) user_data.ln = hashSHA256(purchaseData.lastName);
+    if (purchaseData.phone) {
+      const phoneClean = purchaseData.phone.replace(/\D/g, '');
       user_data.ph = hashSHA256(phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`);
     }
-    if (userData.firstName) user_data.fn = hashSHA256(userData.firstName);
-    if (userData.lastName) user_data.ln = hashSHA256(userData.lastName);
+    
+    // Adicionar dados persistidos (CR?TICO para atribui??o!)
+    if (userData.fbp) user_data.fbp = userData.fbp;
+    if (userData.fbc) user_data.fbc = userData.fbc;
     if (userData.city) user_data.ct = hashSHA256(userData.city);
     if (userData.state) user_data.st = hashSHA256(userData.state);
     
@@ -157,12 +192,14 @@ export async function sendOfflinePurchase(
       ? Math.floor(purchaseData.timestamp / 1000) 
       : Math.floor(Date.now() / 1000);
     
+    const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
+    
     const payload = {
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
-        event_id: `Purchase_${purchaseData.orderId}_${eventTime}`,
-        event_source_url: 'https://pay.cakto.com.br', // checkout externo
+        event_id: eventID,
+        event_source_url: 'https://pay.cakto.com.br',
         action_source: 'website',
         user_data,
         custom_data: {
@@ -171,6 +208,7 @@ export async function sendOfflinePurchase(
           content_type: 'product',
           content_ids: ['339591'],
           content_name: 'Sistema 4 Fases - Ebook Trips',
+          content_category: 'digital_product',
           num_items: 1,
           order_id: purchaseData.orderId
         }
@@ -178,6 +216,14 @@ export async function sendOfflinePurchase(
     };
     
     // Enviar para Stape CAPIG
+    console.log('?? Enviando Purchase via Stape CAPI:', {
+      orderId: purchaseData.orderId,
+      email: purchaseData.email,
+      value: purchaseData.value,
+      hasFbp: !!userData.fbp,
+      hasFbc: !!userData.fbc
+    });
+    
     const response = await fetch(`${stapeUrl}/v15.0/${pixelId}/events`, {
       method: 'POST',
       headers: {
@@ -195,10 +241,8 @@ export async function sendOfflinePurchase(
     
     console.log('? Offline Purchase enviado via Stape CAPI:', {
       orderId: purchaseData.orderId,
-      email: purchaseData.email,
-      value: purchaseData.value,
-      fbp: userData.fbp ? 'presente' : 'ausente',
-      fbc: userData.fbc ? 'presente' : 'ausente'
+      eventID,
+      response: result
     });
     
     return { success: true };
@@ -216,44 +260,71 @@ export async function sendOfflinePurchase(
 
 /**
  * Processa webhook da Cakto e envia Purchase
- * 
- * AGUARDANDO: Documenta??o completa da Cakto
  */
 export async function processCaktoWebhook(
   payload: CaktoWebhookPayload
 ): Promise<{ success: boolean; message: string }> {
   
   try {
-    // TODO: Adaptar conforme estrutura real do webhook Cakto
-    console.log('?? Webhook Cakto recebido:', payload);
+    console.log('?? Webhook Cakto recebido:', {
+      event: payload.event,
+      orderId: payload.data.refId,
+      email: payload.data.customer.email,
+      status: payload.data.status
+    });
     
-    // Validar se ? um evento de compra confirmada
-    // TODO: Verificar campo correto conforme documenta??o
-    if (payload.event !== 'purchase.approved' && payload.status !== 'paid') {
+    // Validar se ? um evento de compra aprovada
+    if (payload.event !== 'purchase_approved') {
+      console.log(`?? Evento "${payload.event}" ignorado (n?o ? purchase_approved)`);
       return {
-        success: false,
-        message: 'Evento n?o ? uma compra confirmada'
+        success: true,
+        message: `Evento ${payload.event} recebido mas ignorado`
       };
     }
     
-    // Extrair dados (adaptar conforme estrutura real)
+    // Validar se o pagamento foi confirmado
+    if (payload.data.status !== 'paid') {
+      console.log(`?? Status "${payload.data.status}" ignorado (n?o ? paid)`);
+      return {
+        success: true,
+        message: `Status ${payload.data.status} ignorado`
+      };
+    }
+    
+    // Extrair dados do cliente
+    const customer = payload.data.customer;
+    const nameParts = customer.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+    
+    // Preparar dados da compra
     const purchaseData: OfflinePurchaseData = {
-      orderId: payload.transaction_id || 'unknown',
-      email: payload.customer_email || '',
-      value: payload.amount || 0,
-      currency: 'BRL'
+      orderId: payload.data.refId,
+      email: customer.email,
+      firstName,
+      lastName: lastName || undefined,
+      phone: customer.phone,
+      value: payload.data.amount,
+      currency: 'BRL',
+      timestamp: payload.data.paidAt ? new Date(payload.data.paidAt).getTime() : Date.now()
     };
     
     if (!purchaseData.email) {
       throw new Error('Email n?o encontrado no payload');
     }
     
-    // Buscar dados persistidos do usu?rio
+    // Buscar dados persistidos do usu?rio (fbp/fbc)
     const userData = getUserDataByEmail(purchaseData.email);
     
     if (!userData) {
       console.warn('?? User data n?o encontrado para:', purchaseData.email);
-      // Mesmo assim, enviar Purchase (sem fbp/fbc)
+      console.warn('?? Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
+    } else {
+      console.log('? User data encontrado:', {
+        email: purchaseData.email,
+        hasFbp: !!userData.fbp,
+        hasFbc: !!userData.fbc
+      });
     }
     
     // Enviar Purchase via Stape CAPI
@@ -268,7 +339,7 @@ export async function processCaktoWebhook(
     
     return {
       success: true,
-      message: 'Offline Purchase processado com sucesso'
+      message: 'Offline Purchase processado e enviado com sucesso'
     };
     
   } catch (error: any) {
