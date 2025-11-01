@@ -235,10 +235,11 @@ export default function App() {
     // Disparar evento Lead (ELITE - com advanced matching)
     await trackLeadElite(trackingUserData);
 
-    // Salvar fbp/fbc no Vercel KV para Offline Conversions (Purchase via webhook)
+    // Salvar fbp/fbc + ATTRIBUTION no Vercel KV para Offline Conversions (Purchase via webhook)
     try {
-      const { getMetaCookies } = await import('@/lib/advancedDataPersistence');
+      const { getMetaCookies, getAttributionInsights } = await import('@/lib/advancedDataPersistence');
       const metaCookies = getMetaCookies();
+      const attribution = getAttributionInsights();
       
       await fetch('/api/save-tracking', {
         method: 'POST',
@@ -252,11 +253,20 @@ export default function App() {
           phone: trackingUserData.phone,
           city: trackingUserData.city,
           state: trackingUserData.state,
-          zip: trackingUserData.zip
+          zip: trackingUserData.zip,
+          // ADICIONAR: Attribution data para usar no Purchase
+          attributionJourney: attribution ? JSON.stringify(attribution) : undefined,
+          firstTouchSource: attribution?.firstTouch.source,
+          firstTouchMedium: attribution?.firstTouch.medium,
+          lastTouchSource: attribution?.lastTouch.source,
+          lastTouchMedium: attribution?.lastTouch.medium,
+          touchpointCount: attribution?.touchpointCount,
+          timeToConvert: attribution?.timeToConvert,
+          hasPaidClick: attribution?.hasPaidClick
         })
       });
       
-      console.log('✅ fbp/fbc salvos no Vercel KV para atribuição de Purchase');
+      console.log('✅ fbp/fbc + ATTRIBUTION salvos no Vercel KV para atribuição de Purchase');
     } catch (error) {
       console.error('⚠️ Erro ao salvar tracking (não bloqueia fluxo):', error);
     }

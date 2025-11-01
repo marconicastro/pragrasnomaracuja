@@ -376,6 +376,17 @@ export async function sendOfflinePurchase(
     
     const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
     
+    // Calcular Data Quality Score do Purchase
+    let dataQualityScore = 0;
+    if (user_data.em) dataQualityScore += 15;
+    if (user_data.ph) dataQualityScore += 15;
+    if (user_data.fn) dataQualityScore += 10;
+    if (user_data.ln) dataQualityScore += 10;
+    if (user_data.ct) dataQualityScore += 5;
+    if (user_data.st) dataQualityScore += 5;
+    if (user_data.fbp) dataQualityScore += 20; // CRÍTICO!
+    if (user_data.fbc) dataQualityScore += 20; // CRÍTICO!
+    
     // Test Event Code (opcional - para aparecer em Test Events do Meta)
     const testEventCode = process.env.META_TEST_EVENT_CODE;
     
@@ -395,7 +406,25 @@ export async function sendOfflinePurchase(
           content_name: 'Sistema 4 Fases - Ebook Trips',
           content_category: 'digital_product',
           num_items: 1,
-          order_id: purchaseData.orderId
+          order_id: purchaseData.orderId,
+          // ADICIONAR: Campos Elite que estavam faltando
+          fb_data_quality_score: dataQualityScore,
+          fb_tracking_version: '2.0_elite',
+          fb_event_source: 'webhook_cakto',
+          // Attribution data (do Lead salvo - CRÍTICO!)
+          fb_first_touch_source: (userData as any).firstTouchSource || 'unknown',
+          fb_first_touch_medium: (userData as any).firstTouchMedium || 'unknown',
+          fb_last_touch_source: (userData as any).lastTouchSource || 'unknown',
+          fb_last_touch_medium: (userData as any).lastTouchMedium || 'unknown',
+          fb_touchpoint_count: (userData as any).touchpointCount || 0,
+          fb_time_to_convert: (userData as any).timeToConvert ? Math.floor((userData as any).timeToConvert / 1000) : 0,
+          fb_has_paid_click: (userData as any).hasPaidClick || false,
+          fb_attribution_journey: (userData as any).attributionJourney || '{}',
+          // Metadata adicional
+          fb_purchase_type: 'offline_conversion',
+          fb_has_fbp: !!userData.fbp,
+          fb_has_fbc: !!userData.fbc,
+          fb_matched_by: (userData as any).matchedBy || 'unknown'
         }
       }]
     };
@@ -405,6 +434,8 @@ export async function sendOfflinePurchase(
       payload.test_event_code = testEventCode;
       console.log('🧪 Test Event Code ativado:', testEventCode);
     }
+    
+    console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     
     // ESTRATÉGIA: Tentar Stape CAPIG primeiro (mantém IP/UA real)
     // Se falhar, fallback para Meta direto (garante envio)

@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveUserTrackingData } from '@/lib/offlineConversions';
+import { saveUserTracking } from '@/lib/userTrackingStore';
 
 /**
- * API Route: Salva fbp/fbc quando Lead acontece
+ * API Route: Salva fbp/fbc + Attribution quando Lead acontece
  * 
  * Chamado pelo frontend ap?s disparar evento Lead
- * Salva dados no banco para uso posterior em Offline Conversions
+ * Salva dados no Vercel KV para uso posterior em Offline Conversions (Purchase)
  */
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
-    const { email, fbp, fbc, firstName, lastName, phone, city, state, zip } = data;
+    const { 
+      email, fbp, fbc, firstName, lastName, phone, city, state, zip,
+      // Attribution data
+      attributionJourney, firstTouchSource, firstTouchMedium,
+      lastTouchSource, lastTouchMedium, touchpointCount,
+      timeToConvert, hasPaidClick
+    } = data;
     
     if (!email) {
       return NextResponse.json(
@@ -21,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const success = await saveUserTrackingData({
+    const success = await saveUserTracking({
       email,
       fbp,
       fbc,
@@ -30,7 +36,16 @@ export async function POST(request: NextRequest) {
       phone,
       city,
       state,
-      zip
+      zip,
+      // Attribution data (NOVO!)
+      attributionJourney,
+      firstTouchSource,
+      firstTouchMedium,
+      lastTouchSource,
+      lastTouchMedium,
+      touchpointCount,
+      timeToConvert,
+      hasPaidClick
     });
     
     if (success) {

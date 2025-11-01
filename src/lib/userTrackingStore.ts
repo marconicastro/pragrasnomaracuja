@@ -19,6 +19,16 @@ export interface UserTrackingData {
   city?: string;
   state?: string;
   zip?: string;
+  // Attribution data (para manter no Purchase)
+  attributionJourney?: string; // JSON stringified
+  firstTouchSource?: string;
+  firstTouchMedium?: string;
+  lastTouchSource?: string;
+  lastTouchMedium?: string;
+  touchpointCount?: number;
+  timeToConvert?: number;
+  hasPaidClick?: boolean;
+  // Timestamps
   createdAt: number;
   updatedAt: number;
 }
