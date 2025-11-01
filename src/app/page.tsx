@@ -191,34 +191,6 @@ export default function App() {
     setUserData(userDataToSave);
     
     console.log('💾 Dados salvos persistentemente:', userDataToSave);
-    
-    // Capturar apenas parâmetros essenciais para o checkout
-    const additionalParams: Record<string, string> = {};
-    additionalParams['name'] = cleanFullName;
-    additionalParams['email'] = formData.email;
-    
-    // Formatação rápida do telefone (já existe phoneClean do estado userData)
-    if (phoneClean.length >= 10 && phoneClean.length <= 11) {
-      const ddd = phoneClean.substring(0, 2);
-      const numeroCompleto = phoneClean.substring(2);
-      
-      if (numeroCompleto.length === 9) {
-        const primeiraParte = numeroCompleto.substring(0, 5);
-        const segundaParte = numeroCompleto.substring(5);
-        additionalParams['phone_number'] = `${ddd} ${primeiraParte}-${segundaParte}`;
-      } else if (numeroCompleto.length === 8) {
-        const primeiraParte = numeroCompleto.substring(0, 4);
-        const segundaParte = numeroCompleto.substring(4);
-        additionalParams['phone_number'] = `${ddd} ${primeiraParte}-${segundaParte}`;
-      }
-    }
-
-    // Adicionar dados de localização se existirem
-    if (formData.city?.trim()) additionalParams['city'] = formData.city.trim();
-    if (formData.state?.trim()) additionalParams['state'] = formData.state.trim();
-    if (formData.cep?.replace(/\D/g, '').length === 8) {
-      additionalParams['zip'] = formData.cep.replace(/\D/g, '');
-    }
 
     // Preparar dados do usuário para tracking ELITE
     const nameParts = cleanFullName.split(' ');
@@ -274,8 +246,8 @@ export default function App() {
     // Disparar evento InitiateCheckout (ELITE - com attribution)
     await trackInitiateCheckoutElite(trackingUserData);
 
-    // Construir URL do checkout usando variável de ambiente
-    const finalUrlString = `${CHECKOUT_URL}?${new URLSearchParams(additionalParams).toString()}`;
+    // URL do checkout LIMPA (sem parâmetros)
+    const finalUrlString = CHECKOUT_URL;
     
     // Simular processamento
     await new Promise(resolve => setTimeout(resolve, 2000));
