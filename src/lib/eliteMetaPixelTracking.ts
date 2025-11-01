@@ -111,7 +111,7 @@ async function prepareAdvancedMatching(isColdEvent: boolean = false): Promise<Re
   if (userData?.firstName) matching.fn = userData.firstName.toLowerCase().trim();
   if (userData?.lastName) matching.ln = userData.lastName.toLowerCase().trim();
   
-  // Localizacao
+  // Localizacao (SEMPRE incluir se dispon?vel!)
   if (userData?.city) matching.ct = userData.city.toLowerCase().trim();
   if (userData?.state) matching.st = userData.state.toLowerCase().trim();
   if (userData?.zip) matching.zp = userData.zip.replace(/\D/g, '');
@@ -121,6 +121,24 @@ async function prepareAdvancedMatching(isColdEvent: boolean = false): Promise<Re
   if (metaCookies.fbp) matching.fbp = metaCookies.fbp;
   if (metaCookies.fbc) matching.fbc = metaCookies.fbc;
   if (userData?.external_id) matching.external_id = userData.external_id;
+  
+  // Browser context (adicionar para completude - mesmo em warm events!)
+  matching.fb_device_type = /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+  const ua = navigator.userAgent;
+  if (ua.includes('Chrome') && !ua.includes('Edge')) matching.fb_browser = 'chrome';
+  else if (ua.includes('Firefox')) matching.fb_browser = 'firefox';
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) matching.fb_browser = 'safari';
+  else if (ua.includes('Edge')) matching.fb_browser = 'edge';
+  else matching.fb_browser = 'other';
+  
+  if (ua.includes('Windows')) matching.fb_os = 'windows';
+  else if (ua.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) matching.fb_os = 'macos';
+  else if (ua.includes('Linux') && !ua.includes('Android')) matching.fb_os = 'linux';
+  else if (ua.includes('Android')) matching.fb_os = 'android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) matching.fb_os = 'ios';
+  else matching.fb_os = 'other';
+  
+  matching.fb_language = navigator.language || 'pt-BR';
   
   log('debug', 'Advanced Matching preparado (warm):', {
     fields: Object.keys(matching).length,
