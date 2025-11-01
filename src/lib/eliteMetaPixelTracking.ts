@@ -359,17 +359,24 @@ export async function trackScrollDepthElite(
 }
 
 /**
- * CTAClick (Elite Custom) - COLD EVENT com enrichment automatico
+ * CTAClick (Elite) - Agora usando AddToCart (standard event)
+ * MOTIVO: Eventos custom podem n?o ser enviados pelo Stape CAPIG
+ * AddToCart funciona perfeitamente para tracking de CTAs
  */
 export async function trackCTAClickElite(
   buttonText: string,
   customParams: Record<string, any> = {}
 ) {
-  return trackEliteEvent('CTAClick', {
-    button_text: buttonText,
+  return trackEliteEvent('AddToCart', {
     content_name: `CTA: ${buttonText}`,
+    content_type: 'cta_button',
+    value: 0, // Sem valor monet?rio, apenas tracking de inten??o
+    currency: 'BRL',
+    // Par?metros custom para identificar que ? um CTA
+    cta_type: 'button',
+    cta_text: buttonText,
     ...customParams
-  }, 'custom', { isColdEvent: true });
+  }, 'standard', { isColdEvent: true }); // MUDOU: 'standard' ao inv?s de 'custom'
 }
 
 /**
