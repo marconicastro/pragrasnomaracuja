@@ -37,6 +37,14 @@ export interface UserTrackingData {
   utmLastCampaign?: string;
   utmTouchCount?: number;
   utmChannels?: string; // comma-separated
+  // Facebook Native Parameters (dados ricos)
+  fb_campaign_id?: string;
+  fb_campaign_name?: string;
+  fb_adset_id?: string;
+  fb_adset_name?: string;
+  fb_ad_id?: string;
+  fb_ad_name?: string;
+  fb_placement?: string;
   // Timestamps
   createdAt: number;
   updatedAt: number;

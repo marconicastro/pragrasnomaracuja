@@ -247,7 +247,15 @@ export default function App() {
           utmLastMedium: utmAttribution?.lastTouch.utm_medium,
           utmLastCampaign: utmAttribution?.lastTouch.utm_campaign,
           utmTouchCount: utmAttribution?.touchCount,
-          utmChannels: utmAttribution?.channels.join(',')
+          utmChannels: utmAttribution?.channels.join(','),
+          // Facebook Native Parameters (dados ricos)
+          fb_campaign_id: utmAttribution?.lastTouch.fb_campaign_id,
+          fb_campaign_name: utmAttribution?.lastTouch.fb_campaign_name,
+          fb_adset_id: utmAttribution?.lastTouch.fb_adset_id,
+          fb_adset_name: utmAttribution?.lastTouch.fb_adset_name,
+          fb_ad_id: utmAttribution?.lastTouch.fb_ad_id,
+          fb_ad_name: utmAttribution?.lastTouch.fb_ad_name,
+          fb_placement: utmAttribution?.lastTouch.fb_placement
         })
       });
       
@@ -397,13 +405,26 @@ export default function App() {
     const utms = getUTMAttribution();
     
     if (utms) {
+      // UTMs padrão
       if (utms.lastTouch.utm_source) checkoutUrl.searchParams.set('utm_source', utms.lastTouch.utm_source);
       if (utms.lastTouch.utm_medium) checkoutUrl.searchParams.set('utm_medium', utms.lastTouch.utm_medium);
       if (utms.lastTouch.utm_campaign) checkoutUrl.searchParams.set('utm_campaign', utms.lastTouch.utm_campaign);
       if (utms.lastTouch.utm_content) checkoutUrl.searchParams.set('utm_content', utms.lastTouch.utm_content);
       if (utms.lastTouch.utm_term) checkoutUrl.searchParams.set('utm_term', utms.lastTouch.utm_term);
+      if (utms.lastTouch.utm_id) checkoutUrl.searchParams.set('utm_id', utms.lastTouch.utm_id);
+      
+      // Click IDs
       if (utms.lastTouch.fbclid) checkoutUrl.searchParams.set('fbclid', utms.lastTouch.fbclid);
       if (utms.lastTouch.gclid) checkoutUrl.searchParams.set('gclid', utms.lastTouch.gclid);
+      
+      // Facebook Native Parameters (dados ricos)
+      if (utms.lastTouch.fb_campaign_id) checkoutUrl.searchParams.set('fb_campaign_id', utms.lastTouch.fb_campaign_id);
+      if (utms.lastTouch.fb_campaign_name) checkoutUrl.searchParams.set('fb_campaign_name', utms.lastTouch.fb_campaign_name);
+      if (utms.lastTouch.fb_adset_id) checkoutUrl.searchParams.set('fb_adset_id', utms.lastTouch.fb_adset_id);
+      if (utms.lastTouch.fb_adset_name) checkoutUrl.searchParams.set('fb_adset_name', utms.lastTouch.fb_adset_name);
+      if (utms.lastTouch.fb_ad_id) checkoutUrl.searchParams.set('fb_ad_id', utms.lastTouch.fb_ad_id);
+      if (utms.lastTouch.fb_ad_name) checkoutUrl.searchParams.set('fb_ad_name', utms.lastTouch.fb_ad_name);
+      if (utms.lastTouch.fb_placement) checkoutUrl.searchParams.set('fb_placement', utms.lastTouch.fb_placement);
     }
     
     // ===== 5. UX FLOW (redirecionar após pagamento) =====

@@ -18,6 +18,7 @@
 // ===== INTERFACES =====
 
 export interface UTMParameters {
+  // UTMs padr?o (Google Analytics)
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
@@ -25,9 +26,20 @@ export interface UTMParameters {
   utm_term?: string;
   utm_id?: string;
   
-  // Dados adicionais
+  // Click IDs
   gclid?: string;  // Google Ads Click ID
-  fbclid?: string; // Facebook Click ID (j? capturado pelo Meta)
+  fbclid?: string; // Facebook Click ID
+  
+  // Facebook Native Parameters (dados ricos)
+  fb_campaign_id?: string;
+  fb_campaign_name?: string;
+  fb_adset_id?: string;
+  fb_adset_name?: string;
+  fb_ad_id?: string;
+  fb_ad_name?: string;
+  fb_placement?: string;
+  
+  // Contexto
   referrer?: string;
   landing_page?: string;
   timestamp: number;
@@ -115,14 +127,28 @@ export function extractUTMsFromURL(url?: string): UTMParameters | null {
   if (!hasUTM && !hasClickID) return null;
   
   const utms: UTMParameters = {
+    // UTMs padr?o
     utm_source: params.get('utm_source') || undefined,
     utm_medium: params.get('utm_medium') || undefined,
     utm_campaign: params.get('utm_campaign') || undefined,
     utm_content: params.get('utm_content') || undefined,
     utm_term: params.get('utm_term') || undefined,
     utm_id: params.get('utm_id') || undefined,
+    
+    // Click IDs
     gclid: params.get('gclid') || undefined,
     fbclid: params.get('fbclid') || undefined,
+    
+    // Facebook Native Parameters (dados ricos)
+    fb_campaign_id: params.get('fb_campaign_id') || undefined,
+    fb_campaign_name: params.get('fb_campaign_name') || undefined,
+    fb_adset_id: params.get('fb_adset_id') || undefined,
+    fb_adset_name: params.get('fb_adset_name') || undefined,
+    fb_ad_id: params.get('fb_ad_id') || undefined,
+    fb_ad_name: params.get('fb_ad_name') || undefined,
+    fb_placement: params.get('fb_placement') || undefined,
+    
+    // Contexto
     referrer: document.referrer || undefined,
     landing_page: urlObj.pathname + urlObj.search,
     timestamp: Date.now()
