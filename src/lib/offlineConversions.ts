@@ -557,8 +557,9 @@ export async function sendOfflinePurchase(
       
       console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
       
-      // CAPIG com OAuth pode usar formato Meta CAPI padrão (com array data)
+      // CAPIG OAuth: formato híbrido (array + data_source_id)
       const capigPayload = {
+        data_source_id: pixelId,  // CAPIG OAuth precisa!
         data: [{
           event_name: 'Purchase',
           event_time: eventTime,
