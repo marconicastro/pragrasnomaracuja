@@ -289,38 +289,75 @@ export default function App() {
     };
     
     // Se NÃO tiver dados, tentar buscar da API IP agora
+    console.log('📍 Geolocalização antes da API IP:', {
+      hasCity: !!geoData.city,
+      hasState: !!geoData.state,
+      hasZip: !!geoData.zip,
+      city: geoData.city,
+      state: geoData.state,
+      zip: geoData.zip
+    });
+    
     if (!geoData.city || !geoData.state || !geoData.zip) {
+      console.log('🔍 Tentando buscar geolocalização via API IP...');
       try {
         const { getCachedIPGeolocation } = await import('@/lib/coldEventsEnrichment');
         const ipGeo = await getCachedIPGeolocation();
+        
+        console.log('🌍 API IP retornou:', ipGeo);
         
         if (ipGeo) {
           geoData.city = geoData.city || ipGeo.city;
           geoData.state = geoData.state || ipGeo.state;
           geoData.zip = geoData.zip || ipGeo.zip;
           
-          console.log('🌍 Geolocalização capturada via API IP:', ipGeo);
+          console.log('✅ Geolocalização final após merge:', geoData);
+        } else {
+          console.warn('⚠️ API IP retornou null (sem dados)');
         }
       } catch (error) {
-        console.warn('⚠️ Erro ao obter geolocalização via IP:', error);
+        console.error('❌ ERRO ao buscar geolocalização via API IP:', error);
       }
+    } else {
+      console.log('✅ Já tem geolocalização completa (localStorage)');
     }
     
     // Adicionar à URL (se tiver)
+    console.log('🔗 Adicionando à URL:', {
+      zip: geoData.zip ? geoData.zip.replace(/\D/g, '') : 'NÃO TEM',
+      city: geoData.city || 'NÃO TEM',
+      state: geoData.state ? geoData.state.toUpperCase() : 'NÃO TEM'
+    });
+    
     if (geoData.zip) {
-      checkoutUrl.searchParams.set('zip', geoData.zip.replace(/\D/g, ''));
+      const cleanZip = geoData.zip.replace(/\D/g, '');
+      // Adicionar em MÚLTIPLOS formatos (Cakto pode esperar qualquer um)
+      checkoutUrl.searchParams.set('zip', cleanZip);        // Padrão US
+      checkoutUrl.searchParams.set('zipcode', cleanZip);    // Alternativo
+      checkoutUrl.searchParams.set('cep', cleanZip);        // Padrão BR
+      console.log('✅ CEP adicionado em 3 formatos (zip/zipcode/cep):', cleanZip);
+    } else {
+      console.warn('⚠️ CEP não adicionado (vazio)');
     }
     
     if (geoData.city) {
       checkoutUrl.searchParams.set('city', geoData.city);
+      console.log('✅ CITY adicionado:', geoData.city);
+    } else {
+      console.warn('⚠️ CITY não adicionado (vazio)');
     }
     
     if (geoData.state) {
-      checkoutUrl.searchParams.set('state', geoData.state.toUpperCase());
+      const stateUpper = geoData.state.toUpperCase();
+      checkoutUrl.searchParams.set('state', stateUpper);
+      console.log('✅ STATE adicionado:', stateUpper);
+    } else {
+      console.warn('⚠️ STATE não adicionado (vazio)');
     }
     
     // País sempre BR
     checkoutUrl.searchParams.set('country', 'BR');
+    console.log('✅ COUNTRY adicionado: BR');
     
     // ===== 3. META TRACKING (crítico para attribution) =====
     const { getMetaCookies } = await import('@/lib/advancedDataPersistence');
