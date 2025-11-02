@@ -552,113 +552,69 @@ export async function sendOfflinePurchase(
       headers['x-fb-pixel-id'] = pixelId;
       headers['x-pixel-id'] = pixelId;
       
-      // TENTAR FORMATO 1: CAPIG raiz (POST direto na URL base)
-      let stapeEndpoint = stapeUrl;
+      // TENTAR FORMATO 1: CAPIG /events (sabemos que funciona!)
+      let stapeEndpoint = `${stapeUrl}/events`;
       
-      console.log('🔄 Tentativa 1 - CAPIG raiz (POST direto):', stapeEndpoint);
+      console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
+      
+      // CAPIG usa formato simplificado (sem array data)
+      const capigPayload = {
+        pixel_id: pixelId,
+        data_source_id: pixelId,
+        access_token: process.env.META_ACCESS_TOKEN,
+        event_name: 'Purchase',
+        event_time: eventTime,
+        event_id: eventID,
+        event_source_url: 'https://pay.cakto.com.br',
+        action_source: 'website',
+        user_data,
+        custom_data: customData,
+        test_event_code: testEventCode || undefined
+      };
       
       response = await fetch(stapeEndpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(capigPayload)
       });
       
       if (!response.ok) {
         const errorText = await response.text();
         console.warn(`❌ Tentativa 1 falhou: ${response.status} - ${errorText}`);
         
-        // TENTAR FORMATO 2: CAPIG /events (formato CAPIG simplificado)
-        stapeEndpoint = `${stapeUrl}/events`;
-        console.log('🔄 Tentativa 2 - CAPIG /events (formato simplificado):', stapeEndpoint);
+        // TENTAR FORMATO 2: sa.stape.co com identifier (alternativo)
+        const stapeBaseUrl = 'https://sa.stape.co';
+        stapeEndpoint = `${stapeBaseUrl}/stape-api/${capigIdentifier}/v1/facebook`;
         
-        // CAPIG pode usar formato simplificado (sem array data)
-        const capigPayload = {
-          pixel_id: pixelId,
-          data_source_id: pixelId,
-          access_token: process.env.META_ACCESS_TOKEN,
-          event_name: 'Purchase',
-          event_time: eventTime,
-          event_id: eventID,
-          event_source_url: 'https://pay.cakto.com.br',
-          action_source: 'website',
-          user_data,
-          custom_data: customData,
-          test_event_code: testEventCode || undefined
-        };
+        console.log('🔄 Tentativa 2 - Stape API com identifier:', stapeEndpoint);
         
         response = await fetch(stapeEndpoint, {
           method: 'POST',
           headers,
-          body: JSON.stringify(capigPayload)
+          body: JSON.stringify(payload) // Formato Meta CAPI (com array)
         });
         
         if (!response.ok) {
           const errorText2 = await response.text();
           console.warn(`❌ Tentativa 2 falhou: ${response.status} - ${errorText2}`);
           
-          // TENTAR FORMATO 3: Custom domain (se diferente)
-          if (stapeUrl !== 'https://capig.stape.pm') {
-            stapeEndpoint = `${stapeUrl}/facebook`;
-            console.log('🔄 Tentativa 3 - Custom domain:', stapeEndpoint);
+          // TENTAR FORMATO 3: sGTM container (se tiver tag Facebook CAPI)
+          const sgtmUrl = 'https://event.maracujazeropragas.com';
+          stapeEndpoint = `${sgtmUrl}/facebook`;
+          console.log('🔄 Tentativa 3 - sGTM container:', stapeEndpoint);
+          
+          response = await fetch(stapeEndpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+            const errorText3 = await response.text();
+            console.warn(`❌ Tentativa 3 falhou: ${response.status} - ${errorText3}`);
             
-            response = await fetch(stapeEndpoint, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify(payload)
-            });
-            
-            if (!response.ok) {
-              const errorText3 = await response.text();
-              console.warn(`❌ Tentativa 3 falhou: ${response.status} - ${errorText3}`);
-              
-              // TENTAR FORMATO 4: CAPIG /conversions
-              stapeEndpoint = `${stapeUrl}/conversions`;
-              console.log('🔄 Tentativa 4 - CAPIG /conversions:', stapeEndpoint);
-              
-              response = await fetch(stapeEndpoint, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload)
-              });
-              
-              if (!response.ok) {
-                const errorText4 = await response.text();
-                console.warn(`❌ Tentativa 4 falhou: ${response.status} - ${errorText4}`);
-                
-                // TENTAR FORMATO 5: sGTM container (se tiver tag Facebook CAPI configurada)
-                const sgtmUrl = 'https://event.maracujazeropragas.com';
-                stapeEndpoint = `${sgtmUrl}/facebook`;
-                console.log('🔄 Tentativa 5 - sGTM container:', stapeEndpoint);
-                
-                response = await fetch(stapeEndpoint, {
-                  method: 'POST',
-                  headers,
-                  body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                  const errorText5 = await response.text();
-                  console.warn(`❌ Tentativa 5 falhou: ${response.status} - ${errorText5}`);
-                  
-                  // TENTAR FORMATO 6: CAPIG URL principal /facebook
-                  stapeEndpoint = 'https://capig.stape.pm/facebook';
-                  console.log('🔄 Tentativa 6 - URL principal Stape /facebook:', stapeEndpoint);
-                  
-                  response = await fetch(stapeEndpoint, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(payload)
-                  });
-                  
-                  if (!response.ok) {
-                    error404Details = `Todas 6 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
-                    throw new Error(error404Details);
-                  }
-                }
-              }
-            }
-          } else {
-            error404Details = `Todas tentativas falharam. Último: ${response.status} - ${errorText2}`;
+            // Se todas falharem, lança erro para fallback Meta
+            error404Details = `Todas 3 tentativas falharam. Último: ${response.status} - ${errorText3}`;
             throw new Error(error404Details);
           }
         }
