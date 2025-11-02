@@ -347,6 +347,20 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
           user_data.country = geo.country;
           sources.push('ip_country');
         }
+        
+        // IMPORTANTE: Salvar no localStorage para uso futuro (Lead/Purchase)!
+        // Isso garante que city/state/zip estar?o dispon?veis quando fizer Lead
+        if (geo.city || geo.state || geo.zip) {
+          const { saveAdvancedUserData } = await import('./advancedDataPersistence');
+          saveAdvancedUserData({
+            city: geo.city,
+            state: geo.state,
+            zip: geo.zip,
+            country: geo.country
+          }, false); // Sem consent ainda (s? geo p?blica)
+          
+          console.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
+        }
       }
       // Se API falhar, NAO adiciona nada (ZERO dados fake!)
     } catch (error) {

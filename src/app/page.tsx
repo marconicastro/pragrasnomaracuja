@@ -218,21 +218,40 @@ export default function App() {
       const { getUTMAttribution } = await import('@/lib/utmTracking');
       const utmAttribution = getUTMAttribution();
       
-      // IMPORTANTE: Buscar city/state/zip do localStorage (API IP capturou!)
-      // Modal não pede esses dados, mas API IP já capturou na PageView!
+      // IMPORTANTE: Buscar city/state/zip de MÚLTIPLAS fontes
       console.log('🔍 DEBUG - Fontes de geolocalização:', {
         fromTracking: { city: trackingUserData.city, state: trackingUserData.state, zip: trackingUserData.zip },
         fromLocalStorage: { city: existingUserData?.city, state: existingUserData?.state, zip: existingUserData?.zip }
       });
       
-      const geoData = {
+      let geoData = {
         city: trackingUserData.city || existingUserData?.city,
         state: trackingUserData.state || existingUserData?.state,
         zip: trackingUserData.zip || existingUserData?.zip
       };
       
-      console.log('📍 Geolocalização que será salva no KV:', geoData);
-      console.log('⚠️ ATENÇÃO: Se city/state/zip estiverem undefined, API IP não capturou ou localStorage está vazio!');
+      // Se AINDA não tiver geolocalização, forçar busca da API IP AGORA
+      if (!geoData.city || !geoData.state || !geoData.zip) {
+        console.warn('⚠️ Geolocalização vazia! Forçando busca via API IP...');
+        try {
+          const { getCachedIPGeolocation } = await import('@/lib/coldEventsEnrichment');
+          const ipGeo = await getCachedIPGeolocation();
+          
+          if (ipGeo) {
+            geoData.city = geoData.city || ipGeo.city;
+            geoData.state = geoData.state || ipGeo.state;
+            geoData.zip = geoData.zip || ipGeo.zip;
+            console.log('✅ Geolocalização capturada via API IP (fallback):', ipGeo);
+          } else {
+            console.error('❌ API IP retornou null! Sem geolocalização disponível!');
+          }
+        } catch (error) {
+          console.error('❌ ERRO ao buscar API IP:', error);
+        }
+      }
+      
+      console.log('📍 Geolocalização FINAL que será salva no KV:', geoData);
+      console.log('⚠️ CRÍTICO: Se ainda estiver undefined, DQS será 92 (ao invés de 98)!');
       
       await fetch('/api/save-tracking', {
         method: 'POST',
