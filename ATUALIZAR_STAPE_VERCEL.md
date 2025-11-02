@@ -33,7 +33,7 @@
 
 **Deve estar:** `https://capig.maracujazeropragas.com` (antigo)
 
-**Mude para:** `https://capig.stape.pm` (novo!)
+**Mude para:** `https://capigateway.maracujazeropragas.com` (novo!)
 
 **Como:**
 1. Clique **?** ? **Edit**
@@ -99,7 +99,7 @@
 
 ## ?? ENDPOINTS QUE SER?O TESTADOS:
 
-**Tentativa 1:** `https://capig.stape.pm/facebook`  
+**Tentativa 1:** `https://capigateway.maracujazeropragas.com/facebook`  
 **Tentativa 2:** `https://sa.stape.co/stape-api/kmwitszu/v1/facebook`  
 **Tentativa 3:** Fallback Meta direto (se tudo falhar)
 
