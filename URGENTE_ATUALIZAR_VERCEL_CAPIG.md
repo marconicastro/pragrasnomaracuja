@@ -1,6 +1,6 @@
 # ?? URGENTE: ATUALIZAR URL CAPIG NA VERCEL
 
-**Problema encontrado:** DNS n?o resolve `capig.maracujazeropragas.com`  
+**Problema encontrado:** DNS n?o resolve `[dominio-anterior-dns-erro]`  
 **Solu??o:** Usar `capigateway.maracujazeropragas.com` (funciona!)  
 **A??o:** ATUALIZAR AGORA NA VERCEL!
 
@@ -25,7 +25,7 @@ NEXT_PUBLIC_STAPE_CONTAINER_URL
 
 **? VALOR ERRADO (atual):**
 ```
-https://capig.maracujazeropragas.com
+https://[dominio-anterior-dns-erro]
 ```
 
 **? VALOR CORRETO (novo):**
@@ -149,7 +149,7 @@ curl -I https://capigateway.maracujazeropragas.com
 ## ?? RESUMO:
 
 ```
-? ANTES: capig.maracujazeropragas.com (DNS erro)
+? ANTES: [dominio-anterior-dns-erro] (DNS erro)
 ? AGORA: capigateway.maracujazeropragas.com (funciona!)
 
 ? C?digo: Corrigido e no ar

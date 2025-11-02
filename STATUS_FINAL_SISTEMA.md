@@ -11,7 +11,7 @@
 ### **CAPIG n?o recebia eventos - CAUSA ENCONTRADA:**
 
 ```
-? DNS n?o resolvia: capig.maracujazeropragas.com
+? DNS n?o resolvia: [dominio-anterior-dns-erro]
 ? Corrigido para: capigateway.maracujazeropragas.com (200 OK)
 ```
 
@@ -35,7 +35,7 @@
 2. Settings ? Environment Variables
 3. Editar: NEXT_PUBLIC_STAPE_CONTAINER_URL
 
-? Valor atual: https://capig.maracujazeropragas.com
+? Valor atual: https://[dominio-anterior-dns-erro]
 ? Valor novo: https://capigateway.maracujazeropragas.com
 
 4. Save

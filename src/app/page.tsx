@@ -474,10 +474,7 @@ export default function App() {
     
     console.log('🔗 URL do checkout (padrão mercado - 100% pré-preenchido):', finalUrlString);
     
-    // Simular processamento
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Fechar modal e redirecionar
+    // Fechar modal e redirecionar IMEDIATAMENTE (sem delay!)
     setIsPreCheckoutModalOpen(false);
     window.location.href = finalUrlString;
   };
