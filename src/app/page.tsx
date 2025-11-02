@@ -207,15 +207,26 @@ export default function App() {
     // Disparar evento Lead (ELITE - com advanced matching)
     await trackLeadElite(trackingUserData);
 
-    // Salvar fbp/fbc + ATTRIBUTION no Vercel KV para Offline Conversions (Purchase via webhook)
+    // Salvar fbp/fbc + ATTRIBUTION + GEOLOCALIZAÇÃO no Vercel KV para Offline Conversions (Purchase via webhook)
     try {
-      const { getMetaCookies, getAttributionInsights } = await import('@/lib/advancedDataPersistence');
+      const { getMetaCookies, getAttributionInsights, getAdvancedUserData } = await import('@/lib/advancedDataPersistence');
       const metaCookies = getMetaCookies();
       const attribution = getAttributionInsights();
+      const existingUserData = getAdvancedUserData();
       
       // Obter UTMs (se disponíveis)
       const { getUTMAttribution } = await import('@/lib/utmTracking');
       const utmAttribution = getUTMAttribution();
+      
+      // IMPORTANTE: Buscar city/state/zip do localStorage (API IP capturou!)
+      // Modal não pede esses dados, mas API IP já capturou na PageView!
+      const geoData = {
+        city: trackingUserData.city || existingUserData?.city,
+        state: trackingUserData.state || existingUserData?.state,
+        zip: trackingUserData.zip || existingUserData?.zip
+      };
+      
+      console.log('📍 Geolocalização que será salva no KV:', geoData);
       
       await fetch('/api/save-tracking', {
         method: 'POST',
@@ -227,9 +238,9 @@ export default function App() {
           firstName: trackingUserData.firstName,
           lastName: trackingUserData.lastName,
           phone: trackingUserData.phone,
-          city: trackingUserData.city,
-          state: trackingUserData.state,
-          zip: trackingUserData.zip,
+          city: geoData.city,        // ← Da API IP!
+          state: geoData.state,      // ← Da API IP!
+          zip: geoData.zip,          // ← Da API IP!
           // Attribution data
           attributionJourney: attribution ? JSON.stringify(attribution) : undefined,
           firstTouchSource: attribution?.firstTouch.source,
