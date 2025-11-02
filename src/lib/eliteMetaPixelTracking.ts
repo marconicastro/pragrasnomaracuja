@@ -520,29 +520,18 @@ export async function trackInitiateCheckoutElite(
     country: 'br'
   }, true);
   
-  // Calcular valor total (base + order bump)
+  // Valor base (padr?o: 39.9)
+  // Suporta valor din?mico via orderDetails (para quando tiver order bump na Cakto)
   const BASE_VALUE = 39.9;
-  const totalValue = orderDetails?.value || BASE_VALUE;
-  const numItems = orderDetails?.items?.length || 1;
+  const finalValue = orderDetails?.value || BASE_VALUE;
   
   return trackEliteEvent('InitiateCheckout', {
-    // ===== VALORES DIN?MICOS =====
-    value: totalValue,                                    // Valor total (base + order bump)
+    value: finalValue,                                    // Valor (suporta din?mico)
     currency: 'BRL',
-    
-    // ===== CONTE?DO =====
-    content_ids: orderDetails?.items || ['hacr962'],      // IDs dos produtos
+    content_ids: orderDetails?.items || ['hacr962'],
     content_type: 'product',
-    content_name: orderDetails?.hasOrderBump 
-      ? 'Sistema 4 Fases + Order Bump' 
-      : 'Sistema 4 Fases - Ebook Trips',
-    num_items: numItems,                                  // Quantidade de itens
-    
-    // ===== ORDER BUMP (Custom Params para an?lise) =====
-    has_order_bump: orderDetails?.hasOrderBump || false,  // Flag order bump
-    order_bump_value: orderDetails?.orderBumpValue || 0,  // Valor do bump
-    base_value: BASE_VALUE,                               // Valor base (refer?ncia)
-    
+    content_name: 'Sistema 4 Fases - Ebook Trips',
+    num_items: orderDetails?.items?.length || 1,
     ...customParams
   }, 'standard');
 }

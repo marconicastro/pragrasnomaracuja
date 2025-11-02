@@ -175,19 +175,6 @@ export default function App() {
     // Formatação rápida do telefone
     const phoneClean = formData.phone.replace(/\D/g, '');
     
-    // Calcular valor dinâmico baseado no Order Bump
-    const BASE_VALUE = 39.9;
-    const ORDER_BUMP_VALUE = 19.9;
-    const hasOrderBump = formData.orderBump === true;
-    const totalValue = hasOrderBump ? BASE_VALUE + ORDER_BUMP_VALUE : BASE_VALUE;
-    
-    console.log('💰 Order Bump:', {
-      hasOrderBump,
-      baseValue: BASE_VALUE,
-      orderBumpValue: ORDER_BUMP_VALUE,
-      totalValue
-    });
-    
     // Salvar dados PERSISTENTEMENTE (com consentimento implícito ao preencher formulário)
     const userDataToSave = {
       email: formData.email,
@@ -269,16 +256,10 @@ export default function App() {
       console.error('⚠️ Erro ao salvar tracking (não bloqueia fluxo):', error);
     }
 
-    // Disparar evento InitiateCheckout (ELITE - com valor DINÂMICO!)
-    await trackInitiateCheckoutElite(
-      trackingUserData,
-      {
-        value: totalValue,
-        hasOrderBump: hasOrderBump,
-        orderBumpValue: hasOrderBump ? ORDER_BUMP_VALUE : 0,
-        items: hasOrderBump ? ['hacr962', 'hacr962_bump'] : ['hacr962']
-      }
-    );
+    // Disparar evento InitiateCheckout (ELITE)
+    // NOTA: Valor é fixo aqui (39.9), mas a função suporta valor dinâmico
+    // quando o cliente escolher order bump na Cakto
+    await trackInitiateCheckoutElite(trackingUserData);
 
     // URL do checkout LIMPA (sem parâmetros)
     const finalUrlString = CHECKOUT_URL;
