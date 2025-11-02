@@ -47,6 +47,9 @@ export interface UserTrackingData {
   fb_placement?: string;
   // External ID (session) - Meta Match Quality
   external_id?: string;
+  // IP e User Agent (CR?TICO para EQM - +3.36% convers?es!)
+  client_ip_address?: string;
+  client_user_agent?: string;
   // Timestamps
   createdAt: number;
   updatedAt: number;

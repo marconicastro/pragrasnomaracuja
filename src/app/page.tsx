@@ -293,7 +293,9 @@ export default function App() {
           fb_ad_name: utmAttribution?.lastTouch.fb_ad_name,
           fb_placement: utmAttribution?.lastTouch.fb_placement,
           // External ID (session) - +0.22% conversões
-          external_id: existingUserData?.sessionId || existingUserData?.external_id
+          external_id: existingUserData?.sessionId || existingUserData?.external_id,
+          // User Agent - +1.68% conversões! (CRÍTICO)
+          client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
         })
       });
       

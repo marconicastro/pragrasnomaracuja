@@ -330,11 +330,14 @@ export async function sendOfflinePurchase(
     fbc?: string;
     firstName?: string;
     lastName?: string;
-  phone?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  country?: string;
+    phone?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+    // +3.36% conversões adicionais! (CRÍTICO)
+    client_ip_address?: string;
+    client_user_agent?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
   
@@ -430,6 +433,7 @@ export async function sendOfflinePurchase(
     if (user_data.country) dataQualityScore += 2; // Country
     if (user_data.fbp) dataQualityScore += 20; // CRÍTICO!
     if (user_data.fbc) dataQualityScore += 20; // CRÍTICO!
+    // IP e UA não contam no DQS, mas melhoram EQM (+3.36%!)
     
     // Test Event Code (opcional - para aparecer em Test Events do Meta)
     const testEventCode = process.env.META_TEST_EVENT_CODE;
