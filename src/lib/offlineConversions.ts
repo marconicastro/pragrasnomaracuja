@@ -488,8 +488,10 @@ export async function sendOfflinePurchase(
     if (userData.fbc) customData.fb_has_fbc = true;
     
     const payload: any = {
-      // CAPIG precisa de pixel_id no payload (não na URL!)
+      // CAPIG pode esperar: pixel_id, data_source_id, ou ambos
       pixel_id: pixelId,
+      data_source_id: pixelId,
+      access_token: process.env.META_ACCESS_TOKEN, // Alguns CAPIGs pedem aqui
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
@@ -542,8 +544,13 @@ export async function sendOfflinePurchase(
       
       if (capigApiKey) {
         headers['Authorization'] = `Bearer ${capigApiKey}`;
-        console.log('🔑 CAPIG API Key incluída (Authorization header)');
+        headers['x-stape-capig-key'] = capigApiKey; // Stape pode usar este header
+        console.log('🔑 CAPIG API Key incluída (Authorization + x-stape-capig-key)');
       }
+      
+      // Alguns CAPIGs pedem pixel_id no header também
+      headers['x-fb-pixel-id'] = pixelId;
+      headers['x-pixel-id'] = pixelId;
       
       // TENTAR FORMATO 1: CAPIG raiz (POST direto na URL base)
       let stapeEndpoint = stapeUrl;
