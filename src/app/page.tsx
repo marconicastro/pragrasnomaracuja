@@ -268,30 +268,58 @@ export default function App() {
     // ===== 1. DADOS PESSOAIS (100% do mercado passa) =====
     checkoutUrl.searchParams.set('name', cleanFullName);
     checkoutUrl.searchParams.set('email', formData.email);
-    checkoutUrl.searchParams.set('phone', phoneClean);
+    
+    // TELEFONE: Adicionar DDI +55 (Brasil) para Cakto reconhecer corretamente
+    const phoneWithDDI = phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`;
+    checkoutUrl.searchParams.set('phone', phoneWithDDI);
     
     // ===== 2. GEOLOCALIZAÇÃO (100% do mercado passa) =====
-    // Fonte: dados já capturados (API IP ou formulário)
-    // Benefício: Checkout 100% pré-preenchido, dados consistentes, menos erros
+    // Busca de MÚLTIPLAS fontes (prioridade):
+    // 1. localStorage (se já capturou antes)
+    // 2. API IP (se não tiver no localStorage)
+    
     const { getAdvancedUserData } = await import('@/lib/advancedDataPersistence');
     const existingData = getAdvancedUserData();
     
-    if (existingData?.zip || trackingUserData.zip) {
-      const zip = trackingUserData.zip || existingData?.zip;
-      checkoutUrl.searchParams.set('zip', zip.replace(/\D/g, '')); // Remove hífen/espaços
+    // Tentar obter geolocalização (localStorage ou API IP)
+    let geoData = {
+      city: existingData?.city || trackingUserData.city,
+      state: existingData?.state || trackingUserData.state,
+      zip: existingData?.zip || trackingUserData.zip
+    };
+    
+    // Se NÃO tiver dados, tentar buscar da API IP agora
+    if (!geoData.city || !geoData.state || !geoData.zip) {
+      try {
+        const { getCachedIPGeolocation } = await import('@/lib/coldEventsEnrichment');
+        const ipGeo = await getCachedIPGeolocation();
+        
+        if (ipGeo) {
+          geoData.city = geoData.city || ipGeo.city;
+          geoData.state = geoData.state || ipGeo.state;
+          geoData.zip = geoData.zip || ipGeo.zip;
+          
+          console.log('🌍 Geolocalização capturada via API IP:', ipGeo);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao obter geolocalização via IP:', error);
+      }
     }
     
-    if (existingData?.city || trackingUserData.city) {
-      const city = trackingUserData.city || existingData?.city;
-      checkoutUrl.searchParams.set('city', city);
+    // Adicionar à URL (se tiver)
+    if (geoData.zip) {
+      checkoutUrl.searchParams.set('zip', geoData.zip.replace(/\D/g, ''));
     }
     
-    if (existingData?.state || trackingUserData.state) {
-      const state = trackingUserData.state || existingData?.state;
-      checkoutUrl.searchParams.set('state', state.toUpperCase()); // Sigla maiúscula (padrão)
+    if (geoData.city) {
+      checkoutUrl.searchParams.set('city', geoData.city);
     }
     
-    // País sempre BR (99% dos casos)
+    if (geoData.state) {
+      checkoutUrl.searchParams.set('state', geoData.state.toUpperCase());
+    }
+    
+    // País sempre BR
     checkoutUrl.searchParams.set('country', 'BR');
     
     // ===== 3. META TRACKING (crítico para attribution) =====
