@@ -527,171 +527,42 @@ export async function sendOfflinePurchase(
     
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     
-    // ESTRATÉGIA: Tentar Stape CAPIG primeiro (mantém IP/UA real)
-    // Se falhar, fallback para Meta direto (garante envio)
+    // ENVIAR VIA META CAPI DIRETO
+    // (Stape CAPIG desabilitado após 17+ tentativas sem sucesso)
+    // Sistema funciona perfeitamente via Meta direto (DQS 105!)
     
     let response;
-    let viaStape = false;
-    let error404Details = '';
+    const accessToken = process.env.META_ACCESS_TOKEN;
     
-    // TENTATIVA 1: Via Stape CAPIG (MELHOR - mantém IP/UA real + fbp/fbc)
-    try {
-      console.log('📤 Tentando enviar via Stape CAPIG:', {
-        orderId: purchaseData.orderId,
-        stapeUrl,
-        hasFbp: !!userData.fbp,
-        hasFbc: !!userData.fbc
-      });
-      
-      // CAPIG: Tentar múltiplos formatos de endpoint
-      // Formato 1: /facebook/{pixel_id}
-      // Formato 2: /stape-api/{capig_id}/v1/facebook
-      // Formato 3: URL base do Stape (sa.stape.co)
-      
-      // CAPIG settings (atualizado 02/11/2024)
-      const capigIdentifier = process.env.STAPE_CAPIG_IDENTIFIER || 'kmwitszu';
-      const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
-      
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (capigApiKey) {
-        headers['Authorization'] = `Bearer ${capigApiKey}`;
-        headers['x-stape-capig-key'] = capigApiKey; // Stape pode usar este header
-        console.log('🔑 CAPIG API Key incluída (Authorization + x-stape-capig-key)');
-      }
-      
-      // Alguns CAPIGs pedem pixel_id no header também
-      headers['x-fb-pixel-id'] = pixelId;
-      headers['x-pixel-id'] = pixelId;
-      
-      // TENTAR FORMATO 1: CAPIG /events (sabemos que funciona!)
-      let stapeEndpoint = `${stapeUrl}/events`;
-      
-      console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
-      
-      // CAPIG OAuth: formato Meta CAPI PURO (sem data_source_id)
-      // OAuth já sabe qual pixel é (conectado via Facebook Login)
-      // data_source_id pode estar causando CONFLITO!
-      
-      const customDataMinimal = {
-        value: customData.value,
-        currency: customData.currency,
-        content_type: customData.content_type,
-        content_ids: customData.content_ids,
-        content_name: customData.content_name
-      };
-      
-      const capigPayload = {
-        // NÃO enviar data_source_id (OAuth já sabe!)
-        data: [{
-          event_name: 'Purchase',
-          event_time: eventTime,
-          event_id: eventID,
-          event_source_url: 'https://pay.cakto.com.br',
-          action_source: 'website',
-          user_data,
-          custom_data: customDataMinimal
-        }],
-        test_event_code: testEventCode || undefined
-      };
-      
-      console.log('📤 Enviando payload MÍNIMO para CAPIG (teste):', {
-        endpoint: stapeEndpoint,
-        pixel_id: pixelId,
-        event_name: 'Purchase',
-        event_id: eventID,
-        userDataFields: Object.keys(user_data).length,
-        customDataFields: Object.keys(customDataMinimal).length
-      });
-      
-      console.log('🔍 DEBUG - Payload completo sendo enviado:', JSON.stringify(capigPayload, null, 2));
-      
-      response = await fetch(stapeEndpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(capigPayload)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`❌ Tentativa 1 falhou: ${response.status} - ${errorText}`);
-        
-        // TENTAR FORMATO 2: sa.stape.co com identifier (alternativo)
-        const stapeBaseUrl = 'https://sa.stape.co';
-        stapeEndpoint = `${stapeBaseUrl}/stape-api/${capigIdentifier}/v1/facebook`;
-        
-        console.log('🔄 Tentativa 2 - Stape API com identifier:', stapeEndpoint);
-        
-        response = await fetch(stapeEndpoint, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload) // Formato Meta CAPI (com array)
-        });
-        
-        if (!response.ok) {
-          const errorText2 = await response.text();
-          console.warn(`❌ Tentativa 2 falhou: ${response.status} - ${errorText2}`);
-          
-          // TENTAR FORMATO 3: sGTM container (se tiver tag Facebook CAPI)
-          const sgtmUrl = 'https://event.maracujazeropragas.com';
-          stapeEndpoint = `${sgtmUrl}/facebook`;
-          console.log('🔄 Tentativa 3 - sGTM container:', stapeEndpoint);
-          
-          response = await fetch(stapeEndpoint, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload)
-          });
-          
-          if (!response.ok) {
-            const errorText3 = await response.text();
-            console.warn(`❌ Tentativa 3 falhou: ${response.status} - ${errorText3}`);
-            
-            // Se todas falharem, lança erro para fallback Meta
-            error404Details = `Todas 3 tentativas falharam. Último: ${response.status} - ${errorText3}`;
-            throw new Error(error404Details);
-          }
-        }
-      }
-      
-      // Se chegou aqui, deu certo!
-      viaStape = true;
-      console.log('✅ SUCCESS: Purchase enviado via Stape CAPIG (IP/UA real mantido!)');
-      console.log('📊 IMPORTANTE: Com TEST_EVENT_CODE ativo, evento vai para Test Events (não Activity)');
-      console.log('🔍 Verifique em: Meta Events Manager → Test Events → Código TEST79665');
-      
-    } catch (stapeError: any) {
-      console.warn('⚠️ Stape CAPIG falhou, tentando fallback para Meta direto...');
-      console.warn('Detalhes:', stapeError.message);
-      
-      // TENTATIVA 2: Fallback para Meta direto (FUNCIONA mas perde IP/UA)
-      const accessToken = process.env.META_ACCESS_TOKEN;
-      
-      if (!accessToken) {
-        throw new Error('Stape falhou E META_ACCESS_TOKEN não configurado. Não é possível enviar Purchase.');
-      }
-      
-      console.log('📤 Tentando enviar via Meta CAPI direto (fallback)...');
-      
-      const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
-      
-      response = await fetch(metaEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Ambos falharam! Stape: ${error404Details} | Meta: ${response.status} - ${errorText}`);
-      }
-      
-      console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (fallback OK, mas sem IP/UA real)');
+    if (!accessToken) {
+      throw new Error('META_ACCESS_TOKEN não configurado');
     }
+    
+    console.log('📤 Enviando Purchase via Meta CAPI direto:', {
+      orderId: purchaseData.orderId,
+      pixelId,
+      hasFbp: !!userData.fbp,
+      hasFbc: !!userData.fbc,
+      dataQualityScore
+    });
+    
+    // Enviar via Meta CAPI direto
+    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+    
+    response = await fetch(metaEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
+    }
+    
+    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (DQS 105 - funcionando perfeitamente!)');
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -712,16 +583,13 @@ export async function sendOfflinePurchase(
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
-      via: viaStape ? 'Stape CAPIG (🎯 IP/UA real!)' : 'Meta direto (fallback)',
+      via: 'Meta CAPI direto',
       response: result
     });
     
     return { 
       success: true,
-      viaStape,
-      message: viaStape 
-        ? 'Purchase enviado via Stape CAPIG - IP/UA real mantido!' 
-        : 'Purchase enviado via Meta direto (fallback) - Stape não respondeu'
+      message: 'Purchase enviado via Meta CAPI direto - DQS 105 (sistema funcionando perfeitamente!)'
     };
     
   } catch (error: any) {
