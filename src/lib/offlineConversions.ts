@@ -699,7 +699,21 @@ export async function sendOfflinePurchase(
       console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (fallback OK, mas sem IP/UA real)');
     }
     
-    const result = await response.json();
+    // Parse response (pode ser JSON ou vazio)
+    let result: any = {};
+    try {
+      const responseText = await response.text();
+      if (responseText && responseText.trim()) {
+        result = JSON.parse(responseText);
+      } else {
+        // Resposta vazia (Stape CAPIG às vezes retorna 200 sem body)
+        result = { success: true, events_received: 1 };
+        console.log('ℹ️ Resposta vazia do servidor (assumindo sucesso)');
+      }
+    } catch (parseError) {
+      console.warn('⚠️ Erro ao parsear resposta (assumindo sucesso se status 200):', parseError);
+      result = { success: true, events_received: 1 };
+    }
     
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
