@@ -29,7 +29,7 @@ interface MetaPixelStapeProps {
 
 export default function MetaPixelStape({ 
   pixelId = '642933108377475',
-  stapeContainerUrl = 'https://capig.maracujazeropragas.com'
+  stapeContainerUrl = 'https://capigateway.maracujazeropragas.com'
 }: MetaPixelStapeProps) {
   
   useEffect(() => {

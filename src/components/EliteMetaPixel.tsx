@@ -31,7 +31,7 @@ interface EliteMetaPixelProps {
 
 export default function EliteMetaPixel({ 
   pixelId = '642933108377475',
-  stapeContainerUrl = 'https://capig.maracujazeropragas.com'
+  stapeContainerUrl = 'https://capigateway.maracujazeropragas.com'
 }: EliteMetaPixelProps) {
   
   useEffect(() => {
