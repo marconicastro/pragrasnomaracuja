@@ -488,6 +488,8 @@ export async function sendOfflinePurchase(
     if (userData.fbc) customData.fb_has_fbc = true;
     
     const payload: any = {
+      // CAPIG precisa de pixel_id no payload (não na URL!)
+      pixel_id: pixelId,
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
@@ -504,6 +506,8 @@ export async function sendOfflinePurchase(
       payload.test_event_code = testEventCode;
       console.log('🧪 Test Event Code ativado:', testEventCode);
     }
+    
+    console.log('📦 Payload preparado com pixel_id:', pixelId);
     
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     
