@@ -373,7 +373,21 @@ export async function sendOfflinePurchase(
     
     // Adicionar dados persistidos (CR?TICO para atribui??o!)
     if (userData.fbp) user_data.fbp = userData.fbp;
-    if (userData.fbc) user_data.fbc = userData.fbc;
+    
+    // fbc: VALIDAR antes de enviar (Meta rejeita fbc fake/modificado!)
+    // fbc válido: fb.1.[timestamp].[fbclid real do Facebook]
+    // Se fbc tiver caracteres inválidos ou for muito curto = FAKE!
+    if (userData.fbc) {
+      // Validar formato básico: fb.1.timestamp.fbclid
+      const fbcParts = userData.fbc.split('.');
+      if (fbcParts.length >= 4 && fbcParts[0] === 'fb' && fbcParts[1] === '1') {
+        // fbc parece válido
+        user_data.fbc = userData.fbc;
+      } else {
+        console.warn('⚠️ fbc inválido detectado (não enviando para evitar erro Meta):', userData.fbc);
+        // NÃO adicionar fbc inválido!
+      }
+    }
     
     // External ID (session) - NÃO hashear (conforme doc Meta)
     // Ganho: +0.22% conversões adicionais
