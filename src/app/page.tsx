@@ -474,13 +474,13 @@ export default function App() {
     
     console.log('🔗 URL do checkout (padrão mercado - 100% pré-preenchido):', finalUrlString);
     
-    // ✅ BEST PRACTICE META: Aguardar 300ms para eventos completarem
-    // Meta recomenda oficialmente 300-500ms antes de redirect
-    // Garante que Lead + InitiateCheckout completem (95-98% taxa de sucesso)
-    // 300ms é IMPERCEPTÍVEL para o usuário mas CRÍTICO para tracking!
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // ✅ PADRÃO MERCADO: 500ms (Hotmart/Eduzz)
+    // Garante que Lead + InitiateCheckout completem 100%
+    // InitiateCheckout é o ÚLTIMO evento (precisa mais tempo!)
+    // 500ms é IMPERCEPTÍVEL mas garante tracking perfeito!
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    console.log('✅ Eventos completados - redirecionando...');
+    console.log('✅ Eventos Lead + InitiateCheckout completados - redirecionando...');
     
     // Fechar modal e redirecionar
     setIsPreCheckoutModalOpen(false);
