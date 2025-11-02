@@ -567,14 +567,29 @@ export async function sendOfflinePurchase(
         const errorText = await response.text();
         console.warn(`❌ Tentativa 1 falhou: ${response.status} - ${errorText}`);
         
-        // TENTAR FORMATO 2: CAPIG /events
+        // TENTAR FORMATO 2: CAPIG /events (formato CAPIG simplificado)
         stapeEndpoint = `${stapeUrl}/events`;
-        console.log('🔄 Tentativa 2 - CAPIG /events:', stapeEndpoint);
+        console.log('🔄 Tentativa 2 - CAPIG /events (formato simplificado):', stapeEndpoint);
+        
+        // CAPIG pode usar formato simplificado (sem array data)
+        const capigPayload = {
+          pixel_id: pixelId,
+          data_source_id: pixelId,
+          access_token: process.env.META_ACCESS_TOKEN,
+          event_name: 'Purchase',
+          event_time: eventTime,
+          event_id: eventID,
+          event_source_url: 'https://pay.cakto.com.br',
+          action_source: 'website',
+          user_data,
+          custom_data: customData,
+          test_event_code: testEventCode || undefined
+        };
         
         response = await fetch(stapeEndpoint, {
           method: 'POST',
           headers,
-          body: JSON.stringify(payload)
+          body: JSON.stringify(capigPayload)
         });
         
         if (!response.ok) {
