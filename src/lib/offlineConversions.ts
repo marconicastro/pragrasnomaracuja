@@ -339,6 +339,18 @@ export async function sendOfflinePurchase(
 ): Promise<{ success: boolean; error?: string }> {
   
   try {
+    // DEBUG: Ver exatamente o que recebemos do KV
+    console.log('🔍 DEBUG - userData recebido do KV:', {
+      hasFbp: !!userData.fbp,
+      hasFbc: !!userData.fbc,
+      hasCity: !!userData.city,
+      hasState: !!userData.state,
+      hasZip: !!userData.zip,
+      city: userData.city,
+      state: userData.state,
+      zip: userData.zip
+    });
+    
     const stapeUrl = process.env.NEXT_PUBLIC_STAPE_CONTAINER_URL;
     const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
     

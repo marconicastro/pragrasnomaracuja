@@ -80,7 +80,13 @@ export async function saveUserTracking(data: Omit<UserTrackingData, 'createdAt' 
       console.log('? User tracking salvo no Vercel KV:', {
         email: data.email,
         hasFbp: !!data.fbp,
-        hasFbc: !!data.fbc
+        hasFbc: !!data.fbc,
+        hasCity: !!data.city,
+        hasState: !!data.state,
+        hasZip: !!data.zip,
+        city: data.city,
+        state: data.state,
+        zip: data.zip
       });
       
       return true;

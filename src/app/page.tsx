@@ -220,6 +220,11 @@ export default function App() {
       
       // IMPORTANTE: Buscar city/state/zip do localStorage (API IP capturou!)
       // Modal não pede esses dados, mas API IP já capturou na PageView!
+      console.log('🔍 DEBUG - Fontes de geolocalização:', {
+        fromTracking: { city: trackingUserData.city, state: trackingUserData.state, zip: trackingUserData.zip },
+        fromLocalStorage: { city: existingUserData?.city, state: existingUserData?.state, zip: existingUserData?.zip }
+      });
+      
       const geoData = {
         city: trackingUserData.city || existingUserData?.city,
         state: trackingUserData.state || existingUserData?.state,
@@ -227,6 +232,7 @@ export default function App() {
       };
       
       console.log('📍 Geolocalização que será salva no KV:', geoData);
+      console.log('⚠️ ATENÇÃO: Se city/state/zip estiverem undefined, API IP não capturou ou localStorage está vazio!');
       
       await fetch('/api/save-tracking', {
         method: 'POST',
