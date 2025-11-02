@@ -557,16 +557,17 @@ export async function sendOfflinePurchase(
       
       console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
       
-      // CAPIG usa formato simplificado (sem array data)
+      // CAPIG com OAuth pode usar formato Meta CAPI padrão (com array data)
       const capigPayload = {
-        data_source_id: pixelId,  // CAPIG PRECISA deste campo!
-        event_name: 'Purchase',
-        event_time: eventTime,
-        event_id: eventID,
-        event_source_url: 'https://pay.cakto.com.br',
-        action_source: 'website',
-        user_data,
-        custom_data: customData,
+        data: [{
+          event_name: 'Purchase',
+          event_time: eventTime,
+          event_id: eventID,
+          event_source_url: 'https://pay.cakto.com.br',
+          action_source: 'website',
+          user_data,
+          custom_data: customData
+        }],
         test_event_code: testEventCode || undefined
       };
       
