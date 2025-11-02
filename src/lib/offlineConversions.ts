@@ -557,8 +557,10 @@ export async function sendOfflinePurchase(
       
       console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
       
-      // CAPIG OAuth: testar formato MÍNIMO primeiro (descobrir campo problemático)
-      // Remover custom_data complexo e test_event_code (podem estar causando erro)
+      // CAPIG OAuth: formato Meta CAPI PURO (sem data_source_id)
+      // OAuth já sabe qual pixel é (conectado via Facebook Login)
+      // data_source_id pode estar causando CONFLITO!
+      
       const customDataMinimal = {
         value: customData.value,
         currency: customData.currency,
@@ -568,7 +570,7 @@ export async function sendOfflinePurchase(
       };
       
       const capigPayload = {
-        data_source_id: pixelId,
+        // NÃO enviar data_source_id (OAuth já sabe!)
         data: [{
           event_name: 'Purchase',
           event_time: eventTime,
@@ -576,9 +578,9 @@ export async function sendOfflinePurchase(
           event_source_url: 'https://pay.cakto.com.br',
           action_source: 'website',
           user_data,
-          custom_data: customDataMinimal  // Mínimo primeiro!
-        }]
-        // test_event_code pode estar causando erro, testar sem
+          custom_data: customDataMinimal
+        }],
+        test_event_code: testEventCode || undefined
       };
       
       console.log('📤 Enviando payload MÍNIMO para CAPIG (teste):', {
