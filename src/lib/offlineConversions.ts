@@ -541,10 +541,10 @@ export async function sendOfflinePurchase(
         console.log('🔑 CAPIG API Key incluída (Authorization header)');
       }
       
-      // TENTAR FORMATO 1: CAPIG URL direta (recomendado)
-      let stapeEndpoint = `${stapeUrl}/facebook`;
+      // TENTAR FORMATO 1: CAPIG raiz (POST direto na URL base)
+      let stapeEndpoint = stapeUrl;
       
-      console.log('🔄 Tentativa 1 - CAPIG URL:', stapeEndpoint);
+      console.log('🔄 Tentativa 1 - CAPIG raiz (POST direto):', stapeEndpoint);
       
       response = await fetch(stapeEndpoint, {
         method: 'POST',
@@ -556,11 +556,9 @@ export async function sendOfflinePurchase(
         const errorText = await response.text();
         console.warn(`❌ Tentativa 1 falhou: ${response.status} - ${errorText}`);
         
-        // TENTAR FORMATO 2: sa.stape.co com identifier
-        const stapeBaseUrl = 'https://sa.stape.co';
-        stapeEndpoint = `${stapeBaseUrl}/stape-api/${capigIdentifier}/v1/facebook`;
-        
-        console.log('🔄 Tentativa 2 - Stape API com identifier:', stapeEndpoint);
+        // TENTAR FORMATO 2: CAPIG /events
+        stapeEndpoint = `${stapeUrl}/events`;
+        console.log('🔄 Tentativa 2 - CAPIG /events:', stapeEndpoint);
         
         response = await fetch(stapeEndpoint, {
           method: 'POST',
@@ -587,10 +585,9 @@ export async function sendOfflinePurchase(
               const errorText3 = await response.text();
               console.warn(`❌ Tentativa 3 falhou: ${response.status} - ${errorText3}`);
               
-              // TENTAR FORMATO 4: sGTM container (se tiver tag Facebook CAPI configurada)
-              const sgtmUrl = 'https://event.maracujazeropragas.com';
-              stapeEndpoint = `${sgtmUrl}/facebook`;
-              console.log('🔄 Tentativa 4 - sGTM container:', stapeEndpoint);
+              // TENTAR FORMATO 4: CAPIG /conversions
+              stapeEndpoint = `${stapeUrl}/conversions`;
+              console.log('🔄 Tentativa 4 - CAPIG /conversions:', stapeEndpoint);
               
               response = await fetch(stapeEndpoint, {
                 method: 'POST',
@@ -599,8 +596,39 @@ export async function sendOfflinePurchase(
               });
               
               if (!response.ok) {
-                error404Details = `Todas 4 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
-                throw new Error(error404Details);
+                const errorText4 = await response.text();
+                console.warn(`❌ Tentativa 4 falhou: ${response.status} - ${errorText4}`);
+                
+                // TENTAR FORMATO 5: sGTM container (se tiver tag Facebook CAPI configurada)
+                const sgtmUrl = 'https://event.maracujazeropragas.com';
+                stapeEndpoint = `${sgtmUrl}/facebook`;
+                console.log('🔄 Tentativa 5 - sGTM container:', stapeEndpoint);
+                
+                response = await fetch(stapeEndpoint, {
+                  method: 'POST',
+                  headers,
+                  body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                  const errorText5 = await response.text();
+                  console.warn(`❌ Tentativa 5 falhou: ${response.status} - ${errorText5}`);
+                  
+                  // TENTAR FORMATO 6: CAPIG URL principal /facebook
+                  stapeEndpoint = 'https://capig.stape.pm/facebook';
+                  console.log('🔄 Tentativa 6 - URL principal Stape /facebook:', stapeEndpoint);
+                  
+                  response = await fetch(stapeEndpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                  });
+                  
+                  if (!response.ok) {
+                    error404Details = `Todas 6 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
+                    throw new Error(error404Details);
+                  }
+                }
               }
             }
           } else {
