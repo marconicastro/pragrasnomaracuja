@@ -408,6 +408,22 @@ export async function sendOfflinePurchase(
     // Pa?s sempre BR (DEVE HASHEAR!)
     user_data.country = hashSHA256('br');
     
+    // ✅ IP e User Agent - +3.36% conversões! (CRÍTICO para EQM)
+    // Esses campos NÃO são hasheados (conforme doc Meta)
+    if (userData.client_ip_address) {
+      user_data.client_ip_address = userData.client_ip_address;
+      console.log('📍 IP adicionado:', userData.client_ip_address);
+    } else {
+      console.warn('⚠️ IP ausente (impacto: -1.68% conversões)');
+    }
+    
+    if (userData.client_user_agent) {
+      user_data.client_user_agent = userData.client_user_agent;
+      console.log('🖥️ User Agent adicionado:', userData.client_user_agent.substring(0, 50) + '...');
+    } else {
+      console.warn('⚠️ User Agent ausente (impacto: -1.68% conversões)');
+    }
+    
     // Preparar evento - SEMPRE usar timestamp ATUAL (melhor prática)
     // Para eventos server-side, o ideal é enviar o timestamp de quando o webhook é processado
     const now = Math.floor(Date.now() / 1000);
