@@ -572,6 +572,16 @@ export async function sendOfflinePurchase(
         test_event_code: testEventCode || undefined
       };
       
+      console.log('📤 Enviando payload para CAPIG:', {
+        endpoint: stapeEndpoint,
+        pixel_id: pixelId,
+        event_name: 'Purchase',
+        event_id: eventID,
+        hasTestCode: !!testEventCode,
+        userDataFields: Object.keys(user_data).length,
+        customDataFields: Object.keys(customData).length
+      });
+      
       response = await fetch(stapeEndpoint, {
         method: 'POST',
         headers,
@@ -623,6 +633,8 @@ export async function sendOfflinePurchase(
       // Se chegou aqui, deu certo!
       viaStape = true;
       console.log('✅ SUCCESS: Purchase enviado via Stape CAPIG (IP/UA real mantido!)');
+      console.log('📊 IMPORTANTE: Com TEST_EVENT_CODE ativo, evento vai para Test Events (não Activity)');
+      console.log('🔍 Verifique em: Meta Events Manager → Test Events → Código TEST79665');
       
     } catch (stapeError: any) {
       console.warn('⚠️ Stape CAPIG falhou, tentando fallback para Meta direto...');
