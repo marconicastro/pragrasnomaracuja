@@ -584,8 +584,24 @@ export async function sendOfflinePurchase(
             });
             
             if (!response.ok) {
-              error404Details = `Todas 3 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
-              throw new Error(error404Details);
+              const errorText3 = await response.text();
+              console.warn(`❌ Tentativa 3 falhou: ${response.status} - ${errorText3}`);
+              
+              // TENTAR FORMATO 4: sGTM container (se tiver tag Facebook CAPI configurada)
+              const sgtmUrl = 'https://event.maracujazeropragas.com';
+              stapeEndpoint = `${sgtmUrl}/facebook`;
+              console.log('🔄 Tentativa 4 - sGTM container:', stapeEndpoint);
+              
+              response = await fetch(stapeEndpoint, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+              });
+              
+              if (!response.ok) {
+                error404Details = `Todas 4 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
+                throw new Error(error404Details);
+              }
             }
           } else {
             error404Details = `Todas tentativas falharam. Último: ${response.status} - ${errorText2}`;
