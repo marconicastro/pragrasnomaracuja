@@ -257,12 +257,41 @@ export default function App() {
     }
 
     // Disparar evento InitiateCheckout (ELITE)
-    // NOTA: Valor é fixo aqui (39.9), mas a função suporta valor dinâmico
-    // quando o cliente escolher order bump na Cakto
     await trackInitiateCheckoutElite(trackingUserData);
 
-    // URL do checkout LIMPA (sem parâmetros)
-    const finalUrlString = CHECKOUT_URL;
+    // ===== MONTAR URL COM DADOS PARA PRÉ-PREENCHER CHECKOUT =====
+    // (Padrão do mercado: melhor UX + maior conversão!)
+    
+    const checkoutUrl = new URL(CHECKOUT_URL);
+    
+    // Dados do usuário (para pré-preencher checkout)
+    checkoutUrl.searchParams.set('name', cleanFullName);
+    checkoutUrl.searchParams.set('email', formData.email);
+    checkoutUrl.searchParams.set('phone', phoneClean);
+    
+    // Meta cookies (para rastreamento no checkout)
+    const { getMetaCookies } = await import('@/lib/advancedDataPersistence');
+    const metaCookies = getMetaCookies();
+    if (metaCookies.fbp) checkoutUrl.searchParams.set('fbp', metaCookies.fbp);
+    if (metaCookies.fbc) checkoutUrl.searchParams.set('fbc', metaCookies.fbc);
+    
+    // UTMs (para preservar atribuição - CRÍTICO!)
+    const { getUTMAttribution } = await import('@/lib/utmTracking');
+    const utms = getUTMAttribution();
+    
+    if (utms) {
+      if (utms.lastTouch.utm_source) checkoutUrl.searchParams.set('utm_source', utms.lastTouch.utm_source);
+      if (utms.lastTouch.utm_medium) checkoutUrl.searchParams.set('utm_medium', utms.lastTouch.utm_medium);
+      if (utms.lastTouch.utm_campaign) checkoutUrl.searchParams.set('utm_campaign', utms.lastTouch.utm_campaign);
+      if (utms.lastTouch.utm_content) checkoutUrl.searchParams.set('utm_content', utms.lastTouch.utm_content);
+      if (utms.lastTouch.utm_term) checkoutUrl.searchParams.set('utm_term', utms.lastTouch.utm_term);
+      if (utms.lastTouch.fbclid) checkoutUrl.searchParams.set('fbclid', utms.lastTouch.fbclid);
+      if (utms.lastTouch.gclid) checkoutUrl.searchParams.set('gclid', utms.lastTouch.gclid);
+    }
+    
+    const finalUrlString = checkoutUrl.toString();
+    
+    console.log('🔗 URL do checkout (com dados para pré-preencher):', finalUrlString);
     
     // Simular processamento
     await new Promise(resolve => setTimeout(resolve, 2000));
