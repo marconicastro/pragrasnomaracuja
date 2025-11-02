@@ -30,6 +30,7 @@ const checkoutFormSchema = z.object({
       },
       'Telefone deve ter 10 ou 11 dígitos'
     ),
+  orderBump: z.boolean().optional(),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -37,11 +38,22 @@ type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 interface PreCheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CheckoutFormData) => void;
+  onSubmit: (data: CheckoutFormData & { orderBump: boolean }) => void;
 }
+
+// Configuração do Order Bump (EDITE AQUI!)
+const ORDER_BUMP_CONFIG = {
+  enabled: true,                                      // true = ativar order bump
+  value: 19.9,                                        // Valor do order bump
+  title: '🎁 OFERTA ESPECIAL: Guia Completo de Controle de Pragas',
+  description: 'Receba também o guia completo com 50 receitas naturais para eliminar pragas. Valor: R$ 29,90',
+  discount: 'De R$ 29,90 por apenas R$ 19,90 (33% OFF)',
+  checked: false,                                     // true = marcado por padrão
+};
 
 export default function PreCheckoutModal({ isOpen, onClose, onSubmit }: PreCheckoutModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderBumpChecked, setOrderBumpChecked] = useState(ORDER_BUMP_CONFIG.checked);
 
   const {
     register,
@@ -52,6 +64,9 @@ export default function PreCheckoutModal({ isOpen, onClose, onSubmit }: PreCheck
     reset,
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutFormSchema),
+    defaultValues: {
+      orderBump: ORDER_BUMP_CONFIG.checked,
+    }
   });
 
   // Função para formatar telefone
@@ -91,8 +106,12 @@ export default function PreCheckoutModal({ isOpen, onClose, onSubmit }: PreCheck
     setIsSubmitting(true);
     
     try {
-      await onSubmit(data);
+      await onSubmit({
+        ...data,
+        orderBump: orderBumpChecked || false
+      });
       reset();
+      setOrderBumpChecked(ORDER_BUMP_CONFIG.checked); // Reset order bump
     } catch (error) {
       console.error('Erro ao enviar formulário:', error);
     } finally {
@@ -186,6 +205,43 @@ export default function PreCheckoutModal({ isOpen, onClose, onSubmit }: PreCheck
               </p>
             )}
           </div>
+
+          {/* ORDER BUMP */}
+          {ORDER_BUMP_CONFIG.enabled && (
+            <div className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+              orderBumpChecked 
+                ? 'border-green-500 bg-green-50' 
+                : 'border-gray-300 bg-gray-50'
+            }`}>
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="orderBump"
+                  {...register('orderBump')}
+                  checked={orderBumpChecked}
+                  onChange={(e) => setOrderBumpChecked(e.target.checked)}
+                  className="w-5 h-5 mt-1 text-green-600 border-gray-300 rounded focus:ring-green-500 cursor-pointer flex-shrink-0"
+                />
+                <label htmlFor="orderBump" className="cursor-pointer flex-1">
+                  <div className="font-bold text-sm sm:text-base mb-1">
+                    {ORDER_BUMP_CONFIG.title}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-700 mb-2">
+                    {ORDER_BUMP_CONFIG.description}
+                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-xs text-gray-500 line-through">R$ 29,90</span>
+                    <span className="text-sm sm:text-base font-bold text-green-600">
+                      R$ {ORDER_BUMP_CONFIG.value.toFixed(2).replace('.', ',')}
+                    </span>
+                    <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded w-fit">
+                      33% OFF
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Botão de Envio */}
           <Button 

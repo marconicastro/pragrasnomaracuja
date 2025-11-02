@@ -459,11 +459,25 @@ export async function trackLeadElite(
   }, true);
   
   return trackEliteEvent('Lead', {
-    value: 15.0,
+    // ===== VALORES (Otimiza??o de Campanha) =====
+    value: 15.0,                                      // Valor do Lead
     currency: 'BRL',
-    content_name: 'Formul?rio de Contato - Sistema 4 Fases',
+    predicted_ltv: 180.0,                             // Lifetime Value esperado
+    
+    // ===== CONTE?DO (Segmenta??o e Cat?logo) =====
+    content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'lead_generation',
-    predicted_ltv: 180.0,
+    content_ids: ['hacr962'],                         // ID da oferta
+    content_type: 'product',                          // Tipo de conte?do
+    
+    // ===== QUALIFICA??O (An?lise do Meta) =====
+    status: 'completed',                              // Lead completo
+    registration_method: 'website_form',              // M?todo de registro
+    
+    // ===== SEGMENTA??O ADICIONAL =====
+    lead_source: 'landing_page',                      // Origem do lead
+    lead_type: 'organic_form',                        // Tipo de lead
+    
     ...customParams
   }, 'standard');
 }
@@ -480,6 +494,12 @@ export async function trackInitiateCheckoutElite(
     city?: string;
     state?: string;
     zip?: string;
+  },
+  orderDetails?: {
+    value?: number;           // Valor DIN?MICO (base + order bump)
+    hasOrderBump?: boolean;   // Se selecionou order bump
+    orderBumpValue?: number;  // Valor do order bump
+    items?: string[];         // IDs dos produtos
   },
   customParams: Record<string, any> = {}
 ) {
@@ -500,13 +520,29 @@ export async function trackInitiateCheckoutElite(
     country: 'br'
   }, true);
   
+  // Calcular valor total (base + order bump)
+  const BASE_VALUE = 39.9;
+  const totalValue = orderDetails?.value || BASE_VALUE;
+  const numItems = orderDetails?.items?.length || 1;
+  
   return trackEliteEvent('InitiateCheckout', {
-    value: 39.9,
+    // ===== VALORES DIN?MICOS =====
+    value: totalValue,                                    // Valor total (base + order bump)
     currency: 'BRL',
-    content_ids: ['hacr962'],
+    
+    // ===== CONTE?DO =====
+    content_ids: orderDetails?.items || ['hacr962'],      // IDs dos produtos
     content_type: 'product',
-    content_name: 'Sistema 4 Fases - Ebook Trips',
-    num_items: 1,
+    content_name: orderDetails?.hasOrderBump 
+      ? 'Sistema 4 Fases + Order Bump' 
+      : 'Sistema 4 Fases - Ebook Trips',
+    num_items: numItems,                                  // Quantidade de itens
+    
+    // ===== ORDER BUMP (Custom Params para an?lise) =====
+    has_order_bump: orderDetails?.hasOrderBump || false,  // Flag order bump
+    order_bump_value: orderDetails?.orderBumpValue || 0,  // Valor do bump
+    base_value: BASE_VALUE,                               // Valor base (refer?ncia)
+    
     ...customParams
   }, 'standard');
 }
