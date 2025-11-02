@@ -375,6 +375,15 @@ export async function sendOfflinePurchase(
     if (userData.fbp) user_data.fbp = userData.fbp;
     if (userData.fbc) user_data.fbc = userData.fbc;
     
+    // External ID (session) - NÃO hashear (conforme doc Meta)
+    // Ganho: +0.22% conversões adicionais
+    if (userData.external_id) {
+      user_data.external_id = userData.external_id;
+    } else {
+      // Gerar external_id baseado no email (fallback se não tiver session)
+      user_data.external_id = `purchase_${hashSHA256(purchaseData.email).substring(0, 16)}`;
+    }
+    
     // Geolocaliza??o (do Lead salvo) - DEVE HASHEAR! (todos os user_data exceto fbp/fbc/external_id)
     if (userData.city) user_data.ct = hashSHA256(userData.city.toLowerCase());
     if (userData.state) user_data.st = hashSHA256(userData.state.toLowerCase());

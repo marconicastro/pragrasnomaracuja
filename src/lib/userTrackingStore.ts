@@ -45,6 +45,8 @@ export interface UserTrackingData {
   fb_ad_id?: string;
   fb_ad_name?: string;
   fb_placement?: string;
+  // External ID (session) - Meta Match Quality
+  external_id?: string;
   // Timestamps
   createdAt: number;
   updatedAt: number;

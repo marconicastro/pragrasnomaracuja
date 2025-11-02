@@ -18,10 +18,15 @@ export async function POST(request: NextRequest) {
       attributionJourney, firstTouchSource, firstTouchMedium,
       lastTouchSource, lastTouchMedium, touchpointCount,
       timeToConvert, hasPaidClick,
-      // UTM data (NOVO!)
+      // UTM data
       utmFirstSource, utmFirstMedium, utmFirstCampaign,
       utmLastSource, utmLastMedium, utmLastCampaign,
-      utmTouchCount, utmChannels
+      utmTouchCount, utmChannels,
+      // Facebook Native Parameters
+      fb_campaign_id, fb_campaign_name, fb_adset_id, fb_adset_name,
+      fb_ad_id, fb_ad_name, fb_placement,
+      // External ID (session) - +0.22% convers?es
+      external_id
     } = data;
     
     if (!email) {
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
       touchpointCount,
       timeToConvert,
       hasPaidClick,
-      // UTM data (NOVO!)
+      // UTM data
       utmFirstSource,
       utmFirstMedium,
       utmFirstCampaign,
@@ -58,7 +63,17 @@ export async function POST(request: NextRequest) {
       utmLastMedium,
       utmLastCampaign,
       utmTouchCount,
-      utmChannels
+      utmChannels,
+      // Facebook Native Parameters
+      fb_campaign_id,
+      fb_campaign_name,
+      fb_adset_id,
+      fb_adset_name,
+      fb_ad_id,
+      fb_ad_name,
+      fb_placement,
+      // External ID (session) - +0.22% convers?es
+      external_id
     });
     
     if (success) {

@@ -291,7 +291,9 @@ export default function App() {
           fb_adset_name: utmAttribution?.lastTouch.fb_adset_name,
           fb_ad_id: utmAttribution?.lastTouch.fb_ad_id,
           fb_ad_name: utmAttribution?.lastTouch.fb_ad_name,
-          fb_placement: utmAttribution?.lastTouch.fb_placement
+          fb_placement: utmAttribution?.lastTouch.fb_placement,
+          // External ID (session) - +0.22% conversões
+          external_id: existingUserData?.sessionId || existingUserData?.external_id
         })
       });
       
