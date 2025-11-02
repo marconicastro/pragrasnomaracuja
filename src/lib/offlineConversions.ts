@@ -528,23 +528,23 @@ export async function sendOfflinePurchase(
       // Formato 2: /stape-api/{capig_id}/v1/facebook
       // Formato 3: URL base do Stape (sa.stape.co)
       
-      // Usar URL personalizada se disponível, senão sa.stape.co
-      const capigIdentifier = process.env.STAPE_CAPIG_IDENTIFIER || 'odvkmmpw';
+      // CAPIG settings (atualizado 02/11/2024)
+      const capigIdentifier = process.env.STAPE_CAPIG_IDENTIFIER || 'kmwitszu';
       const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
-      
-      // TENTAR FORMATO 1: /facebook/{pixel_id}
-      let stapeEndpoint = `${stapeUrl}/facebook/${pixelId}`;
-      
-      console.log('🔄 Tentativa 1 - Endpoint:', stapeEndpoint);
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
       
       if (capigApiKey) {
-        headers['x-stape-capig-key'] = capigApiKey;
-        console.log('🔑 CAPIG API Key incluída');
+        headers['Authorization'] = `Bearer ${capigApiKey}`;
+        console.log('🔑 CAPIG API Key incluída (Authorization header)');
       }
+      
+      // TENTAR FORMATO 1: CAPIG URL direta (recomendado)
+      let stapeEndpoint = `${stapeUrl}/facebook`;
+      
+      console.log('🔄 Tentativa 1 - CAPIG URL:', stapeEndpoint);
       
       response = await fetch(stapeEndpoint, {
         method: 'POST',
@@ -560,7 +560,7 @@ export async function sendOfflinePurchase(
         const stapeBaseUrl = 'https://sa.stape.co';
         stapeEndpoint = `${stapeBaseUrl}/stape-api/${capigIdentifier}/v1/facebook`;
         
-        console.log('🔄 Tentativa 2 - Endpoint:', stapeEndpoint);
+        console.log('🔄 Tentativa 2 - Stape API com identifier:', stapeEndpoint);
         
         response = await fetch(stapeEndpoint, {
           method: 'POST',
@@ -569,8 +569,28 @@ export async function sendOfflinePurchase(
         });
         
         if (!response.ok) {
-          error404Details = `Todas tentativas falharam. Último: ${response.status} - ${await response.text()}`;
-          throw new Error(error404Details);
+          const errorText2 = await response.text();
+          console.warn(`❌ Tentativa 2 falhou: ${response.status} - ${errorText2}`);
+          
+          // TENTAR FORMATO 3: Custom domain (se diferente)
+          if (stapeUrl !== 'https://capig.stape.pm') {
+            stapeEndpoint = `${stapeUrl}/facebook`;
+            console.log('🔄 Tentativa 3 - Custom domain:', stapeEndpoint);
+            
+            response = await fetch(stapeEndpoint, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+              error404Details = `Todas 3 tentativas falharam. Último: ${response.status} - ${await response.text()}`;
+              throw new Error(error404Details);
+            }
+          } else {
+            error404Details = `Todas tentativas falharam. Último: ${response.status} - ${errorText2}`;
+            throw new Error(error404Details);
+          }
         }
       }
       
