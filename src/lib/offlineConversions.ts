@@ -557,9 +557,18 @@ export async function sendOfflinePurchase(
       
       console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
       
-      // CAPIG OAuth: formato híbrido (array + data_source_id)
+      // CAPIG OAuth: testar formato MÍNIMO primeiro (descobrir campo problemático)
+      // Remover custom_data complexo e test_event_code (podem estar causando erro)
+      const customDataMinimal = {
+        value: customData.value,
+        currency: customData.currency,
+        content_type: customData.content_type,
+        content_ids: customData.content_ids,
+        content_name: customData.content_name
+      };
+      
       const capigPayload = {
-        data_source_id: pixelId,  // CAPIG OAuth precisa!
+        data_source_id: pixelId,
         data: [{
           event_name: 'Purchase',
           event_time: eventTime,
@@ -567,20 +576,21 @@ export async function sendOfflinePurchase(
           event_source_url: 'https://pay.cakto.com.br',
           action_source: 'website',
           user_data,
-          custom_data: customData
-        }],
-        test_event_code: testEventCode || undefined
+          custom_data: customDataMinimal  // Mínimo primeiro!
+        }]
+        // test_event_code pode estar causando erro, testar sem
       };
       
-      console.log('📤 Enviando payload para CAPIG:', {
+      console.log('📤 Enviando payload MÍNIMO para CAPIG (teste):', {
         endpoint: stapeEndpoint,
         pixel_id: pixelId,
         event_name: 'Purchase',
         event_id: eventID,
-        hasTestCode: !!testEventCode,
         userDataFields: Object.keys(user_data).length,
-        customDataFields: Object.keys(customData).length
+        customDataFields: Object.keys(customDataMinimal).length
       });
+      
+      console.log('🔍 DEBUG - Payload completo sendo enviado:', JSON.stringify(capigPayload, null, 2));
       
       response = await fetch(stapeEndpoint, {
         method: 'POST',
