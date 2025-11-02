@@ -533,7 +533,9 @@ export async function trackInitiateCheckoutElite(
     content_name: 'Sistema 4 Fases - Ebook Trips',
     num_items: orderDetails?.items?.length || 1,
     ...customParams
-  }, 'standard');
+  }, 'standard', { 
+    isColdEvent: false  // ? Warm event (user data do Lead)
+  });
 }
 
 /**
