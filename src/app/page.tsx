@@ -331,26 +331,38 @@ export default function App() {
     
     if (geoData.zip) {
       const cleanZip = geoData.zip.replace(/\D/g, '');
-      // Adicionar em MÚLTIPLOS formatos (Cakto pode esperar qualquer um)
-      checkoutUrl.searchParams.set('zip', cleanZip);        // Padrão US
-      checkoutUrl.searchParams.set('zipcode', cleanZip);    // Alternativo
-      checkoutUrl.searchParams.set('cep', cleanZip);        // Padrão BR
-      console.log('✅ CEP adicionado em 3 formatos (zip/zipcode/cep):', cleanZip);
+      // Adicionar em TODOS os formatos possíveis (Cakto vai usar o que reconhecer)
+      checkoutUrl.searchParams.set('zip', cleanZip);                    // 1. Padrão internacional
+      checkoutUrl.searchParams.set('zipcode', cleanZip);                // 2. Alternativo US
+      checkoutUrl.searchParams.set('postal_code', cleanZip);            // 3. Padrão formal
+      checkoutUrl.searchParams.set('cep', cleanZip);                    // 4. Padrão BR
+      checkoutUrl.searchParams.set('address_zip_code', cleanZip);       // 5. Hotmart usa
+      checkoutUrl.searchParams.set('address[zip_code]', cleanZip);      // 6. Formato nested
+      checkoutUrl.searchParams.set('customer[address][zip]', cleanZip); // 7. Kiwify usa
+      console.log('✅ CEP adicionado em 7 formatos diferentes:', cleanZip);
     } else {
       console.warn('⚠️ CEP não adicionado (vazio)');
     }
     
     if (geoData.city) {
+      // Adicionar cidade em múltiplos formatos
       checkoutUrl.searchParams.set('city', geoData.city);
-      console.log('✅ CITY adicionado:', geoData.city);
+      checkoutUrl.searchParams.set('address_city', geoData.city);
+      checkoutUrl.searchParams.set('address[city]', geoData.city);
+      checkoutUrl.searchParams.set('customer[address][city]', geoData.city);
+      console.log('✅ CITY adicionado em 4 formatos:', geoData.city);
     } else {
       console.warn('⚠️ CITY não adicionado (vazio)');
     }
     
     if (geoData.state) {
       const stateUpper = geoData.state.toUpperCase();
+      // Adicionar estado em múltiplos formatos
       checkoutUrl.searchParams.set('state', stateUpper);
-      console.log('✅ STATE adicionado:', stateUpper);
+      checkoutUrl.searchParams.set('address_state', stateUpper);
+      checkoutUrl.searchParams.set('address[state]', stateUpper);
+      checkoutUrl.searchParams.set('customer[address][state]', stateUpper);
+      console.log('✅ STATE adicionado em 4 formatos:', stateUpper);
     } else {
       console.warn('⚠️ STATE não adicionado (vazio)');
     }
