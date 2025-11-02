@@ -91,26 +91,33 @@ export default function EliteMetaPixel({
 
     // Configurar Meta Pixel com Stape CAPIG
     if (window.fbq) {
+      // 1. Inicializar Pixel
       window.fbq('init', pixelId);
       
-      // ? CONFIGURA??O STAPE CAPIG GATEWAY
+      // 2. CONFIGURA??O STAPE CAPIG GATEWAY (ordem e sintaxe CR?TICAS!)
+      // ?? IMPORTANTE: Passar pixelId em TODOS os 'set' para garantir que config ? aplicada!
       window.fbq('set', 'autoConfig', false, pixelId);
-      window.fbq('set', 'agent', 'stape');
-      window.fbq('set', 'server_event_uri', stapeContainerUrl);
+      window.fbq('set', 'agent', 'stape', pixelId);  // ? COM pixelId!
+      window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);  // ? COM pixelId!
       
       console.log('? ELITE Meta Pixel inicializado');
+      console.log('?? Pixel ID:', pixelId);
       console.log('?? Stape Container:', stapeContainerUrl);
+      console.log('? CAPIG Config:');
+      console.log('   - autoConfig: false ?');
+      console.log('   - agent: stape ?');
+      console.log('   - server_event_uri: ' + stapeContainerUrl + ' ?');
       console.log('?? Dual Tracking:');
       console.log('   1?? Browser ? Meta Pixel endpoint');
-      console.log('   2?? Server ? Meta Conversions API (via Stape)');
+      console.log('   2?? Server ? Meta Conversions API (via CAPIG)');
       console.log('?? Features ELITE:');
-      console.log('   ? Advanced Matching (14 campos)');
+      console.log('   ? Advanced Matching (13 campos)');
       console.log('   ? Attribution Tracking');
       console.log('   ? Data Quality Score');
       console.log('   ? Event Deduplication');
       console.log('   ? LGPD Compliant');
       
-      // Disparar PageView Elite (com todos os dados)
+      // 3. Disparar PageView Elite (com todos os dados)
       trackPageViewElite();
     }
   }, [pixelId, stapeContainerUrl]);

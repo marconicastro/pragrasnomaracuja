@@ -63,12 +63,13 @@ export default function MetaPixelStape({
       window.fbq('init', pixelId);
       
       // ? CONFIGURA??O STAPE CAPIG GATEWAY
+      // ?? CR?TICO: Passar pixelId em TODOS os 'set' commands!
       window.fbq('set', 'autoConfig', false, pixelId);
-      window.fbq('set', 'agent', 'stape');
+      window.fbq('set', 'agent', 'stape', pixelId);  // ? COM pixelId!
       
       // ?? CR?TICO: server_event_uri aponta para Stape
       // Stape intercepta eventos e envia via server-side tamb?m
-      window.fbq('set', 'server_event_uri', stapeContainerUrl);
+      window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);  // ? COM pixelId!
       
       // Event ID ?nico para deduplica??o
       const eventID = `PageView_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
