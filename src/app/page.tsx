@@ -331,15 +331,30 @@ export default function App() {
     
     if (geoData.zip) {
       const cleanZip = geoData.zip.replace(/\D/g, '');
-      // Adicionar em TODOS os formatos possíveis (Cakto vai usar o que reconhecer)
-      checkoutUrl.searchParams.set('zip', cleanZip);                    // 1. Padrão internacional
-      checkoutUrl.searchParams.set('zipcode', cleanZip);                // 2. Alternativo US
-      checkoutUrl.searchParams.set('postal_code', cleanZip);            // 3. Padrão formal
-      checkoutUrl.searchParams.set('cep', cleanZip);                    // 4. Padrão BR
-      checkoutUrl.searchParams.set('address_zip_code', cleanZip);       // 5. Hotmart usa
-      checkoutUrl.searchParams.set('address[zip_code]', cleanZip);      // 6. Formato nested
-      checkoutUrl.searchParams.set('customer[address][zip]', cleanZip); // 7. Kiwify usa
-      console.log('✅ CEP adicionado em 7 formatos diferentes:', cleanZip);
+      
+      // Formato com hífen (padrão brasileiro: 12345-678)
+      const formattedZip = cleanZip.length === 8 
+        ? `${cleanZip.substring(0, 5)}-${cleanZip.substring(5)}` 
+        : cleanZip;
+      
+      // Adicionar CEP em TODOS os formatos possíveis
+      // SEM HÍFEN (12345678):
+      checkoutUrl.searchParams.set('zip', cleanZip);
+      checkoutUrl.searchParams.set('zipcode', cleanZip);
+      checkoutUrl.searchParams.set('postal_code', cleanZip);
+      checkoutUrl.searchParams.set('cep', cleanZip);
+      checkoutUrl.searchParams.set('address_zip_code', cleanZip);
+      checkoutUrl.searchParams.set('address[zip_code]', cleanZip);
+      checkoutUrl.searchParams.set('customer[address][zip]', cleanZip);
+      
+      // COM HÍFEN (12345-678):
+      checkoutUrl.searchParams.set('zip_formatted', formattedZip);
+      checkoutUrl.searchParams.set('cep_formatted', formattedZip);
+      
+      console.log('✅ CEP adicionado em 9 formatos (com e sem hífen):', {
+        semHifen: cleanZip,
+        comHifen: formattedZip
+      });
     } else {
       console.warn('⚠️ CEP não adicionado (vazio)');
     }
