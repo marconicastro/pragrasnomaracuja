@@ -558,10 +558,9 @@ export async function sendOfflinePurchase(
       console.log('🔄 Tentativa 1 - CAPIG /events (formato simplificado):', stapeEndpoint);
       
       // CAPIG usa formato simplificado (sem array data)
+      // NÃO enviar access_token no payload (CAPIG usa o configurado no dashboard)
       const capigPayload = {
         pixel_id: pixelId,
-        data_source_id: pixelId,
-        access_token: process.env.META_ACCESS_TOKEN,
         event_name: 'Purchase',
         event_time: eventTime,
         event_id: eventID,
