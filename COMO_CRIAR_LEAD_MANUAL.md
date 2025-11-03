@@ -7,6 +7,12 @@
 2. Pressione `F12` (ou `Ctrl+Shift+I`)
 3. Vá na aba **Console**
 
+### **Passo 1.5: Permitir Colar Código (Se Necessário)**
+⚠️ **Se aparecer aviso de segurança:**
+1. Digite: `allow pasting`
+2. Pressione `Enter`
+3. Agora pode colar código normalmente
+
 ### **Passo 2: Copiar e Colar Este Código**
 
 ```javascript
@@ -72,7 +78,7 @@ fetch('/api/save-tracking', {
 
 ---
 
-## 📋 Método 2: Via ReqBin (Direto na API)
+## 📋 Método 2: Via ReqBin (RECOMENDADO - Mais Fácil!)
 
 ### **URL:**
 ```
@@ -90,6 +96,15 @@ Content-Type: application/json
 ```
 
 ### **Body (JSON):**
+
+**⚠️ IMPORTANTE:** Substitua `TIMESTAMP_AGORA` pelo valor atual!
+
+Para obter o timestamp, abra qualquer calculadora online e digite:
+```
+Math.floor(Date.now() / 1000)
+```
+
+Ou use este valor aproximado (substitua pelos segundos atuais):
 ```json
 {
   "email": "teste.webhook.fbc@maracujazeropragas.com",
@@ -100,7 +115,7 @@ Content-Type: application/json
   "state": "BA",
   "zip": "40000",
   "fbp": "fb.1.1737110400000.123456789",
-  "fbc": "fb.1.1737110400.abc123def456",
+  "fbc": "fb.1.TIMESTAMP_AGORA.abc123def456",
   "firstTouchSource": "facebook",
   "firstTouchMedium": "cpc",
   "lastTouchSource": "facebook",
@@ -110,10 +125,10 @@ Content-Type: application/json
 }
 ```
 
-**Nota:** Substitua `1737110400` por timestamp atual (em segundos):
-```javascript
-Math.floor(Date.now() / 1000)
-```
+**Como gerar timestamp:**
+1. Abra: https://www.epochconverter.com/
+2. Copie o valor "Current epoch timestamp" (em segundos)
+3. Cole no lugar de `TIMESTAMP_AGORA` no JSON acima
 
 ---
 
