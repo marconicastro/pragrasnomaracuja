@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Download, ArrowRight } from 'lucide-react';
 import { trackPurchaseElite } from '@/lib/eliteMetaPixelTracking';
 import { trackPageViewElite } from '@/lib/eliteMetaPixelTracking';
 
-export default function ObrigadoPage() {
+function ObrigadoContent() {
   const searchParams = useSearchParams();
   const [purchaseSent, setPurchaseSent] = useState(false);
   
@@ -213,6 +213,24 @@ export default function ObrigadoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ObrigadoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+          <div className="animate-pulse">
+            <div className="h-16 w-16 bg-green-100 rounded-full mx-auto mb-6"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <ObrigadoContent />
+    </Suspense>
   );
 }
 
