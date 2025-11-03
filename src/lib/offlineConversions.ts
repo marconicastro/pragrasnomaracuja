@@ -677,7 +677,12 @@ export async function sendOfflinePurchase(
       hasFbc: !!user_data.fbc,
       hasExternalId: !!user_data.external_id,
       hasIp: !!user_data.client_ip_address,
-      hasUserAgent: !!user_data.client_user_agent
+      hasUserAgent: !!user_data.client_user_agent,
+      // Debug: mostrar valores reais (hasheados)
+      cityHash: user_data.ct ? user_data.ct.substring(0, 20) + '...' : undefined,
+      stateHash: user_data.st ? user_data.st.substring(0, 20) + '...' : undefined,
+      zipHash: user_data.zp ? user_data.zp.substring(0, 20) + '...' : undefined,
+      fbpValue: user_data.fbp ? user_data.fbp.substring(0, 30) + '...' : undefined
     });
     
     // Preparar payload para Meta CAPI (formato padrão)
@@ -693,6 +698,22 @@ export async function sendOfflinePurchase(
         custom_data: customData
       }]
     };
+    
+    // DEBUG: Log do payload completo (apenas user_data para verificar)
+    console.log('🔍 DEBUG - user_data no payload:', JSON.stringify({
+      em: user_data.em ? '***' : undefined,
+      ph: user_data.ph ? '***' : undefined,
+      fn: user_data.fn ? '***' : undefined,
+      ln: user_data.ln ? '***' : undefined,
+      ct: user_data.ct ? user_data.ct.substring(0, 20) + '...' : undefined,
+      st: user_data.st ? user_data.st.substring(0, 20) + '...' : undefined,
+      zp: user_data.zp ? user_data.zp.substring(0, 20) + '...' : undefined,
+      country: user_data.country ? user_data.country.substring(0, 20) + '...' : undefined,
+      fbp: user_data.fbp,
+      fbc: user_data.fbc,
+      external_id: user_data.external_id,
+      client_ip_address: user_data.client_ip_address
+    }, null, 2));
     
     // Preparar payload para CAPIG (formato compatível com Meta CAPI)
     // CAPIG requer pixel_id no payload quando enviado server-side diretamente
@@ -773,6 +794,34 @@ export async function sendOfflinePurchase(
     
       // Enviar direto para Meta CAPI (formato padrão)
     const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+    
+    // DEBUG: Log do payload completo que será enviado (para verificar se dados estão presentes)
+    const payloadDebug = {
+      pixel_id: metaPayloadFinal.pixel_id,
+      data: metaPayloadFinal.data.map((event: any) => ({
+        event_name: event.event_name,
+        event_time: event.event_time,
+        event_id: event.event_id,
+        action_source: event.action_source,
+        user_data_keys: Object.keys(event.user_data),
+        user_data_has_fields: {
+          hasEmail: !!event.user_data.em,
+          hasPhone: !!event.user_data.ph,
+          hasFirstName: !!event.user_data.fn,
+          hasLastName: !!event.user_data.ln,
+          hasCity: !!event.user_data.ct,
+          hasState: !!event.user_data.st,
+          hasZip: !!event.user_data.zp,
+          hasCountry: !!event.user_data.country,
+          hasFbp: !!event.user_data.fbp,
+          hasFbc: !!event.user_data.fbc,
+          hasExternalId: !!event.user_data.external_id,
+          hasIp: !!event.user_data.client_ip_address
+        },
+        custom_data_keys: Object.keys(event.custom_data)
+      }))
+    };
+    console.log('🔍 DEBUG - Payload completo que será enviado ao Meta:', JSON.stringify(payloadDebug, null, 2));
     
     // Enviar direto (não usar CAPIG para server-side events)
     response = await fetch(metaEndpoint, {
