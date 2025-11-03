@@ -660,10 +660,10 @@ export async function sendOfflinePurchase(
       }]
     };
     
-    // Preparar payload para CAPIG (formato pode ser diferente)
-    // CAPIG geralmente aceita mesmo formato, mas pode precisar de ajustes
+    // Preparar payload para CAPIG (formato diferente do Meta direto)
+    // CAPIG não precisa de pixel_id no payload (identifica pela API Key/configuração)
+    // Formato baseado na documentação Stape CAPIG: apenas array data
     const capigPayload: any = {
-      pixel_id: pixelId,
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
@@ -675,16 +675,33 @@ export async function sendOfflinePurchase(
       }]
     };
     
-    // Usar mesmo payload para ambos (CAPIG deve aceitar formato Meta CAPI padrão)
-    const payload = capigPayload;
+    // Adicionar partner_agent se disponível (identifica origem do evento)
+    // Alguns CAPIGs podem precisar disso para processar corretamente
+    capigPayload.partner_agent = 'stape_capig';
+    
+    // Payload para CAPIG (sem pixel_id - identificado pela configuração)
+    const capigPayloadFinal = capigPayload;
+    
+    // Payload para Meta direto (com pixel_id - requerido pela API Meta)
+    const metaPayloadFinal = metaPayload;
     
     // Adicionar test_event_code se configurado (para debug no Meta Events Manager)
+    // CAPIG: test_event_code pode precisar estar no evento ou no root
     if (testEventCode) {
-      payload.test_event_code = testEventCode;
+      capigPayloadFinal.test_event_code = testEventCode;
+      metaPayloadFinal.test_event_code = testEventCode;
       console.log('🧪 Test Event Code ativado:', testEventCode);
     }
     
-    console.log('📦 Payload preparado com pixel_id:', pixelId);
+    console.log('📦 Payload CAPIG preparado (sem pixel_id - identificado pela API Key):', {
+      hasData: !!capigPayloadFinal.data,
+      eventCount: capigPayloadFinal.data?.length,
+      partnerAgent: capigPayloadFinal.partner_agent
+    });
+    console.log('📦 Payload Meta preparado (com pixel_id):', {
+      pixelId: metaPayloadFinal.pixel_id,
+      eventCount: metaPayloadFinal.data?.length
+    });
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     console.log('🌐 event_source_url:', eventSourceUrl);
     
@@ -700,50 +717,55 @@ export async function sendOfflinePurchase(
     }
     
     // Tentar primeiro via CAPIG (para ter EQM 9.3 como outros eventos)
-    // IMPORTANTE: CAPIG pode esperar formato diferente ou acesso via API Key
+    // IMPORTANTE: CAPIG usa formato diferente - sem pixel_id no payload
     const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
     
     console.log('📤 Tentando Purchase via CAPIG (para EQM 9.3 como outros eventos):', {
       orderId: purchaseData.orderId,
-      pixelId,
+      pixelId, // Apenas para log - não está no payload CAPIG
       hasFbp: !!userData.fbp,
       hasFbc: !!userData.fbc,
       dataQualityScore,
       eventSourceUrl,
-      capigUrl
+      capigUrl,
+      payloadFormat: 'CAPIG (sem pixel_id no body)'
     });
     
     let useCapig = true;
     let capigError: string | null = null;
     
-    // Tentar CAPIG primeiro (com payload limpo - sem access_token no body)
-    // CAPIG geralmente usa API Key no header ou configuração interna
+    // Tentar CAPIG primeiro (com payload formato CAPIG - sem pixel_id)
+    // CAPIG identifica pixel pela API Key/configuração, não pelo payload
     try {
       const capigHeaders: Record<string, string> = {
         'Content-Type': 'application/json'
       };
       
-      // Tentar adicionar API Key se disponível (CAPIG pode precisar)
+      // Tentar adicionar API Key se disponível (CAPIG precisa para identificar pixel)
       const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
       if (capigApiKey) {
         capigHeaders['Authorization'] = `Bearer ${capigApiKey}`;
-        console.log('🔑 Usando CAPIG API Key no header');
+        console.log('🔑 Usando CAPIG API Key no header para identificar pixel:', pixelId);
+      } else {
+        console.warn('⚠️ STAPE_CAPIG_API_KEY não configurada - CAPIG pode não identificar o pixel');
       }
       
       response = await fetch(capigUrl, {
         method: 'POST',
         headers: capigHeaders,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(capigPayloadFinal) // Payload CAPIG (sem pixel_id)
       });
       
       if (response.ok) {
+        const responseData = await response.text();
         console.log('✅ SUCCESS: Purchase enviado via CAPIG Gateway (EQM 9.3 otimizado!)');
+        console.log('📋 Resposta CAPIG:', responseData.substring(0, 200) || '(vazio)');
       } else {
         // CAPIG retornou erro - fazer fallback
         const errorText = await response.text();
         capigError = `CAPIG error: ${response.status} - ${errorText}`;
         console.warn('⚠️ CAPIG retornou erro, fazendo fallback para Meta direto:', capigError);
-        console.warn('📋 Payload enviado para CAPIG:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
+        console.warn('📋 Payload CAPIG enviado:', JSON.stringify(capigPayloadFinal, null, 2).substring(0, 500) + '...');
         useCapig = false;
       }
     } catch (capigFetchError: any) {
@@ -773,7 +795,7 @@ export async function sendOfflinePurchase(
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(metaPayload) // Usar payload Meta padrão no fallback
+        body: JSON.stringify(metaPayloadFinal) // Payload Meta padrão (com pixel_id)
       });
       
       if (!response.ok) {
