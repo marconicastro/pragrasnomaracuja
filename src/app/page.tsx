@@ -12,8 +12,7 @@ import {
   trackCTAClickElite,
   trackAddToCartElite,
   trackLeadElite,
-  trackInitiateCheckoutElite,
-  trackPurchaseElite
+  trackInitiateCheckoutElite
 } from '@/lib/eliteMetaPixelTracking';
 
 export default function App() {
@@ -47,9 +46,6 @@ export default function App() {
     state?: string;
     cep?: string;
   }>({});
-
-  // Estado para teste de Purchase
-  const [purchaseTestStatus, setPurchaseTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   // Remover estado de modo - não é mais necessário com server-side tracking
 
@@ -559,66 +555,6 @@ export default function App() {
   };
 
   // Função principal de checkout (REDIRECIONAMENTO)
-  // Função para testar Purchase manualmente
-  const handleTestPurchase = async () => {
-    setPurchaseTestStatus('loading');
-    
-    try {
-      // Buscar dados do localStorage (do Lead)
-      const storedData = localStorage.getItem('userTrackingData');
-      let email = '';
-      let phone = '';
-      let firstName = '';
-      let lastName = '';
-      
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        email = parsed.email || 'teste@teste.com';
-        phone = parsed.phone || '';
-        firstName = parsed.firstName || 'Teste';
-        lastName = parsed.lastName || 'Usuario';
-      } else {
-        // Se não tiver, usar dados padrão
-        email = 'teste@teste.com';
-        firstName = 'Teste';
-        lastName = 'Usuario';
-      }
-      
-      // Gerar Order ID único
-      const orderId = `TEST_${Date.now()}`;
-      
-      console.log('🧪 Teste Purchase iniciado:', { orderId, email });
-      
-      // Disparar Purchase
-      await trackPurchaseElite(
-        orderId,
-        {
-          email,
-          phone,
-          firstName,
-          lastName
-        },
-        {
-          value: 39.9,
-          currency: 'BRL',
-          purchase_source: 'manual_test',
-          purchase_method: 'test'
-        }
-      );
-      
-      setPurchaseTestStatus('success');
-      console.log('✅ Purchase enviado via browser + CAPIG (EQM 9.3!)');
-      
-      // Resetar após 3 segundos
-      setTimeout(() => setPurchaseTestStatus('idle'), 3000);
-      
-    } catch (error: any) {
-      setPurchaseTestStatus('error');
-      console.error('❌ Erro ao testar Purchase:', error);
-      setTimeout(() => setPurchaseTestStatus('idle'), 3000);
-    }
-  };
-
   const handleCheckoutRedirect = async (event: React.MouseEvent) => {
     event.preventDefault();
     
@@ -1297,20 +1233,6 @@ export default function App() {
                 >
                   Cookie Diagnostic
                 </a>
-                <span className="text-green-400">•</span>
-                <button
-                  onClick={handleTestPurchase}
-                  disabled={purchaseTestStatus === 'loading'}
-                  className={`text-green-200 hover:text-white underline text-xs ${
-                    purchaseTestStatus === 'loading' ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  title="Testar Purchase via browser + CAPIG (EQM 9.3)"
-                >
-                  {purchaseTestStatus === 'loading' ? 'Testando Purchase...' : 
-                   purchaseTestStatus === 'success' ? '✅ Purchase Enviado!' :
-                   purchaseTestStatus === 'error' ? '❌ Erro' :
-                   '🧪 Teste Purchase'}
-                </button>
               </div>
             </div>
           </div>
