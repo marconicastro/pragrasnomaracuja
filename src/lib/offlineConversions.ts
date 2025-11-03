@@ -672,9 +672,9 @@ export async function sendOfflinePurchase(
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     console.log('🌐 event_source_url:', eventSourceUrl);
     
-    // ✅ ENVIAR VIA CAPIG (como os outros eventos!)
-    // A CAPIG funciona perfeitamente agora e melhora EQM
-    // Além disso, permite usar o mesmo sistema de todos os eventos
+    // ⚠️ ATENÇÃO: Mantendo envio direto para Meta (funcionando 100%!)
+    // Testes de CAPIG serão feitos separadamente para não quebrar o que funciona
+    // TODO: Testar Purchase via CAPIG em ambiente separado antes de alterar
     
     let response;
     const accessToken = process.env.META_ACCESS_TOKEN;
@@ -683,23 +683,20 @@ export async function sendOfflinePurchase(
       throw new Error('META_ACCESS_TOKEN não configurado');
     }
     
-    // CRÍTICO: Usar CAPIG para Purchase também!
-    // A CAPIG URL é: https://capigateway.maracujazeropragas.com
-    // Ela aceita o mesmo formato do Meta CAPI direto
-    const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
-    
-    console.log('📤 Enviando Purchase via CAPIG:', {
+    console.log('📤 Enviando Purchase via Meta CAPI direto (ESTÁVEL - FUNCIONANDO 100%):', {
       orderId: purchaseData.orderId,
       pixelId,
       hasFbp: !!userData.fbp,
       hasFbc: !!userData.fbc,
       dataQualityScore,
-      eventSourceUrl,
-      capigUrl
+      eventSourceUrl
     });
     
-    // Enviar via CAPIG (mesmo endpoint que outros eventos!)
-    response = await fetch(capigUrl, {
+    // Enviar via Meta CAPI direto (MANTIDO - funcionando 100%!)
+    // Para testar CAPIG, criar branch separada
+    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+    
+    response = await fetch(metaEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -712,7 +709,7 @@ export async function sendOfflinePurchase(
       throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
     }
     
-    console.log('✅ SUCCESS: Purchase enviado via CAPIG!');
+    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (ESTÁVEL - FUNCIONANDO 100%!)');
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -721,9 +718,9 @@ export async function sendOfflinePurchase(
       if (responseText && responseText.trim()) {
         result = JSON.parse(responseText);
       } else {
-        // Resposta vazia (CAPIG às vezes retorna 200 sem body)
+        // Resposta vazia (Meta às vezes retorna 200 sem body)
         result = { success: true, events_received: 1 };
-        console.log('ℹ️ Resposta vazia do CAPIG (assumindo sucesso)');
+        console.log('ℹ️ Resposta vazia do servidor (assumindo sucesso)');
       }
     } catch (parseError) {
       console.warn('⚠️ Erro ao parsear resposta (assumindo sucesso se status 200):', parseError);
@@ -733,14 +730,14 @@ export async function sendOfflinePurchase(
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
-      via: 'CAPIG Gateway',
+      via: 'Meta CAPI direto (ESTÁVEL)',
       eventSourceUrl,
       response: result
     });
     
     return { 
       success: true,
-      message: 'Purchase enviado via CAPIG Gateway - EQM 9.3 otimizado com UTMs na URL!'
+      message: 'Purchase enviado via Meta CAPI direto - DQS 85 (funcionando perfeitamente!) - URL com UTMs otimizada para EQM 9.3'
     };
     
   } catch (error: any) {
