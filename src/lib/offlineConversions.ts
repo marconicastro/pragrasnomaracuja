@@ -672,9 +672,9 @@ export async function sendOfflinePurchase(
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     console.log('🌐 event_source_url:', eventSourceUrl);
     
-    // ⚠️ ATENÇÃO: Mantendo envio direto para Meta (funcionando 100%!)
-    // Testes de CAPIG serão feitos separadamente para não quebrar o que funciona
-    // TODO: Testar Purchase via CAPIG em ambiente separado antes de alterar
+    // ✅ ENVIAR VIA CAPIG (como outros eventos para ter EQM 9.3!)
+    // ⚠️ SEGURANÇA: Se CAPIG falhar, fallback automático para Meta direto
+    // Isso garante que nunca quebra o que está funcionando
     
     let response;
     const accessToken = process.env.META_ACCESS_TOKEN;
@@ -683,33 +683,77 @@ export async function sendOfflinePurchase(
       throw new Error('META_ACCESS_TOKEN não configurado');
     }
     
-    console.log('📤 Enviando Purchase via Meta CAPI direto (ESTÁVEL - FUNCIONANDO 100%):', {
+    // Tentar primeiro via CAPIG (para ter EQM 9.3 como outros eventos)
+    const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
+    
+    console.log('📤 Tentando Purchase via CAPIG (para EQM 9.3 como outros eventos):', {
       orderId: purchaseData.orderId,
       pixelId,
       hasFbp: !!userData.fbp,
       hasFbc: !!userData.fbc,
       dataQualityScore,
-      eventSourceUrl
+      eventSourceUrl,
+      capigUrl
     });
     
-    // Enviar via Meta CAPI direto (MANTIDO - funcionando 100%!)
-    // Para testar CAPIG, criar branch separada
-    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+    let useCapig = true;
+    let capigError: string | null = null;
     
-    response = await fetch(metaEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
+    // Tentar CAPIG primeiro
+    try {
+      response = await fetch(capigUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        console.log('✅ SUCCESS: Purchase enviado via CAPIG Gateway (EQM 9.3 otimizado!)');
+      } else {
+        // CAPIG retornou erro - fazer fallback
+        const errorText = await response.text();
+        capigError = `CAPIG error: ${response.status} - ${errorText}`;
+        console.warn('⚠️ CAPIG retornou erro, fazendo fallback para Meta direto:', capigError);
+        useCapig = false;
+      }
+    } catch (capigFetchError: any) {
+      // Erro de rede ou fetch - fazer fallback
+      capigError = capigFetchError.message;
+      console.warn('⚠️ Erro ao enviar para CAPIG, fazendo fallback para Meta direto:', capigError);
+      useCapig = false;
     }
     
-    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (ESTÁVEL - FUNCIONANDO 100%!)');
+    // Fallback para Meta direto se CAPIG falhou
+    if (!useCapig) {
+      console.log('🔄 Fallback: Enviando Purchase via Meta CAPI direto (garantia de funcionamento):', {
+        orderId: purchaseData.orderId,
+        pixelId,
+        hasFbp: !!userData.fbp,
+        hasFbc: !!userData.fbc,
+        dataQualityScore,
+        eventSourceUrl,
+        fallbackReason: capigError
+      });
+      
+      const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
+      
+      response = await fetch(metaEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
+      }
+      
+      console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (fallback - funcionando 100%!)');
+    }
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -730,14 +774,17 @@ export async function sendOfflinePurchase(
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
-      via: 'Meta CAPI direto (ESTÁVEL)',
+      via: useCapig ? 'CAPIG Gateway (EQM 9.3)' : 'Meta CAPI direto (fallback)',
       eventSourceUrl,
-      response: result
+      response: result,
+      ...(capigError ? { capigError } : {})
     });
     
     return { 
       success: true,
-      message: 'Purchase enviado via Meta CAPI direto - DQS 85 (funcionando perfeitamente!) - URL com UTMs otimizada para EQM 9.3'
+      message: useCapig 
+        ? 'Purchase enviado via CAPIG Gateway - EQM 9.3 otimizado como outros eventos!'
+        : `Purchase enviado via Meta CAPI direto (fallback após erro CAPIG) - DQS 85 - ${capigError ? `Erro CAPIG: ${capigError}` : ''}`
     };
     
   } catch (error: any) {
