@@ -719,8 +719,10 @@ export async function sendOfflinePurchase(
     }
     
     // Tentar primeiro via CAPIG (para ter EQM 9.3 como outros eventos)
-    // IMPORTANTE: CAPIG requer pixel_id no payload para server-side events
-    const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
+    // IMPORTANTE: CAPIG pode exigir pixel_id na URL ou formato diferente
+    let capigBaseUrl = stapeUrl.endsWith('/events') ? stapeUrl.replace('/events', '') : stapeUrl;
+    // Tentar com pixel_id na URL (alguns CAPIGs podem precisar disso)
+    const capigUrl = `${capigBaseUrl}/events?pixel_id=${pixelId}`;
     
     console.log('📤 Tentando Purchase via CAPIG (para EQM 9.3 como outros eventos):', {
       orderId: purchaseData.orderId,
@@ -730,14 +732,14 @@ export async function sendOfflinePurchase(
       dataQualityScore,
       eventSourceUrl,
       capigUrl,
-      payloadFormat: 'CAPIG (com pixel_id no body - requerido)'
+      payloadFormat: 'CAPIG (pixel_id na URL + no body)'
     });
     
     let useCapig = true;
     let capigError: string | null = null;
     
-    // Tentar CAPIG primeiro (com payload formato CAPIG - com pixel_id)
-    // CAPIG requer pixel_id no payload para server-side events (diferente de browser events)
+    // Tentar CAPIG primeiro (com payload formato CAPIG - com pixel_id no body E na URL)
+    // CAPIG pode exigir pixel_id em múltiplos lugares para server-side events
     try {
       const capigHeaders: Record<string, string> = {
         'Content-Type': 'application/json'
@@ -750,10 +752,16 @@ export async function sendOfflinePurchase(
         console.log('🔑 Usando CAPIG API Key no header (autenticação adicional)');
       }
       
+      // Adicionar também data_source_id no payload (alguns CAPIGs podem precisar)
+      const capigPayloadWithDataSource = {
+        ...capigPayloadFinal,
+        data_source_id: pixelId // Alguns CAPIGs podem usar este campo
+      };
+      
       response = await fetch(capigUrl, {
         method: 'POST',
         headers: capigHeaders,
-        body: JSON.stringify(capigPayloadFinal) // Payload CAPIG (com pixel_id no body)
+        body: JSON.stringify(capigPayloadWithDataSource) // Payload CAPIG (pixel_id + data_source_id)
       });
       
       if (response.ok) {
