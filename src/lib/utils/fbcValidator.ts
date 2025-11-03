@@ -43,13 +43,19 @@ export function isValidFbcTimestamp(fbc: string): boolean {
   if (!isValidFbcFormat(fbc)) return false;
   
   const parts = fbc.split('.');
-  const fbcTimestamp = parseInt(parts[2]);
+  const fbcTimestampStr = parts[2];
+  const fbcTimestamp = parseInt(fbcTimestampStr);
   
   if (isNaN(fbcTimestamp)) return false;
   
-  // Calcular diferença em milissegundos
-  const now = Date.now();
-  const fbcTime = fbcTimestamp * 1000; // fbc timestamp é em segundos
+  // ✅ CORREÇÃO: Facebook usa MILISSEGUNDOS quando timestamp tem 13 dígitos
+  // Se tem 13 dígitos = milissegundos (não multiplicar)
+  // Se tem 10 dígitos = segundos (multiplicar por 1000)
+  const now = Date.now(); // milissegundos
+  const fbcTime = fbcTimestampStr.length === 13 
+    ? fbcTimestamp // Já está em milissegundos
+    : fbcTimestamp * 1000; // Converter segundos para milissegundos
+  
   const diff = now - fbcTime;
   
   // Janela válida: 24 horas (86400000 ms)
