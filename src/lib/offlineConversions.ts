@@ -403,7 +403,9 @@ export async function sendOfflinePurchase(
       hasZip: !!userData.zip,
       city: userData.city,
       state: userData.state,
-      zip: userData.zip
+      zip: userData.zip,
+      fbp: userData.fbp ? userData.fbp.substring(0, 30) + '...' : undefined,
+      fbc: userData.fbc ? userData.fbc.substring(0, 40) + '...' : undefined
     });
     
     const stapeUrl = process.env.NEXT_PUBLIC_STAPE_CONTAINER_URL;
@@ -426,8 +428,13 @@ export async function sendOfflinePurchase(
       user_data.ph = hashSHA256(phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`);
     }
     
-    // Adicionar dados persistidos (CR?TICO para atribui??o!)
-    if (userData.fbp) user_data.fbp = userData.fbp;
+    // Adicionar dados persistidos (CRÍTICO para atribuição!)
+    if (userData.fbp) {
+      user_data.fbp = userData.fbp;
+      console.log('✅ fbp adicionado');
+    } else {
+      console.warn('⚠️ fbp ausente (impacto: -20 DQS)');
+    }
     
     // fbc: VALIDAR antes de enviar (Meta rejeita fbc fake/modificado!)
     // CRÍTICO: fbc DEVE ser preservado EXATAMENTE como vem do cookie
@@ -468,22 +475,23 @@ export async function sendOfflinePurchase(
     
     // Geolocalização (do Lead salvo) - DEVE HASHEAR!
     // CRÍTICO: Sempre enviar (49% → 100% cobertura!)
-    // Se não tiver do Lead, usar fallback genérico para garantir cobertura
     if (userData.city) {
-      user_data.ct = hashSHA256(userData.city.toLowerCase());
+      user_data.ct = hashSHA256(userData.city.toLowerCase().trim());
+      console.log('✅ City adicionada:', userData.city);
     } else {
-      // Fallback: Não enviar city inválido (Meta prefere sem city do que city fake)
       console.warn('⚠️ City ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.state) {
-      user_data.st = hashSHA256(userData.state.toLowerCase());
+      user_data.st = hashSHA256(userData.state.toLowerCase().trim());
+      console.log('✅ State adicionado:', userData.state);
     } else {
       console.warn('⚠️ State ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.zip) {
-      user_data.zp = hashSHA256(userData.zip.replace(/\D/g, ''));
+      user_data.zp = hashSHA256(userData.zip.replace(/\D/g, '').trim());
+      console.log('✅ ZIP adicionado:', userData.zip);
     } else {
       console.warn('⚠️ ZIP ausente (cobertura reduzida: -3 DQS)');
     }
@@ -642,6 +650,23 @@ export async function sendOfflinePurchase(
       }
     }
 
+    // DEBUG: Ver o que será enviado no user_data
+    console.log('🔍 DEBUG - user_data final antes de enviar:', {
+      hasEmail: !!user_data.em,
+      hasPhone: !!user_data.ph,
+      hasFirstName: !!user_data.fn,
+      hasLastName: !!user_data.ln,
+      hasCity: !!user_data.ct,
+      hasState: !!user_data.st,
+      hasZip: !!user_data.zp,
+      hasCountry: !!user_data.country,
+      hasFbp: !!user_data.fbp,
+      hasFbc: !!user_data.fbc,
+      hasExternalId: !!user_data.external_id,
+      hasIp: !!user_data.client_ip_address,
+      hasUserAgent: !!user_data.client_user_agent
+    });
+    
     // Preparar payload para Meta CAPI (formato padrão)
     const metaPayload: any = {
       pixel_id: pixelId,
