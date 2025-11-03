@@ -90,32 +90,69 @@ export default function EliteMetaPixel({
       'https://connect.facebook.net/en_US/fbevents.js'
     );
 
-    // Configurar Meta Pixel
+    // Configurar Meta Pixel (exatamente como MetaPixelStape funciona)
+    // Aguardar script carregar completamente antes de configurar
+    const initPixel = () => {
+      if (window.fbq && typeof window.fbq === 'function') {
+        try {
+          // 1. Inicializar Pixel (PRIMEIRO!)
+          window.fbq('init', pixelId);
+          
+          // ✅ CONFIGURAÇÃO STAPE CAPIG GATEWAY (HABILITADO)
+          // CRÍTICO: Ordem e sintaxe são ESSENCIAIS! (igual ao MetaPixelStape)
+          // 2. Desabilitar autoConfig ANTES de configurar CAPIG
+          window.fbq('set', 'autoConfig', false, pixelId);
+          
+          // 3. Configurar agent (deve ser antes de server_event_uri)
+          window.fbq('set', 'agent', 'stape', pixelId);
+          
+          // 4. Configurar server_event_uri (CRÍTICO - deve ser o último)
+          // IMPORTANTE: URL SEM /events (Stape adiciona automaticamente)
+          window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);
+          
+          console.log('✅ ELITE Meta Pixel inicializado');
+          console.log('📊 Tracking Mode: Dual (Browser + CAPIG)');
+          console.log('🔧 Features ELITE:');
+          console.log('   ✅ Advanced Matching (14 campos)');
+          console.log('   ✅ Attribution Tracking');
+          console.log('   ✅ Data Quality Score');
+          console.log('   ✅ Event Deduplication');
+          console.log('   ✅ LGPD Compliant');
+          console.log('   ✅ CAPIG Gateway habilitado');
+          console.log('📡 CAPIG URL:', stapeContainerUrl);
+          console.log('🔄 Dual Tracking:');
+          console.log('   1️⃣ Browser → Meta Pixel endpoint');
+          console.log('   2️⃣ Server → CAPIG → Meta Conversions API');
+          
+          // Verificar se configuração foi aplicada
+          setTimeout(() => {
+            const pixelState = (window as any)._fbq?.getState?.();
+            if (pixelState?.pixels?.[pixelId]) {
+              console.log('✅ CAPIG Config verificado:', {
+                server_event_uri: pixelState.pixels[pixelId].server_event_uri,
+                agent: pixelState.pixels[pixelId].agent,
+                autoConfig: pixelState.pixels[pixelId].autoConfig
+              });
+            }
+          }, 500);
+          
+          // Disparar PageView Elite (com todos os dados)
+          trackPageViewElite();
+        } catch (error) {
+          console.error('❌ Erro ao configurar Meta Pixel:', error);
+        }
+      } else {
+        // Tentar novamente após 100ms
+        setTimeout(initPixel, 100);
+      }
+    };
+
+    // Aguardar um pouco para garantir que script carregou
     if (window.fbq) {
-      window.fbq('init', pixelId);
-      
-      // ✅ CONFIGURAÇÃO STAPE CAPIG GATEWAY (HABILITADO)
-      // CRÍTICO: Passar pixelId em TODOS os 'set' commands!
-      window.fbq('set', 'autoConfig', false, pixelId);
-      window.fbq('set', 'agent', 'stape', pixelId);
-      window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);
-      
-      console.log('✅ ELITE Meta Pixel inicializado');
-      console.log('📊 Tracking Mode: Dual (Browser + CAPIG)');
-      console.log('🔧 Features ELITE:');
-      console.log('   ✅ Advanced Matching (14 campos)');
-      console.log('   ✅ Attribution Tracking');
-      console.log('   ✅ Data Quality Score');
-      console.log('   ✅ Event Deduplication');
-      console.log('   ✅ LGPD Compliant');
-      console.log('   ✅ CAPIG Gateway habilitado');
-      console.log('📡 CAPIG URL:', stapeContainerUrl);
-      console.log('🔄 Dual Tracking:');
-      console.log('   1️⃣ Browser → Meta Pixel endpoint');
-      console.log('   2️⃣ Server → CAPIG → Meta Conversions API');
-      
-      // 3. Disparar PageView Elite (com todos os dados)
-      trackPageViewElite();
+      initPixel();
+    } else {
+      // Se ainda não carregou, aguardar
+      setTimeout(initPixel, 200);
     }
   }, [pixelId, stapeContainerUrl]);
 
