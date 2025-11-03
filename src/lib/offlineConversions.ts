@@ -653,45 +653,76 @@ export async function sendOfflinePurchase(
     // A URL completa melhora significativamente o Event Match Quality
     let eventSourceUrl = 'https://pay.cakto.com.br';
     
+    // Função auxiliar para validar valor de parâmetro URL (evitar valores inválidos)
+    const isValidUrlParam = (value: string | undefined | null): boolean => {
+      if (!value || typeof value !== 'string') return false;
+      // Rejeitar valores muito longos (provavelmente erros/dados inválidos)
+      if (value.length > 200) return false;
+      // Rejeitar valores que parecem ser markdown/código/documentação
+      if (value.includes('```') || value.includes('**') || value.includes('##') || value.includes('###')) return false;
+      // Rejeitar valores com muitas quebras de linha (provavelmente texto copiado)
+      if ((value.match(/\n/g) || []).length > 2) return false;
+      return true;
+    };
+    
     // Construir URL com todos os parâmetros se disponíveis (CRÍTICO para EQM 9.3+!)
     if (userDataTyped) {
       const urlParams = new URLSearchParams();
       
       // ✅ Click IDs (CRÍTICO para atribuição Facebook/Google!)
-      if (userDataTyped.fbclid) {
+      // Validar fbclid: deve ter formato válido (geralmente 24+ caracteres alfanuméricos)
+      if (userDataTyped.fbclid && isValidUrlParam(userDataTyped.fbclid) && userDataTyped.fbclid.length >= 20) {
         urlParams.set('fbclid', userDataTyped.fbclid);
         console.log('✅ fbclid adicionado à URL:', userDataTyped.fbclid.substring(0, 20) + '...');
+      } else if (userDataTyped.fbclid) {
+        console.warn('⚠️ fbclid inválido (muito curto ou formato incorreto), não adicionando à URL');
       }
-      if (userDataTyped.gclid) {
+      
+      // Validar gclid: deve ter formato válido (geralmente 20+ caracteres)
+      if (userDataTyped.gclid && isValidUrlParam(userDataTyped.gclid) && userDataTyped.gclid.length >= 15) {
         urlParams.set('gclid', userDataTyped.gclid);
         console.log('✅ gclid adicionado à URL:', userDataTyped.gclid.substring(0, 20) + '...');
+      } else if (userDataTyped.gclid) {
+        console.warn('⚠️ gclid inválido (muito curto ou formato incorreto), não adicionando à URL');
       }
       
       // UTMs do Lead (first touch ou last touch - prioridade para last touch)
-      if (userDataTyped.utmLastSource) urlParams.set('utm_source', userDataTyped.utmLastSource);
-      if (userDataTyped.utmLastMedium) urlParams.set('utm_medium', userDataTyped.utmLastMedium);
-      if (userDataTyped.utmLastCampaign) urlParams.set('utm_campaign', userDataTyped.utmLastCampaign);
-      
-      // Se não tiver last touch, usar first touch
-      if (!userDataTyped.utmLastSource && userDataTyped.utmFirstSource) {
+      // Validar cada UTM antes de adicionar
+      if (userDataTyped.utmLastSource && isValidUrlParam(userDataTyped.utmLastSource)) {
+        urlParams.set('utm_source', userDataTyped.utmLastSource);
+      } else if (userDataTyped.utmFirstSource && isValidUrlParam(userDataTyped.utmFirstSource)) {
         urlParams.set('utm_source', userDataTyped.utmFirstSource);
       }
-      if (!userDataTyped.utmLastMedium && userDataTyped.utmFirstMedium) {
+      
+      if (userDataTyped.utmLastMedium && isValidUrlParam(userDataTyped.utmLastMedium)) {
+        urlParams.set('utm_medium', userDataTyped.utmLastMedium);
+      } else if (userDataTyped.utmFirstMedium && isValidUrlParam(userDataTyped.utmFirstMedium)) {
         urlParams.set('utm_medium', userDataTyped.utmFirstMedium);
       }
-      if (!userDataTyped.utmLastCampaign && userDataTyped.utmFirstCampaign) {
+      
+      if (userDataTyped.utmLastCampaign && isValidUrlParam(userDataTyped.utmLastCampaign)) {
+        urlParams.set('utm_campaign', userDataTyped.utmLastCampaign);
+      } else if (userDataTyped.utmFirstCampaign && isValidUrlParam(userDataTyped.utmFirstCampaign)) {
         urlParams.set('utm_campaign', userDataTyped.utmFirstCampaign);
       }
       
-      // Facebook Native Parameters (se disponíveis)
-      if (userDataTyped.fb_campaign_id) urlParams.set('fb_campaign_id', userDataTyped.fb_campaign_id);
-      if (userDataTyped.fb_adset_id) urlParams.set('fb_adset_id', userDataTyped.fb_adset_id);
-      if (userDataTyped.fb_ad_id) urlParams.set('fb_ad_id', userDataTyped.fb_ad_id);
+      // Facebook Native Parameters (se disponíveis) - validar também
+      if (userDataTyped.fb_campaign_id && isValidUrlParam(userDataTyped.fb_campaign_id)) {
+        urlParams.set('fb_campaign_id', userDataTyped.fb_campaign_id);
+      }
+      if (userDataTyped.fb_adset_id && isValidUrlParam(userDataTyped.fb_adset_id)) {
+        urlParams.set('fb_adset_id', userDataTyped.fb_adset_id);
+      }
+      if (userDataTyped.fb_ad_id && isValidUrlParam(userDataTyped.fb_ad_id)) {
+        urlParams.set('fb_ad_id', userDataTyped.fb_ad_id);
+      }
       
-      // Se tiver parâmetros, adicionar à URL
+      // Se tiver parâmetros válidos, adicionar à URL
       if (urlParams.toString()) {
         eventSourceUrl = `${eventSourceUrl}?${urlParams.toString()}`;
-        console.log('✅ event_source_url com UTMs + fbclid/gclid:', eventSourceUrl.substring(0, 150) + (eventSourceUrl.length > 150 ? '...' : ''));
+        console.log('✅ event_source_url com parâmetros válidos:', eventSourceUrl.substring(0, 150) + (eventSourceUrl.length > 150 ? '...' : ''));
+      } else {
+        console.log('ℹ️ Nenhum parâmetro válido para adicionar à event_source_url');
       }
     }
 
