@@ -286,9 +286,14 @@ export async function getUserDataFromKVOrPrisma(
     console.warn('⚠️ Vercel KV não disponível, tentando Prisma:', error);
   }
   
-  // 2. FALLBACK: Usar Prisma se KV não disponível
+  // 2. FALLBACK: Usar Prisma se KV não disponível (somente se DATABASE_URL configurado)
   try {
-    return await getUserDataByEmailOrPhone(email, phone);
+    if (process.env.DATABASE_URL) {
+      return await getUserDataByEmailOrPhone(email, phone);
+    } else {
+      console.warn('⚠️ Prisma não disponível (DATABASE_URL não configurado)');
+      return null;
+    }
   } catch (error) {
     console.error('❌ Erro ao buscar no Prisma:', error);
     return null;
