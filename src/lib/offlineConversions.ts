@@ -259,7 +259,13 @@ export async function getUserDataFromKVOrPrisma(
       console.log('✅ User data encontrado no Vercel KV:', {
         email: kvData.email,
         hasFbp: !!kvData.fbp,
-        hasFbc: !!kvData.fbc
+        hasFbc: !!kvData.fbc,
+        hasCity: !!kvData.city,
+        hasState: !!kvData.state,
+        hasZip: !!kvData.zip,
+        city: kvData.city,
+        state: kvData.state,
+        zip: kvData.zip
       });
       
       return {
@@ -273,6 +279,8 @@ export async function getUserDataFromKVOrPrisma(
         zip: kvData.zip,
         matchedBy: email ? 'email' : 'phone'
       };
+    } else {
+      console.warn('⚠️ User data NÃO encontrado no KV:', { email, phone });
     }
   } catch (error) {
     console.warn('⚠️ Vercel KV não disponível, tentando Prisma:', error);
