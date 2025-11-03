@@ -37,6 +37,9 @@ export interface UserTrackingData {
   utmLastCampaign?: string;
   utmTouchCount?: number;
   utmChannels?: string; // comma-separated
+  // Click IDs (CRÍTICO para atribuição!)
+  fbclid?: string; // Facebook Click ID (da URL)
+  gclid?: string; // Google Click ID (da URL)
   // Facebook Native Parameters (dados ricos)
   fb_campaign_id?: string;
   fb_campaign_name?: string;

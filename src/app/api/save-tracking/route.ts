@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
       utmFirstSource, utmFirstMedium, utmFirstCampaign,
       utmLastSource, utmLastMedium, utmLastCampaign,
       utmTouchCount, utmChannels,
+      // Click IDs (CRÍTICO para atribuição!)
+      fbclid, gclid,
       // Facebook Native Parameters
       fb_campaign_id, fb_campaign_name, fb_adset_id, fb_adset_name,
       fb_ad_id, fb_ad_name, fb_placement,
@@ -75,6 +77,9 @@ export async function POST(request: NextRequest) {
       utmLastCampaign,
       utmTouchCount,
       utmChannels,
+      // Click IDs (CRÍTICO para atribuição!)
+      fbclid,
+      gclid,
       // Facebook Native Parameters
       fb_campaign_id,
       fb_campaign_name,

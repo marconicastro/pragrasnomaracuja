@@ -324,6 +324,9 @@ export default function App() {
           utmLastCampaign: utmAttribution?.lastTouch.utm_campaign,
           utmTouchCount: utmAttribution?.touchCount,
           utmChannels: utmAttribution?.channels.join(','),
+          // Click IDs (CRÍTICO para atribuição!)
+          fbclid: utmAttribution?.lastTouch.fbclid || utmAttribution?.firstTouch.fbclid,
+          gclid: utmAttribution?.lastTouch.gclid || utmAttribution?.firstTouch.gclid,
           // Facebook Native Parameters (dados ricos)
           fb_campaign_id: utmAttribution?.lastTouch.fb_campaign_id,
           fb_campaign_name: utmAttribution?.lastTouch.fb_campaign_name,

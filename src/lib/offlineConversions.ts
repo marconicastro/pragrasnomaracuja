@@ -248,6 +248,8 @@ export async function getUserDataFromKVOrPrisma(
   state?: string;
   zip?: string;
   matchedBy?: 'email' | 'phone';
+  // Dados completos para construção da URL (UTMs, fbclid, etc)
+  [key: string]: any;
 } | null> {
   
   // 1. PRIORIDADE: Tentar Vercel KV primeiro (mais rápido)
@@ -263,11 +265,14 @@ export async function getUserDataFromKVOrPrisma(
         hasCity: !!kvData.city,
         hasState: !!kvData.state,
         hasZip: !!kvData.zip,
+        hasFbclid: !!kvData.fbclid,
+        hasGclid: !!kvData.gclid,
         city: kvData.city,
         state: kvData.state,
         zip: kvData.zip
       });
       
+      // Retornar TODOS os dados (incluindo UTMs, fbclid, gclid, etc)
       return {
         fbp: kvData.fbp,
         fbc: kvData.fbc,
@@ -277,7 +282,9 @@ export async function getUserDataFromKVOrPrisma(
         city: kvData.city,
         state: kvData.state,
         zip: kvData.zip,
-        matchedBy: email ? 'email' : 'phone'
+        matchedBy: email ? 'email' : 'phone',
+        // Dados completos para construção da URL
+        ...kvData
       };
     } else {
       console.warn('⚠️ User data NÃO encontrado no KV:', { email, phone });
@@ -642,13 +649,23 @@ export async function sendOfflinePurchase(
     if (userData.fbp) customData.fb_has_fbp = true;
     if (userData.fbc) customData.fb_has_fbc = true;
     
-    // CRÍTICO PARA EQM 9.3: Construir event_source_url com UTMs do Lead!
-    // A URL com UTMs melhora significativamente o Event Match Quality
+    // CRÍTICO PARA EQM 9.3+: Construir event_source_url com UTMs + fbclid + gclid do Lead!
+    // A URL completa melhora significativamente o Event Match Quality
     let eventSourceUrl = 'https://pay.cakto.com.br';
     
-    // Construir URL com UTMs se disponíveis (CRÍTICO para EQM 9.3!)
+    // Construir URL com todos os parâmetros se disponíveis (CRÍTICO para EQM 9.3+!)
     if (userDataTyped) {
       const urlParams = new URLSearchParams();
+      
+      // ✅ Click IDs (CRÍTICO para atribuição Facebook/Google!)
+      if (userDataTyped.fbclid) {
+        urlParams.set('fbclid', userDataTyped.fbclid);
+        console.log('✅ fbclid adicionado à URL:', userDataTyped.fbclid.substring(0, 20) + '...');
+      }
+      if (userDataTyped.gclid) {
+        urlParams.set('gclid', userDataTyped.gclid);
+        console.log('✅ gclid adicionado à URL:', userDataTyped.gclid.substring(0, 20) + '...');
+      }
       
       // UTMs do Lead (first touch ou last touch - prioridade para last touch)
       if (userDataTyped.utmLastSource) urlParams.set('utm_source', userDataTyped.utmLastSource);
@@ -671,10 +688,10 @@ export async function sendOfflinePurchase(
       if (userDataTyped.fb_adset_id) urlParams.set('fb_adset_id', userDataTyped.fb_adset_id);
       if (userDataTyped.fb_ad_id) urlParams.set('fb_ad_id', userDataTyped.fb_ad_id);
       
-      // Se tiver UTMs, adicionar à URL
+      // Se tiver parâmetros, adicionar à URL
       if (urlParams.toString()) {
         eventSourceUrl = `${eventSourceUrl}?${urlParams.toString()}`;
-        console.log('✅ event_source_url com UTMs:', eventSourceUrl);
+        console.log('✅ event_source_url com UTMs + fbclid/gclid:', eventSourceUrl.substring(0, 150) + (eventSourceUrl.length > 150 ? '...' : ''));
       }
     }
 
