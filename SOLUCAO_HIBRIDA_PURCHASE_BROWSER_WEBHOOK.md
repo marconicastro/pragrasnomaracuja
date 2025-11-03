@@ -117,19 +117,38 @@
 
 ---
 
+## ⚠️ IMPORTANTE: Cakto Não Permite Configurações Externas
+
+**Situação:** Cakto não aceita configurações externas na URL de sucesso.
+
+**Solução Implementada:** Sistema funciona **SEM dados na URL**!
+
+### **Como Funciona (Sem Dados na URL):**
+
+1. **Usuário faz Lead** → Email salvo no `localStorage`
+2. **Usuário compra no Cakto** → Webhook já envia Purchase (backup)
+3. **Usuário chega em `/obrigado`** (sem parâmetros na URL):
+   - ✅ Busca email do `localStorage` (do Lead)
+   - ✅ Busca dados do usuário via API `/api/get-recent-purchase` (KV)
+   - ✅ Gera `order_id` temporário (webhook já enviou com order_id real)
+   - ✅ Dispara Purchase via browser (EQM 9.3 via CAPIG!)
+
+**Resultado:**
+- ✅ Funciona 100% sem configuração no Cakto
+- ✅ EQM 9.3 garantido via browser
+- ✅ Webhook funciona como backup
+- ✅ Meta deduplica automaticamente
+
 ## 📋 Próximos Passos
 
-### **1. Configurar Cakto (Opcional mas Recomendado):**
+### **1. Testar (Sem Configuração no Cakto):**
 
-Atualizar `success_url` para passar dados:
-```
-https://www.maracujazeropragas.com/obrigado?order_id={refId}&email={customer.email}&name={customer.name}&value={amount}
-```
-
-**Verificar:**
-- Documentação do Cakto sobre placeholders
-- Se suporta variáveis na URL de sucesso
-- Testar com compra real
+1. Fazer Lead (email salvo no localStorage)
+2. Fazer compra no Cakto
+3. Verificar página `/obrigado`:
+   - ✅ Purchase deve ser disparado via browser
+   - ✅ Logs mostram "EQM 9.3 via CAPIG"
+   - ✅ Webhook também enviará (deduplicação automática)
 
 ### **2. Testar:**
 

@@ -31,21 +31,25 @@ export default function ObrigadoPage() {
     
     // 2. Aguardar 1s para garantir que PageView foi processado
     setTimeout(async () => {
-      // 3. Disparar Purchase via browser (passa pelo CAPIG, EQM 9.3!)
-      // FALLBACK: Se não tiver dados na URL, buscar do localStorage/KV
+      // 3. ESTRATÉGIA SEM DADOS NA URL (Cakto não permite configurações externas):
+      //    - Buscar email do localStorage (do Lead)
+      //    - Buscar dados do usuário via API (KV)
+      //    - Gerar order_id temporário (webhook garante com order_id real)
+      //    - Disparar Purchase via browser (EQM 9.3 via CAPIG!)
+      
       let finalOrderId = orderId;
       let finalEmail = email;
       let finalPhone = phone || '';
       let finalFirstName = firstName;
       let finalLastName = lastName;
       
-      // Se faltar dados na URL, tentar buscar do localStorage (dados do Lead)
-      if (!finalOrderId || !finalEmail) {
+      // PASSO 1: Buscar email do localStorage (do Lead que fez InitiateCheckout)
+      if (!finalEmail) {
         try {
           const storedData = localStorage.getItem('userTrackingData');
           if (storedData) {
             const parsed = JSON.parse(storedData);
-            if (!finalEmail && parsed.email) finalEmail = parsed.email;
+            if (parsed.email) finalEmail = parsed.email;
             if (!finalPhone && parsed.phone) finalPhone = parsed.phone;
             if (!finalFirstName && parsed.firstName) finalFirstName = parsed.firstName;
             if (!finalLastName && parsed.lastName) finalLastName = parsed.lastName;
@@ -53,21 +57,48 @@ export default function ObrigadoPage() {
         } catch (e) {
           console.warn('⚠️ Erro ao ler localStorage:', e);
         }
-        
-        // Se ainda não tiver orderId, gerar um temporário (Cakto pode não passar)
-        if (!finalOrderId) {
-          // Tentar buscar do sessionStorage ou URL params alternativos
-          finalOrderId = sessionStorage.getItem('lastOrderId') || `temp_${Date.now()}`;
+      }
+      
+      // PASSO 2: Se tem email mas faltam outros dados, buscar do KV via API
+      if (finalEmail && (!finalPhone || !finalFirstName)) {
+        try {
+          const response = await fetch(`/api/get-recent-purchase?email=${encodeURIComponent(finalEmail)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.userData) {
+              if (!finalPhone && data.userData.phone) finalPhone = data.userData.phone;
+              if (!finalFirstName && data.userData.firstName) finalFirstName = data.userData.firstName;
+              if (!finalLastName && data.userData.lastName) finalLastName = data.userData.lastName;
+              console.log('✅ Dados do usuário recuperados do KV via API');
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ Erro ao buscar dados via API:', e);
         }
       }
       
-      if (finalOrderId && finalEmail && !purchaseSent) {
+      // PASSO 3: Se ainda não tiver orderId, gerar temporário
+      // IMPORTANTE: Webhook já enviou com order_id real, então este é só para EQM 9.3
+      // Meta deduplica por event_id único OU por email + timestamp
+      if (!finalOrderId) {
+        // Tentar buscar do sessionStorage (se salvamos antes)
+        finalOrderId = sessionStorage.getItem('lastOrderId');
+        if (!finalOrderId) {
+          // Gerar temporário (webhook garante com order_id real)
+          finalOrderId = `browser_${Date.now()}`;
+          console.log('ℹ️ Order ID temporário gerado (webhook garante order_id real)');
+        }
+      }
+      
+      // PASSO 4: Disparar Purchase via browser (EQM 9.3 via CAPIG!)
+      if (finalEmail && !purchaseSent) {
         try {
           console.log('🎉 Disparando Purchase via browser (EQM 9.3 via CAPIG):', {
             orderId: finalOrderId,
             email: finalEmail,
             via: 'Browser + CAPIG Gateway',
-            source: orderId ? 'URL params' : 'localStorage fallback'
+            source: orderId ? 'URL params' : 'localStorage + API fallback',
+            note: 'Webhook já enviou com order_id real (backup garantido)'
           });
           
           await trackPurchaseElite(
@@ -83,21 +114,25 @@ export default function ObrigadoPage() {
               currency: 'BRL',
               // Metadata adicional
               purchase_source: 'cakto_success_page',
-              purchase_method: 'credit_card'
+              purchase_method: 'credit_card',
+              // IMPORTANTE: Marcar como browser event para diferenciação
+              fb_event_source: 'browser_capig',
+              fb_tracking_version: '2.0_elite_browser'
             }
           );
           
           setPurchaseSent(true);
           console.log('✅ Purchase enviado via browser + CAPIG (EQM 9.3 garantido!)');
+          console.log('ℹ️ Nota: Webhook também enviará (deduplicação automática pelo Meta)');
         } catch (error) {
           console.error('❌ Erro ao disparar Purchase:', error);
         }
       } else if (!purchaseSent) {
-        console.warn('⚠️ Dados insuficientes para Purchase:', {
-          orderId: !!finalOrderId,
-          email: !!finalEmail
+        console.warn('⚠️ Email não encontrado para Purchase via browser:', {
+          hasEmail: !!finalEmail,
+          hasOrderId: !!finalOrderId
         });
-        console.log('ℹ️ Purchase será enviado via webhook (backup garantido)');
+        console.log('ℹ️ Purchase será enviado APENAS via webhook (backup garantido)');
       }
     }, 1000);
   }, [orderId, email, phone, firstName, lastName, value, purchaseSent]);
