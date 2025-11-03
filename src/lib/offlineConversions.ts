@@ -752,16 +752,12 @@ export async function sendOfflinePurchase(
         console.log('🔑 Usando CAPIG API Key no header (autenticação adicional)');
       }
       
-      // Adicionar também data_source_id no payload (alguns CAPIGs podem precisar)
-      const capigPayloadWithDataSource = {
-        ...capigPayloadFinal,
-        data_source_id: pixelId // Alguns CAPIGs podem usar este campo
-      };
-      
+      // Usar payload limpo (sem data_source_id extra - pode causar "Malformed Payload")
+      // CAPIG aceita pixel_id na URL + no payload
       response = await fetch(capigUrl, {
         method: 'POST',
         headers: capigHeaders,
-        body: JSON.stringify(capigPayloadWithDataSource) // Payload CAPIG (pixel_id + data_source_id)
+        body: JSON.stringify(capigPayloadFinal) // Payload CAPIG padrão (pixel_id + data)
       });
       
       if (response.ok) {
