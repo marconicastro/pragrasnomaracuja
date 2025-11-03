@@ -313,13 +313,15 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     sources.push('progressive_zip');
   }
   
-  // 3. Meta cookies (SEMPRE - cr?tico!)
+  // 3. Meta cookies (SEMPRE - crítico!)
+  // CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações!)
   const metaCookies = getMetaCookies();
   if (metaCookies.fbp) {
     user_data.fbp = metaCookies.fbp;
     sources.push('meta_fbp');
   }
   if (metaCookies.fbc) {
+    // Preservar fbc exatamente como vem do cookie (não modificar!)
     user_data.fbc = metaCookies.fbc;
     sources.push('meta_fbc');
   }

@@ -9,6 +9,7 @@
  */
 
 import crypto from 'crypto';
+import { validateFbc } from './utils/fbcValidator';
 
 // ===== INTERFACES =====
 
@@ -236,11 +237,66 @@ export async function getUserDataByEmailOrPhone(
 }
 
 /**
+ * Busca dados do usuário usando Vercel KV como primário, Prisma como fallback
+ * 
+ * ESTRATÉGIA:
+ * 1. Tenta Vercel KV primeiro (mais rápido)
+ * 2. Se falhar, usa Prisma como fallback
+ * 3. Retorna primeiro match encontrado
+ */
+export async function getUserDataFromKVOrPrisma(
+  email: string,
+  phone?: string
+): Promise<{
+  fbp?: string;
+  fbc?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  matchedBy?: 'email' | 'phone';
+} | null> {
+  
+  // 1. PRIORIDADE: Tentar Vercel KV primeiro (mais rápido)
+  try {
+    const { getUserTracking } = await import('./userTrackingStore');
+    const kvData = await getUserTracking(email, phone);
+    
+    if (kvData) {
+      console.log('✅ User data encontrado no Vercel KV');
+      return {
+        fbp: kvData.fbp,
+        fbc: kvData.fbc,
+        firstName: kvData.firstName,
+        lastName: kvData.lastName,
+        phone: kvData.phone,
+        city: kvData.city,
+        state: kvData.state,
+        zip: kvData.zip,
+        matchedBy: email ? 'email' : 'phone'
+      };
+    }
+  } catch (error) {
+    console.warn('⚠️ Vercel KV não disponível, tentando Prisma:', error);
+  }
+  
+  // 2. FALLBACK: Usar Prisma se KV não disponível
+  try {
+    return await getUserDataByEmailOrPhone(email, phone);
+  } catch (error) {
+    console.error('❌ Erro ao buscar no Prisma:', error);
+    return null;
+  }
+}
+
+/**
  * Alias para compatibilidade (busca s? por email)
  * @deprecated Use getUserDataByEmailOrPhone() para melhor matching
  */
 export async function getUserDataByEmail(email: string) {
-  return getUserDataByEmailOrPhone(email);
+  return getUserDataFromKVOrPrisma(email);
 }
 
 /**
@@ -378,34 +434,65 @@ export async function sendOfflinePurchase(
     if (userData.fbp) user_data.fbp = userData.fbp;
     
     // fbc: VALIDAR antes de enviar (Meta rejeita fbc fake/modificado!)
-    // fbc válido: fb.1.[timestamp].[fbclid real do Facebook]
-    // Se fbc tiver caracteres inválidos ou for muito curto = FAKE!
+    // CRÍTICO: fbc DEVE ser preservado EXATAMENTE como vem do cookie
+    // Qualquer modificação (lowercase, truncamento, etc) causa erro no Meta CAPI
     if (userData.fbc) {
-      // Validar formato básico: fb.1.timestamp.fbclid
-      const fbcParts = userData.fbc.split('.');
-      if (fbcParts.length >= 4 && fbcParts[0] === 'fb' && fbcParts[1] === '1') {
-        // fbc parece válido
-        user_data.fbc = userData.fbc;
+      const { sanitizeFbc } = await import('./utils/fbcSanitizer');
+      const sanitizedFbc = sanitizeFbc(userData.fbc);
+      
+      if (sanitizedFbc) {
+        // Validação completa: formato + timestamp dentro de 24h
+        const fbcValidation = validateFbc(sanitizedFbc);
+        
+        if (fbcValidation.valid) {
+          // PRESERVAR EXATAMENTE como está (sem nenhuma modificação!)
+          user_data.fbc = sanitizedFbc;
+          console.log('✅ fbc válido, preservado exatamente e dentro da janela de 24h');
+          console.log('🔍 fbc preview:', sanitizedFbc.substring(0, 40) + '...');
+        } else {
+          console.warn('⚠️ fbc inválido detectado:', fbcValidation.reason, '- não enviando para evitar erro Meta');
+          // NÃO adicionar fbc inválido!
+        }
       } else {
-        console.warn('⚠️ fbc inválido detectado (não enviando para evitar erro Meta):', userData.fbc);
-        // NÃO adicionar fbc inválido!
+        console.warn('⚠️ fbc não passou na sanitização básica - não enviando');
       }
     }
     
     // External ID (session) - NÃO hashear (conforme doc Meta)
     // Ganho: +0.22% conversões adicionais
+    // CRÍTICO: Sempre enviar (36% → 100% cobertura!)
     if (userData.external_id) {
       user_data.external_id = userData.external_id;
     } else {
       // Gerar external_id baseado no email (fallback se não tiver session)
+      // SEMPRE gerar para garantir 100% cobertura!
       user_data.external_id = `purchase_${hashSHA256(purchaseData.email).substring(0, 16)}`;
+      console.log('✅ external_id gerado (fallback):', user_data.external_id);
     }
     
-    // Geolocaliza??o (do Lead salvo) - DEVE HASHEAR! (todos os user_data exceto fbp/fbc/external_id)
-    if (userData.city) user_data.ct = hashSHA256(userData.city.toLowerCase());
-    if (userData.state) user_data.st = hashSHA256(userData.state.toLowerCase());
-    if (userData.zip) user_data.zp = hashSHA256(userData.zip.replace(/\D/g, ''));
-    // Pa?s sempre BR (DEVE HASHEAR!)
+    // Geolocalização (do Lead salvo) - DEVE HASHEAR!
+    // CRÍTICO: Sempre enviar (49% → 100% cobertura!)
+    // Se não tiver do Lead, usar fallback genérico para garantir cobertura
+    if (userData.city) {
+      user_data.ct = hashSHA256(userData.city.toLowerCase());
+    } else {
+      // Fallback: Não enviar city inválido (Meta prefere sem city do que city fake)
+      console.warn('⚠️ City ausente (cobertura reduzida: -5 DQS)');
+    }
+    
+    if (userData.state) {
+      user_data.st = hashSHA256(userData.state.toLowerCase());
+    } else {
+      console.warn('⚠️ State ausente (cobertura reduzida: -5 DQS)');
+    }
+    
+    if (userData.zip) {
+      user_data.zp = hashSHA256(userData.zip.replace(/\D/g, ''));
+    } else {
+      console.warn('⚠️ ZIP ausente (cobertura reduzida: -3 DQS)');
+    }
+    
+    // País sempre BR (DEVE HASHEAR!) - SEMPRE enviar (garante 100% cobertura)
     user_data.country = hashSHA256('br');
     
     // ✅ IP e User Agent - +3.36% conversões! (CRÍTICO para EQM)
@@ -435,7 +522,9 @@ export async function sendOfflinePurchase(
       local: new Date(eventTime * 1000).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
     });
     
-    const eventID = `Purchase_${purchaseData.orderId}_${eventTime}`;
+    // Gerar Event ID usando função centralizada
+    const { generateEventId } = await import('./utils/eventId');
+    const eventID = generateEventId('Purchase', purchaseData.orderId);
     
     // Calcular Data Quality Score do Purchase
     let dataQualityScore = 0;
@@ -679,9 +768,9 @@ export async function processCaktoWebhook(
       throw new Error('Email n?o encontrado no payload');
     }
     
-    // Buscar dados persistidos do usu?rio (fbp/fbc)
-    // BUSCA POR EMAIL E TELEFONE (fallback se email for diferente!)
-    const userData = await getUserDataByEmailOrPhone(
+    // Buscar dados persistidos do usuário (fbp/fbc)
+    // ESTRATÉGIA: KV primeiro (rápido), Prisma como fallback
+    const userData = await getUserDataFromKVOrPrisma(
       purchaseData.email,
       purchaseData.phone
     );

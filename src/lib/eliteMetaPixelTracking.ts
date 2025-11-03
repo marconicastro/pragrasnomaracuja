@@ -34,6 +34,8 @@ import {
   type EnrichedEventData
 } from './coldEventsEnrichment';
 
+import { generateEventId } from './utils/eventId';
+
 declare global {
   interface Window {
     fbq: (command: string, eventName: string, parameters?: any, options?: any) => void;
@@ -52,16 +54,7 @@ const CONFIG = {
 };
 
 // ===== UTILITIES =====
-
-/**
- * Gera Event ID ?nico (enterprise-grade)
- */
-function generateEventId(eventName: string, orderId?: string): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 12);
-  const prefix = orderId ? `${eventName}_${orderId}` : eventName;
-  return `${prefix}_${timestamp}_${random}`;
-}
+// Event ID generation is now centralized in utils/eventId.ts
 
 /**
  * Logger condicional
@@ -123,8 +116,12 @@ async function prepareAdvancedMatching(isColdEvent: boolean = false): Promise<Re
   if (userData?.country) matching.country = userData.country.toLowerCase();
   
   // Meta identifiers
+  // CRÍTICO: fbp e fbc devem ser preservados EXATAMENTE como vêm do cookie
   if (metaCookies.fbp) matching.fbp = metaCookies.fbp;
-  if (metaCookies.fbc) matching.fbc = metaCookies.fbc;
+  if (metaCookies.fbc) {
+    // Preservar fbc exatamente (não modificar!)
+    matching.fbc = metaCookies.fbc;
+  }
   if (userData?.external_id) matching.external_id = userData.external_id;
   
   // Browser context (adicionar para completude - mesmo em warm events!)
@@ -250,7 +247,7 @@ export async function trackEliteEvent(
       return { success: false, eventId: '', warnings: ['Meta Pixel nao carregado'] };
     }
     
-    // 1. Gerar Event ID
+    // 1. Gerar Event ID (centralizado)
     const eventID = generateEventId(eventName, options?.orderId);
     
     // 2. Preparar Advanced Matching (COM ENRICHMENT para eventos frios!)

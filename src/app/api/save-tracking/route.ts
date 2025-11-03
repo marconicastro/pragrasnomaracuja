@@ -12,6 +12,15 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
+    // CRÍTICO: Capturar IP dos headers (EQM +1.68% conversões!)
+    const client_ip_address = 
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') ||
+      undefined;
+    
+    console.log('📍 IP capturado do request:', client_ip_address || 'não disponível');
+    
     const { 
       email, fbp, fbc, firstName, lastName, phone, city, state, zip,
       // Attribution data
@@ -26,7 +35,9 @@ export async function POST(request: NextRequest) {
       fb_campaign_id, fb_campaign_name, fb_adset_id, fb_adset_name,
       fb_ad_id, fb_ad_name, fb_placement,
       // External ID (session) - +0.22% convers?es
-      external_id
+      external_id,
+      // User Agent (do frontend)
+      client_user_agent
     } = data;
     
     if (!email) {
@@ -73,7 +84,10 @@ export async function POST(request: NextRequest) {
       fb_ad_name,
       fb_placement,
       // External ID (session) - +0.22% convers?es
-      external_id
+      external_id,
+      // IP e User Agent (CRÍTICO para EQM +3.36% conversões!)
+      client_ip_address,
+      client_user_agent
     });
     
     if (success) {

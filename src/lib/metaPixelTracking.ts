@@ -16,14 +16,9 @@ declare global {
   }
 }
 
-/**
- * Gera Event ID ?nico para deduplica??o
- */
-function generateEventId(eventName: string): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substr(2, 5);
-  return `${eventName}_${timestamp}_${random}`;
-}
+import { generateEventId } from './utils/eventId';
+
+// Event ID generation is now centralized in utils/eventId.ts
 
 /**
  * Envia evento via Meta Pixel (Stape intercepta automaticamente)
@@ -39,7 +34,7 @@ function trackMetaEvent(
     return { eventId: '', success: false };
   }
 
-  // Gerar event ID ?nico para deduplica??o
+  // Gerar event ID único para deduplicação (centralizado)
   const eventID = generateEventId(eventName);
 
   try {

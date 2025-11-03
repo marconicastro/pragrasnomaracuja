@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   validateCaktoWebhook,
+  getUserDataFromKVOrPrisma,
+  sendOfflinePurchase,
   type CaktoWebhookPayload 
 } from '@/lib/offlineConversions';
-import { getUserTracking } from '@/lib/userTrackingStore';
-import { sendOfflinePurchase } from '@/lib/offlineConversions';
 
 /**
  * 📨 Webhook Cakto - Offline Conversions (Purchase)
@@ -82,8 +82,17 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // Buscar user data
-    const userData = await getUserTracking(
+    // Capturar IP dos headers (CRÍTICO para EQM +1.68% conversões!)
+    const client_ip_address = 
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') ||
+      undefined;
+    
+    console.log('📍 IP capturado do webhook:', client_ip_address || 'não disponível');
+    
+    // Buscar user data (KV + Prisma fallback)
+    const userData = await getUserDataFromKVOrPrisma(
       payload.data.customer.email,
       payload.data.customer.phone
     );
@@ -101,8 +110,14 @@ export async function POST(request: NextRequest) {
       timestamp: payload.data.paidAt ? new Date(payload.data.paidAt).getTime() : Date.now()
     };
     
-    // Enviar Purchase
-    const result = await sendOfflinePurchase(purchaseData, userData || {});
+    // Enriquecer userData com IP (se não tiver no KV)
+    const enrichedUserData = {
+      ...userData,
+      client_ip_address: userData?.client_ip_address || client_ip_address
+    };
+    
+    // Enviar Purchase com IP
+    const result = await sendOfflinePurchase(purchaseData, enrichedUserData || {});
     
     // 4. Log de performance
     const duration = Date.now() - startTime;

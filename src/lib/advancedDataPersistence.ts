@@ -105,30 +105,66 @@ function generateSessionId(): string {
 
 /**
  * Extrai fbp e fbc dos cookies
+ * 
+ * CRÍTICO: fbc deve ser preservado EXATAMENTE como vem do cookie.
+ * Qualquer modificação causa erro no Meta CAPI.
+ * 
+ * IMPORTANTE: decodeURIComponent preserva caracteres especiais do fbc.
+ * Apenas trim externo é aplicado - NENHUMA outra modificação!
  */
 export function getMetaCookies(): { fbp?: string; fbc?: string } {
   if (typeof document === 'undefined') return {};
   
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
+    // CRÍTICO: decodeURIComponent preserva caracteres especiais do fbc
+    // Se não fizer decode, pode perder caracteres codificados
+    // TRY/CATCH para proteger contra cookies mal formatados
+    try {
+      acc[key] = value ? decodeURIComponent(value) : value;
+    } catch (error) {
+      // Se falhar decode, usar valor raw (melhor que perder cookie)
+      console.warn('⚠️ Erro ao decodificar cookie:', key, error);
+      acc[key] = value;
+    }
     return acc;
   }, {} as Record<string, string>);
   
+  // CRÍTICO: fbc deve ser preservado EXATAMENTE
+  // Apenas remover espaços externos (trim) - NADA MAIS!
+  const rawFbc = cookies['_fbc'];
+  const sanitizedFbc = rawFbc ? rawFbc.trim() : undefined;
+  
+  // Validação básica (sem modificar!)
+  if (sanitizedFbc && !sanitizedFbc.startsWith('fb.1.')) {
+    console.warn('⚠️ fbc formato inválido (não começa com "fb.1."):', sanitizedFbc.substring(0, 30));
+    return {
+      fbp: cookies['_fbp'],
+      fbc: undefined // Não enviar fbc inválido
+    };
+  }
+  
   return {
     fbp: cookies['_fbp'],
-    fbc: cookies['_fbc']
+    fbc: sanitizedFbc
   };
 }
 
 /**
  * Salva fbp/fbc no localStorage para usar em offline conversions
+ * 
+ * CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações)
  */
 export function persistMetaCookies(): void {
   const cookies = getMetaCookies();
   if (cookies.fbp || cookies.fbc) {
+    // JSON.stringify preserva strings corretamente (não modifica fbc)
     localStorage.setItem(KEYS.META_COOKIES, JSON.stringify(cookies));
-    console.log('?? Meta cookies persistidos:', cookies);
+    console.log('✅ Meta cookies persistidos (fbc preservado exatamente):', {
+      hasFbp: !!cookies.fbp,
+      hasFbc: !!cookies.fbc,
+      fbcPreview: cookies.fbc ? cookies.fbc.substring(0, 30) + '...' : 'none'
+    });
   }
 }
 

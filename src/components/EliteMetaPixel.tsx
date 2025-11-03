@@ -5,16 +5,17 @@ import { initializeAdvancedPersistence, hasConsent } from '@/lib/advancedDataPer
 import { trackPageViewElite } from '@/lib/eliteMetaPixelTracking';
 
 /**
- * ?? ELITE Meta Pixel com Stape CAPIG Gateway
+ * 🎯 ELITE Meta Pixel - Sistema Enterprise
  * 
- * Sistema MAIS AVAN?ADO mantendo fluxograma CAPIG:
+ * Sistema AVANÇADO de tracking Meta Pixel:
  * - Advanced Matching (14 campos)
  * - Enhanced Conversions ready
- * - Attribution tracking autom?tico
+ * - Attribution tracking automático
  * - Data quality scoring
  * - Compliance/LGPD ready
+ * - Offline Conversions (via Meta CAPI direto)
  * 
- * MANT?M: Dual tracking (browser + server via Stape)
+ * NOTA: Stape CAPIG desabilitado - usando Meta CAPI direto para Purchase
  */
 
 declare global {
@@ -89,33 +90,26 @@ export default function EliteMetaPixel({
       'https://connect.facebook.net/en_US/fbevents.js'
     );
 
-    // Configurar Meta Pixel com Stape CAPIG
+    // Configurar Meta Pixel
     if (window.fbq) {
-      // 1. Inicializar Pixel
       window.fbq('init', pixelId);
       
-      // 2. CONFIGURA??O STAPE CAPIG GATEWAY (ordem e sintaxe CR?TICAS!)
-      // ?? IMPORTANTE: Passar pixelId em TODOS os 'set' para garantir que config ? aplicada!
-      window.fbq('set', 'autoConfig', false, pixelId);
-      window.fbq('set', 'agent', 'stape', pixelId);  // ? COM pixelId!
-      window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);  // ? COM pixelId!
+      // NOTA: Stape CAPIG desabilitado - usando Meta CAPI direto
+      // Configuração mantida para compatibilidade, mas não ativa
+      // Se precisar reabilitar Stape, descomentar as linhas abaixo:
+      // window.fbq('set', 'autoConfig', false, pixelId);
+      // window.fbq('set', 'agent', 'stape');
+      // window.fbq('set', 'server_event_uri', stapeContainerUrl);
       
-      console.log('? ELITE Meta Pixel inicializado');
-      console.log('?? Pixel ID:', pixelId);
-      console.log('?? Stape Container:', stapeContainerUrl);
-      console.log('? CAPIG Config:');
-      console.log('   - autoConfig: false ?');
-      console.log('   - agent: stape ?');
-      console.log('   - server_event_uri: ' + stapeContainerUrl + ' ?');
-      console.log('?? Dual Tracking:');
-      console.log('   1?? Browser ? Meta Pixel endpoint');
-      console.log('   2?? Server ? Meta Conversions API (via CAPIG)');
-      console.log('?? Features ELITE:');
-      console.log('   ? Advanced Matching (13 campos)');
-      console.log('   ? Attribution Tracking');
-      console.log('   ? Data Quality Score');
-      console.log('   ? Event Deduplication');
-      console.log('   ? LGPD Compliant');
+      console.log('✅ ELITE Meta Pixel inicializado');
+      console.log('📊 Tracking Mode: Browser-side (Meta Pixel)');
+      console.log('🔧 Features ELITE:');
+      console.log('   ✅ Advanced Matching (14 campos)');
+      console.log('   ✅ Attribution Tracking');
+      console.log('   ✅ Data Quality Score');
+      console.log('   ✅ Event Deduplication');
+      console.log('   ✅ LGPD Compliant');
+      console.log('   ✅ Offline Conversions (via Meta CAPI direto)');
       
       // 3. Disparar PageView Elite (com todos os dados)
       trackPageViewElite();
