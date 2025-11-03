@@ -94,22 +94,25 @@ export default function EliteMetaPixel({
     if (window.fbq) {
       window.fbq('init', pixelId);
       
-      // NOTA: Stape CAPIG desabilitado - usando Meta CAPI direto
-      // Configuração mantida para compatibilidade, mas não ativa
-      // Se precisar reabilitar Stape, descomentar as linhas abaixo:
-      // window.fbq('set', 'autoConfig', false, pixelId);
-      // window.fbq('set', 'agent', 'stape');
-      // window.fbq('set', 'server_event_uri', stapeContainerUrl);
+      // ✅ CONFIGURAÇÃO STAPE CAPIG GATEWAY (HABILITADO)
+      // CRÍTICO: Passar pixelId em TODOS os 'set' commands!
+      window.fbq('set', 'autoConfig', false, pixelId);
+      window.fbq('set', 'agent', 'stape', pixelId);
+      window.fbq('set', 'server_event_uri', stapeContainerUrl, pixelId);
       
       console.log('✅ ELITE Meta Pixel inicializado');
-      console.log('📊 Tracking Mode: Browser-side (Meta Pixel)');
+      console.log('📊 Tracking Mode: Dual (Browser + CAPIG)');
       console.log('🔧 Features ELITE:');
       console.log('   ✅ Advanced Matching (14 campos)');
       console.log('   ✅ Attribution Tracking');
       console.log('   ✅ Data Quality Score');
       console.log('   ✅ Event Deduplication');
       console.log('   ✅ LGPD Compliant');
-      console.log('   ✅ Offline Conversions (via Meta CAPI direto)');
+      console.log('   ✅ CAPIG Gateway habilitado');
+      console.log('📡 CAPIG URL:', stapeContainerUrl);
+      console.log('🔄 Dual Tracking:');
+      console.log('   1️⃣ Browser → Meta Pixel endpoint');
+      console.log('   2️⃣ Server → CAPIG → Meta Conversions API');
       
       // 3. Disparar PageView Elite (com todos os dados)
       trackPageViewElite();
