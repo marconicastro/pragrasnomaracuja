@@ -466,7 +466,22 @@ export async function sendOfflinePurchase(
           console.log('✅ fbc válido, preservado exatamente e dentro da janela de 24h');
           console.log('🔍 fbc preview:', sanitizedFbc.substring(0, 40) + '...');
         } else {
-          console.warn('⚠️ fbc inválido detectado:', fbcValidation.reason, '- não enviando para evitar erro Meta');
+          // DEBUG: Mostrar detalhes do fbc expirado
+          const parts = sanitizedFbc.split('.');
+          const fbcTimestamp = parseInt(parts[2]);
+          const now = Math.floor(Date.now() / 1000);
+          const diff = now - fbcTimestamp;
+          const diffHours = (diff / 3600).toFixed(2);
+          
+          console.warn('⚠️ fbc inválido detectado:', fbcValidation.reason);
+          console.warn('🔍 DEBUG fbc:', {
+            fbcTimestamp,
+            nowTimestamp: now,
+            diffSeconds: diff,
+            diffHours: `${diffHours}h`,
+            fbcAge: diff > 0 ? `${diffHours}h atrás` : 'futuro',
+            isValidWindow: diff <= 86400 // 24h em segundos
+          });
           // NÃO adicionar fbc inválido!
         }
       } else {
