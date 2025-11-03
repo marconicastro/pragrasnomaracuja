@@ -707,9 +707,28 @@ export async function sendOfflinePurchase(
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
     console.log('🌐 event_source_url:', eventSourceUrl);
     
-    // ✅ ENVIAR VIA CAPIG (como outros eventos para ter EQM 9.3!)
-    // ⚠️ SEGURANÇA: Se CAPIG falhar, fallback automático para Meta direto
-    // Isso garante que nunca quebra o que está funcionando
+    // ⚠️ LIMITAÇÃO IDENTIFICADA: Stape CAPIG não suporta server-side events via fetch direto
+    // CAPIG funciona apenas para browser events (via fbq + server_event_uri)
+    // Para server-side events (Purchase via webhook), usar Meta CAPI direto
+    // 
+    // Motivo: CAPIG retorna "Data Source Id Or Pixel Id Missing" mesmo com:
+    // - pixel_id no payload ✅
+    // - pixel_id na URL ✅  
+    // - API Key no header ✅
+    // 
+    // Conclusão: CAPIG Stape é otimizado para interceptar eventos do browser,
+    // não para receber eventos server-side via REST API
+    
+    // ✅ Enviar direto via Meta CAPI (funciona 100%, DQS 85, EQM ~8.0)
+    console.log('📤 Enviando Purchase via Meta CAPI direto (CAPIG não suporta server-side events):', {
+      orderId: purchaseData.orderId,
+      pixelId,
+      hasFbp: !!userData.fbp,
+      hasFbc: !!userData.fbc,
+      dataQualityScore,
+      eventSourceUrl,
+      motivo: 'CAPIG Stape só funciona para browser events (fbq), não server-side fetch'
+    });
     
     let response;
     const accessToken = process.env.META_ACCESS_TOKEN;
@@ -718,97 +737,24 @@ export async function sendOfflinePurchase(
       throw new Error('META_ACCESS_TOKEN não configurado');
     }
     
-    // Tentar primeiro via CAPIG (para ter EQM 9.3 como outros eventos)
-    // IMPORTANTE: CAPIG pode exigir pixel_id na URL ou formato diferente
-    let capigBaseUrl = stapeUrl.endsWith('/events') ? stapeUrl.replace('/events', '') : stapeUrl;
-    // Tentar com pixel_id na URL (alguns CAPIGs podem precisar disso)
-    const capigUrl = `${capigBaseUrl}/events?pixel_id=${pixelId}`;
+      // Enviar direto para Meta CAPI (formato padrão)
+    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
     
-    console.log('📤 Tentando Purchase via CAPIG (para EQM 9.3 como outros eventos):', {
-      orderId: purchaseData.orderId,
-      pixelId,
-      hasFbp: !!userData.fbp,
-      hasFbc: !!userData.fbc,
-      dataQualityScore,
-      eventSourceUrl,
-      capigUrl,
-      payloadFormat: 'CAPIG (pixel_id na URL + no body)'
+    // Enviar direto (não usar CAPIG para server-side events)
+    response = await fetch(metaEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(metaPayloadFinal) // Payload Meta padrão (com pixel_id)
     });
     
-    let useCapig = true;
-    let capigError: string | null = null;
-    
-    // Tentar CAPIG primeiro (com payload formato CAPIG - com pixel_id no body E na URL)
-    // CAPIG pode exigir pixel_id em múltiplos lugares para server-side events
-    try {
-      const capigHeaders: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      
-      // Tentar adicionar API Key se disponível (pode ser usada para autenticação adicional)
-      const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
-      if (capigApiKey) {
-        capigHeaders['Authorization'] = `Bearer ${capigApiKey}`;
-        console.log('🔑 Usando CAPIG API Key no header (autenticação adicional)');
-      }
-      
-      // Usar payload limpo (sem data_source_id extra - pode causar "Malformed Payload")
-      // CAPIG aceita pixel_id na URL + no payload
-      response = await fetch(capigUrl, {
-        method: 'POST',
-        headers: capigHeaders,
-        body: JSON.stringify(capigPayloadFinal) // Payload CAPIG padrão (pixel_id + data)
-      });
-      
-      if (response.ok) {
-        const responseData = await response.text();
-        console.log('✅ SUCCESS: Purchase enviado via CAPIG Gateway (EQM 9.3 otimizado!)');
-        console.log('📋 Resposta CAPIG:', responseData.substring(0, 200) || '(vazio)');
-      } else {
-        // CAPIG retornou erro - fazer fallback
-        const errorText = await response.text();
-        capigError = `CAPIG error: ${response.status} - ${errorText}`;
-        console.warn('⚠️ CAPIG retornou erro, fazendo fallback para Meta direto:', capigError);
-        console.warn('📋 Payload CAPIG enviado:', JSON.stringify(capigPayloadFinal, null, 2).substring(0, 500) + '...');
-        useCapig = false;
-      }
-    } catch (capigFetchError: any) {
-      // Erro de rede ou fetch - fazer fallback
-      capigError = capigFetchError.message;
-      console.warn('⚠️ Erro ao enviar para CAPIG, fazendo fallback para Meta direto:', capigError);
-      useCapig = false;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
     }
     
-    // Fallback para Meta direto se CAPIG falhou
-    if (!useCapig) {
-      console.log('🔄 Fallback: Enviando Purchase via Meta CAPI direto (garantia de funcionamento):', {
-        orderId: purchaseData.orderId,
-        pixelId,
-        hasFbp: !!userData.fbp,
-        hasFbc: !!userData.fbc,
-        dataQualityScore,
-        eventSourceUrl,
-        fallbackReason: capigError
-      });
-      
-      // Fallback: Usar payload Meta padrão (com access_token na URL)
-      const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
-      
-      response = await fetch(metaEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(metaPayloadFinal) // Payload Meta padrão (com pixel_id)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
-      }
-      
-      console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (fallback - funcionando 100%!)');
-    }
+    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (funcionando 100%!)');
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -829,17 +775,15 @@ export async function sendOfflinePurchase(
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
-      via: useCapig ? 'CAPIG Gateway (EQM 9.3)' : 'Meta CAPI direto (fallback)',
+      via: 'Meta CAPI direto',
       eventSourceUrl,
       response: result,
-      ...(capigError ? { capigError } : {})
+      motivo: 'CAPIG Stape não suporta server-side events via fetch'
     });
     
     return { 
       success: true,
-      message: useCapig 
-        ? 'Purchase enviado via CAPIG Gateway - EQM 9.3 otimizado como outros eventos!'
-        : `Purchase enviado via Meta CAPI direto (fallback após erro CAPIG) - DQS 85 - ${capigError ? `Erro CAPIG: ${capigError}` : ''}`
+      message: `Purchase enviado via Meta CAPI direto - DQS ${dataQualityScore} - CAPIG Stape não suporta server-side events (só browser events via fbq)`
     };
     
   } catch (error: any) {
