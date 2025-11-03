@@ -646,11 +646,9 @@ export async function sendOfflinePurchase(
       }
     }
 
-    const payload: any = {
-      // CAPIG pode esperar: pixel_id, data_source_id, ou ambos
+    // Preparar payload para Meta CAPI (formato padrão)
+    const metaPayload: any = {
       pixel_id: pixelId,
-      data_source_id: pixelId,
-      access_token: process.env.META_ACCESS_TOKEN, // Alguns CAPIGs pedem aqui
       data: [{
         event_name: 'Purchase',
         event_time: eventTime,
@@ -661,6 +659,24 @@ export async function sendOfflinePurchase(
         custom_data: customData
       }]
     };
+    
+    // Preparar payload para CAPIG (formato pode ser diferente)
+    // CAPIG geralmente aceita mesmo formato, mas pode precisar de ajustes
+    const capigPayload: any = {
+      pixel_id: pixelId,
+      data: [{
+        event_name: 'Purchase',
+        event_time: eventTime,
+        event_id: eventID,
+        event_source_url: eventSourceUrl,
+        action_source: 'website',
+        user_data,
+        custom_data: customData
+      }]
+    };
+    
+    // Usar mesmo payload para ambos (CAPIG deve aceitar formato Meta CAPI padrão)
+    const payload = capigPayload;
     
     // Adicionar test_event_code se configurado (para debug no Meta Events Manager)
     if (testEventCode) {
@@ -684,6 +700,7 @@ export async function sendOfflinePurchase(
     }
     
     // Tentar primeiro via CAPIG (para ter EQM 9.3 como outros eventos)
+    // IMPORTANTE: CAPIG pode esperar formato diferente ou acesso via API Key
     const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
     
     console.log('📤 Tentando Purchase via CAPIG (para EQM 9.3 como outros eventos):', {
@@ -699,13 +716,23 @@ export async function sendOfflinePurchase(
     let useCapig = true;
     let capigError: string | null = null;
     
-    // Tentar CAPIG primeiro
+    // Tentar CAPIG primeiro (com payload limpo - sem access_token no body)
+    // CAPIG geralmente usa API Key no header ou configuração interna
     try {
+      const capigHeaders: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Tentar adicionar API Key se disponível (CAPIG pode precisar)
+      const capigApiKey = process.env.STAPE_CAPIG_API_KEY;
+      if (capigApiKey) {
+        capigHeaders['Authorization'] = `Bearer ${capigApiKey}`;
+        console.log('🔑 Usando CAPIG API Key no header');
+      }
+      
       response = await fetch(capigUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: capigHeaders,
         body: JSON.stringify(payload)
       });
       
@@ -716,6 +743,7 @@ export async function sendOfflinePurchase(
         const errorText = await response.text();
         capigError = `CAPIG error: ${response.status} - ${errorText}`;
         console.warn('⚠️ CAPIG retornou erro, fazendo fallback para Meta direto:', capigError);
+        console.warn('📋 Payload enviado para CAPIG:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
         useCapig = false;
       }
     } catch (capigFetchError: any) {
@@ -737,6 +765,7 @@ export async function sendOfflinePurchase(
         fallbackReason: capigError
       });
       
+      // Fallback: Usar payload Meta padrão (com access_token na URL)
       const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
       
       response = await fetch(metaEndpoint, {
@@ -744,7 +773,7 @@ export async function sendOfflinePurchase(
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(metaPayload) // Usar payload Meta padrão no fallback
       });
       
       if (!response.ok) {
