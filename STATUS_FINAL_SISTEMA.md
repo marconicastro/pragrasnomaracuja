@@ -47,7 +47,7 @@
 - ? Dual tracking funcionando
 - ? EQM +0.5-1.0 pontos
 
-**Guia completo:** `URGENTE_ATUALIZAR_VERCEL_CAPIG.md`
+**Webhook:** Funcionando 100% - Purchase via Meta CAPI direto
 
 ---
 
@@ -287,10 +287,11 @@ Verificar:
 **Arquivos principais:**
 1. **`README.md`** - Overview e quick start
 2. **`GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`** - Guia completo (800+ linhas)
-3. **`URGENTE_ATUALIZAR_VERCEL_CAPIG.md`** - Passo a passo (este problema)
-4. **`STATUS_FINAL_SISTEMA.md`** - Este arquivo (status atual)
+3. **`STATUS_FINAL_SISTEMA.md`** - Este arquivo (status atual)
+4. **`VARIAVEIS_AMBIENTE.md`** - Configuração de variáveis
+5. **`ANALISE_COMPLETA_TRACKING.md`** - Análise técnica completa
 
-**Total:** 4 arquivos MD (organizado!)
+**Total:** 5 arquivos MD (organizado!)
 
 ---
 
@@ -432,10 +433,11 @@ DQS 105 (m?ximo!)
 **Principais arquivos:**
 1. `README.md` - Overview
 2. `GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md` - Guia completo (800+ linhas)
-3. `URGENTE_ATUALIZAR_VERCEL_CAPIG.md` - Fix CAPIG DNS
-4. `STATUS_FINAL_SISTEMA.md` - Este arquivo
+3. `STATUS_FINAL_SISTEMA.md` - Este arquivo
+4. `VARIAVEIS_AMBIENTE.md` - Configuração
+5. `ANALISE_COMPLETA_TRACKING.md` - Análise técnica
 
-**Total:** 4 arquivos (organizado!)
+**Total:** 5 arquivos (organizado!)
 
 ---
 
