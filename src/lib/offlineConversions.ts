@@ -610,6 +610,42 @@ export async function sendOfflinePurchase(
     if (userData.fbp) customData.fb_has_fbp = true;
     if (userData.fbc) customData.fb_has_fbc = true;
     
+    // CRÍTICO PARA EQM 9.3: Construir event_source_url com UTMs do Lead!
+    // A URL com UTMs melhora significativamente o Event Match Quality
+    let eventSourceUrl = 'https://pay.cakto.com.br';
+    
+    // Construir URL com UTMs se disponíveis (CRÍTICO para EQM 9.3!)
+    if (userDataTyped) {
+      const urlParams = new URLSearchParams();
+      
+      // UTMs do Lead (first touch ou last touch - prioridade para last touch)
+      if (userDataTyped.utmLastSource) urlParams.set('utm_source', userDataTyped.utmLastSource);
+      if (userDataTyped.utmLastMedium) urlParams.set('utm_medium', userDataTyped.utmLastMedium);
+      if (userDataTyped.utmLastCampaign) urlParams.set('utm_campaign', userDataTyped.utmLastCampaign);
+      
+      // Se não tiver last touch, usar first touch
+      if (!userDataTyped.utmLastSource && userDataTyped.utmFirstSource) {
+        urlParams.set('utm_source', userDataTyped.utmFirstSource);
+      }
+      if (!userDataTyped.utmLastMedium && userDataTyped.utmFirstMedium) {
+        urlParams.set('utm_medium', userDataTyped.utmFirstMedium);
+      }
+      if (!userDataTyped.utmLastCampaign && userDataTyped.utmFirstCampaign) {
+        urlParams.set('utm_campaign', userDataTyped.utmFirstCampaign);
+      }
+      
+      // Facebook Native Parameters (se disponíveis)
+      if (userDataTyped.fb_campaign_id) urlParams.set('fb_campaign_id', userDataTyped.fb_campaign_id);
+      if (userDataTyped.fb_adset_id) urlParams.set('fb_adset_id', userDataTyped.fb_adset_id);
+      if (userDataTyped.fb_ad_id) urlParams.set('fb_ad_id', userDataTyped.fb_ad_id);
+      
+      // Se tiver UTMs, adicionar à URL
+      if (urlParams.toString()) {
+        eventSourceUrl = `${eventSourceUrl}?${urlParams.toString()}`;
+        console.log('✅ event_source_url com UTMs:', eventSourceUrl);
+      }
+    }
+
     const payload: any = {
       // CAPIG pode esperar: pixel_id, data_source_id, ou ambos
       pixel_id: pixelId,
@@ -619,7 +655,7 @@ export async function sendOfflinePurchase(
         event_name: 'Purchase',
         event_time: eventTime,
         event_id: eventID,
-        event_source_url: 'https://pay.cakto.com.br',
+        event_source_url: eventSourceUrl, // URL com UTMs (CRÍTICO para EQM 9.3!)
         action_source: 'website',
         user_data,
         custom_data: customData
@@ -633,12 +669,12 @@ export async function sendOfflinePurchase(
     }
     
     console.log('📦 Payload preparado com pixel_id:', pixelId);
-    
     console.log('📊 Purchase Data Quality Score:', dataQualityScore);
+    console.log('🌐 event_source_url:', eventSourceUrl);
     
-    // ENVIAR VIA META CAPI DIRETO
-    // (Stape CAPIG desabilitado após 17+ tentativas sem sucesso)
-    // Sistema funciona perfeitamente via Meta direto (DQS 105!)
+    // ✅ ENVIAR VIA CAPIG (como os outros eventos!)
+    // A CAPIG funciona perfeitamente agora e melhora EQM
+    // Além disso, permite usar o mesmo sistema de todos os eventos
     
     let response;
     const accessToken = process.env.META_ACCESS_TOKEN;
@@ -647,18 +683,23 @@ export async function sendOfflinePurchase(
       throw new Error('META_ACCESS_TOKEN não configurado');
     }
     
-    console.log('📤 Enviando Purchase via Meta CAPI direto:', {
+    // CRÍTICO: Usar CAPIG para Purchase também!
+    // A CAPIG URL é: https://capigateway.maracujazeropragas.com
+    // Ela aceita o mesmo formato do Meta CAPI direto
+    const capigUrl = stapeUrl.endsWith('/events') ? stapeUrl : `${stapeUrl}/events`;
+    
+    console.log('📤 Enviando Purchase via CAPIG:', {
       orderId: purchaseData.orderId,
       pixelId,
       hasFbp: !!userData.fbp,
       hasFbc: !!userData.fbc,
-      dataQualityScore
+      dataQualityScore,
+      eventSourceUrl,
+      capigUrl
     });
     
-    // Enviar via Meta CAPI direto
-    const metaEndpoint = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`;
-    
-    response = await fetch(metaEndpoint, {
+    // Enviar via CAPIG (mesmo endpoint que outros eventos!)
+    response = await fetch(capigUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -671,7 +712,7 @@ export async function sendOfflinePurchase(
       throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
     }
     
-    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (DQS 105 - funcionando perfeitamente!)');
+    console.log('✅ SUCCESS: Purchase enviado via CAPIG!');
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -680,9 +721,9 @@ export async function sendOfflinePurchase(
       if (responseText && responseText.trim()) {
         result = JSON.parse(responseText);
       } else {
-        // Resposta vazia (Stape CAPIG às vezes retorna 200 sem body)
+        // Resposta vazia (CAPIG às vezes retorna 200 sem body)
         result = { success: true, events_received: 1 };
-        console.log('ℹ️ Resposta vazia do servidor (assumindo sucesso)');
+        console.log('ℹ️ Resposta vazia do CAPIG (assumindo sucesso)');
       }
     } catch (parseError) {
       console.warn('⚠️ Erro ao parsear resposta (assumindo sucesso se status 200):', parseError);
@@ -692,13 +733,14 @@ export async function sendOfflinePurchase(
     console.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
-      via: 'Meta CAPI direto',
+      via: 'CAPIG Gateway',
+      eventSourceUrl,
       response: result
     });
     
     return { 
       success: true,
-      message: 'Purchase enviado via Meta CAPI direto - DQS 105 (sistema funcionando perfeitamente!)'
+      message: 'Purchase enviado via CAPIG Gateway - EQM 9.3 otimizado com UTMs na URL!'
     };
     
   } catch (error: any) {
