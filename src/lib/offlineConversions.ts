@@ -173,6 +173,7 @@ export async function getUserDataByEmailOrPhone(
     let matchedBy: 'email' | 'phone' | undefined;
     
     // 1. PRIORIDADE: Busca por email
+    // ✅ MELHORIA: Validar fbc antes de usar (garantir que está válido < 24h)
     if (email) {
       userData = await prisma.userTracking.findUnique({
         where: { email: email.toLowerCase().trim() }
@@ -180,34 +181,61 @@ export async function getUserDataByEmailOrPhone(
       
       if (userData) {
         matchedBy = 'email';
-        console.log('? User data encontrado por EMAIL:', email);
+        console.log('✅ User data encontrado por EMAIL:', email);
       }
     }
     
-    // 2. FALLBACK: Busca por telefone (se n?o encontrou por email)
+    // 2. FALLBACK: Busca por telefone
+    // ✅ MELHORIA: Buscar Lead mais recente e validar fbc!
     if (!userData && phone) {
       const normalizedPhone = normalizePhone(phone);
       
-      // Busca no banco (precisa normalizar o phone do banco tamb?m)
-      const allUsers = await prisma.userTracking.findMany({
+      // Buscar TODOS os Leads com telefone (pode ter múltiplos)
+      const allUsersByPhone = await prisma.userTracking.findMany({
         where: {
           phone: {
             not: null
           }
-        }
+        },
+        orderBy: { updatedAt: 'desc' } // ✅ MAIS RECENTE PRIMEIRO (updatedAt indica último Lead)
       });
       
       // Compara telefones normalizados
-      userData = allUsers.find(user => {
+      const matchingUsers = allUsersByPhone.filter(user => {
         if (!user.phone) return false;
         const dbPhone = normalizePhone(user.phone);
         return dbPhone === normalizedPhone;
-      }) || null;
+      });
       
-      if (userData) {
+      if (matchingUsers.length > 0) {
+        // ✅ MELHORIA: Priorizar Lead com fbc válido (< 24h)
+        const { validateFbc } = await import('./utils/fbcValidator');
+        
+        // Tentar encontrar Lead com fbc válido primeiro
+        let bestLead = matchingUsers.find(lead => {
+          if (!lead.fbc) return false;
+          const validation = validateFbc(lead.fbc);
+          return validation.valid; // fbc válido (< 24h)
+        });
+        
+        // Se não encontrou com fbc válido, usar o mais recente (updatedAt desc)
+        if (!bestLead) {
+          bestLead = matchingUsers[0]; // Mais recente
+        }
+        
+        userData = bestLead;
         matchedBy = 'phone';
-        console.log('? User data encontrado por TELEFONE:', phone);
-        console.warn('📤 Email diferente! Checkout:', email, '| Original:', userData.email);
+        
+        if (userData) {
+          const hasValidFbc = userData.fbc ? validateFbc(userData.fbc).valid : false;
+          console.log('✅ User data encontrado por TELEFONE (priorizando fbc válido):', {
+            phone,
+            leadsFound: matchingUsers.length,
+            selectedLeadHasValidFbc: hasValidFbc,
+            selectedLeadUpdatedAt: userData.updatedAt ? new Date(userData.updatedAt).toISOString() : 'N/A'
+          });
+          console.warn('📤 Email diferente! Checkout:', email, '| Original:', userData.email);
+        }
       }
     }
     
@@ -218,9 +246,23 @@ export async function getUserDataByEmailOrPhone(
       return null;
     }
     
+    // ✅ MELHORIA: Validar fbc antes de retornar (garantir que está válido)
+    const { validateFbc } = await import('./utils/fbcValidator');
+    let finalFbc = userData.fbc || undefined;
+    
+    if (userData.fbc) {
+      const fbcValidation = validateFbc(userData.fbc);
+      if (!fbcValidation.valid) {
+        console.warn('⚠️ fbc do Prisma expirado ou inválido:', fbcValidation.reason);
+        finalFbc = undefined; // Não enviar fbc inválido
+      } else {
+        console.log('✅ fbc do Prisma válido e dentro da janela de 24h');
+      }
+    }
+    
     return {
       fbp: userData.fbp || undefined,
-      fbc: userData.fbc || undefined,
+      fbc: finalFbc, // ✅ Apenas fbc válido (ou undefined)
       firstName: userData.firstName || undefined,
       lastName: userData.lastName || undefined,
       phone: userData.phone || undefined,
@@ -260,15 +302,37 @@ export async function getUserDataFromKVOrPrisma(
 } | null> {
   
   // 1. PRIORIDADE: Tentar Vercel KV primeiro (mais rápido)
+  // ✅ MELHORIA: Validar fbc antes de retornar!
   try {
     const { getUserTracking } = await import('./userTrackingStore');
     const kvData = await getUserTracking(email, phone);
     
     if (kvData) {
-      console.log('✅ User data encontrado no Vercel KV');
+      // ✅ Validar fbc para garantir que está válido (< 24h)
+      const { validateFbc } = await import('./utils/fbcValidator');
+      let finalFbc = kvData.fbc;
+      
+      if (kvData.fbc) {
+        const fbcValidation = validateFbc(kvData.fbc);
+        if (!fbcValidation.valid) {
+          console.warn('⚠️ fbc do KV expirado ou inválido:', fbcValidation.reason);
+          finalFbc = undefined; // Não enviar fbc inválido
+        } else {
+          console.log('✅ fbc do KV válido e dentro da janela de 24h');
+        }
+      }
+      
+      console.log('✅ User data encontrado no Vercel KV:', {
+        email: kvData.email,
+        hasFbp: !!kvData.fbp,
+        hasFbc: !!finalFbc,
+        fbcValid: kvData.fbc ? validateFbc(kvData.fbc).valid : false,
+        createdAt: new Date(kvData.createdAt).toISOString()
+      });
+      
       return {
         fbp: kvData.fbp,
-        fbc: kvData.fbc,
+        fbc: finalFbc, // ✅ Apenas fbc válido (ou undefined)
         firstName: kvData.firstName,
         lastName: kvData.lastName,
         phone: kvData.phone,
