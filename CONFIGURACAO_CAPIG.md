@@ -18,6 +18,16 @@
 | **CAPIG Identifier** | `cfgzbpts` |
 | **CAPIG API Key** | `eyJpIjoiY2ZnemJwdHMiLCJoIjoiY2FwaWcuc3RhcGUucG0iLCJrIjoiNTgwZmIyMjkwMDdlZGFjMWFmYTQwNTkyOTI1NWFkZDQ5YjhlMjc1ZWNmZ3picHRzIn0=` |
 
+### **Meta Pixel Configurado:**
+
+| Campo | Valor |
+|-------|-------|
+| **Pixel ID** | `1403975024017865` (NOVO) |
+| **Access Token** | Configurado no CAPIG |
+
+### **⚠️ Pixel Antigo Removido:**
+- ❌ `642933108377475` (removido da estrutura)
+
 ---
 
 ## 🔧 Configuração no Código

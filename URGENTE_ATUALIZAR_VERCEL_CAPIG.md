@@ -60,7 +60,7 @@ https://www.maracujazeropragas.com
 ### **3. F12 ? Console:**
 ```javascript
 // Verificar URL configurada:
-_fbq.getState().pixels['642933108377475']
+_fbq.getState().pixels['1403975024017865']
 
 // Deveria mostrar:
 // server_event_uri: "https://capigateway.maracujazeropragas.com"
@@ -106,7 +106,7 @@ https://tagmanager.stape.io
 ```
 ? Facebook Pixel (ou Meta Pixel)
 ? Status: Connected
-? Pixel ID: 642933108377475
+? Pixel ID: 1403975024017865 (NOVO)
 ```
 
 **3. Se N?O tiver:**
@@ -115,7 +115,7 @@ https://tagmanager.stape.io
 2. Facebook Pixel
 3. OAuth (recomendado)
 4. Autorizar com Meta Business Manager
-5. Selecionar Pixel: 642933108377475
+5. Selecionar Pixel: 1403975024017865 (NOVO)
 6. Save
 ```
 
