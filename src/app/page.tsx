@@ -110,38 +110,65 @@ export default function App() {
   }, [scrollEventsFired]);
 
   // useEffect para ViewContent baseado em timing (EVITAR DUPLICIDADE)
+  // MELHORADO: Disparar mais cedo (10s) e também ao carregar página (após PageView)
   useEffect(() => {
-    // Disparar ViewContent após 15 segundos na página (indica interesse real)
+    // IMPORTANTE: ViewContent deve sempre disparar após PageView
+    // Aguardar um pouco após PageView para garantir ordem correta
+    const initialDelay = setTimeout(async () => {
+      if (!viewContentFired) {
+        try {
+          await trackViewContentElite({
+            trigger_type: 'page_load',
+            time_on_page: 2
+          });
+          
+          setViewContentFired(true);
+          console.log('🎯 ViewContent disparado por page_load (2s após PageView)');
+        } catch (error) {
+          console.error('❌ Erro ao disparar ViewContent:', error);
+        }
+      }
+    }, 2000); // 2 segundos após PageView (garantir ordem)
+
+    // Disparar ViewContent após 10 segundos na página (reduzido de 15s para melhorar taxa de disparo)
     const viewContentTimer = setTimeout(async () => {
       if (!viewContentFired) {
-        await trackViewContentElite({
-          trigger_type: 'timing',
-          time_on_page: 15
-        });
-        
-        setViewContentFired(true);
-        console.log('🎯 ViewContent disparado por timing (15s)');
+        try {
+          await trackViewContentElite({
+            trigger_type: 'timing',
+            time_on_page: 10
+          });
+          
+          setViewContentFired(true);
+          console.log('🎯 ViewContent disparado por timing (10s)');
+        } catch (error) {
+          console.error('❌ Erro ao disparar ViewContent:', error);
+        }
       }
-    }, 15000); // 15 segundos
+    }, 10000); // 10 segundos (reduzido para melhorar cobertura)
 
-    // Disparar ViewContent ao atingir 25% de scroll (engajamento inicial)
+    // Disparar ViewContent ao atingir 20% de scroll (reduzido de 25% para melhorar taxa de disparo)
     const handleScrollForViewContent = async () => {
       if (!viewContentFired) {
         const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
         const scrollPosition = window.scrollY;
         const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
 
-        if (scrollPercentage >= 25) {
-          await trackViewContentElite({
-            trigger_type: 'scroll',
-            scroll_depth: 25
-          });
-          
-          setViewContentFired(true);
-          console.log('🎯 ViewContent disparado por scroll (25%)');
-          
-          // Remover listener após disparar
-          window.removeEventListener('scroll', handleScrollForViewContent);
+        if (scrollPercentage >= 20) { // Reduzido de 25% para 20%
+          try {
+            await trackViewContentElite({
+              trigger_type: 'scroll',
+              scroll_depth: 20
+            });
+            
+            setViewContentFired(true);
+            console.log('🎯 ViewContent disparado por scroll (20%)');
+            
+            // Remover listener após disparar
+            window.removeEventListener('scroll', handleScrollForViewContent);
+          } catch (error) {
+            console.error('❌ Erro ao disparar ViewContent:', error);
+          }
         }
       }
     };
@@ -149,6 +176,7 @@ export default function App() {
     window.addEventListener('scroll', handleScrollForViewContent);
 
     return () => {
+      clearTimeout(initialDelay);
       clearTimeout(viewContentTimer);
       window.removeEventListener('scroll', handleScrollForViewContent);
     };
@@ -205,7 +233,19 @@ export default function App() {
     };
 
     // Disparar evento Lead (ELITE - com advanced matching)
-    await trackLeadElite(trackingUserData);
+    // CRÍTICO: Lead deve ser enviado PRIMEIRO, antes de InitiateCheckout
+    console.log('📤 Enviando Lead (primeiro evento crítico)...');
+    try {
+      const leadResult = await trackLeadElite(trackingUserData);
+      console.log('✅ Lead enviado com sucesso:', leadResult);
+      
+      if (!leadResult.success) {
+        console.warn('⚠️ Lead não foi enviado com sucesso:', leadResult.warnings);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao disparar Lead:', error);
+      // Continuar mesmo se Lead falhar (não bloquear fluxo)
+    }
 
     // Salvar fbp/fbc + ATTRIBUTION + GEOLOCALIZAÇÃO no Vercel KV para Offline Conversions (Purchase via webhook)
     try {
@@ -304,8 +344,25 @@ export default function App() {
       console.error('⚠️ Erro ao salvar tracking (não bloqueia fluxo):', error);
     }
 
+    // CRÍTICO: Aguardar delay mínimo (2s) após Lead para garantir que dados foram processados
+    // Conforme padrão Facebook/Stape CAPIG: InitiateCheckout sempre após Lead com delay
+    console.log('⏱️ Aguardando 2s após Lead antes de enviar InitiateCheckout...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     // Disparar evento InitiateCheckout (ELITE)
-    await trackInitiateCheckoutElite(trackingUserData);
+    // CRÍTICO: InitiateCheckout SEMPRE após Lead (já tem delay na fila, mas garantimos aqui também)
+    console.log('📤 Enviando InitiateCheckout (após Lead)...');
+    try {
+      const checkoutResult = await trackInitiateCheckoutElite(trackingUserData);
+      console.log('✅ InitiateCheckout enviado com sucesso:', checkoutResult);
+      
+      if (!checkoutResult.success) {
+        console.warn('⚠️ InitiateCheckout não foi enviado com sucesso:', checkoutResult.warnings);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao disparar InitiateCheckout:', error);
+      // Continuar mesmo se InitiateCheckout falhar (não bloquear redirecionamento)
+    }
 
     // ===== MONTAR URL COM DADOS PARA PRÉ-PREENCHER CHECKOUT =====
     // Padrão de mercado: Hotmart, Eduzz, Monetizze, Braip, Kiwify (100% fazem assim)
@@ -504,12 +561,20 @@ export default function App() {
     console.log('🛒 Botão COMPRAR AGORA clicado - disparando AddToCart...');
     
     // Disparar AddToCart para botão "COMPRAR AGORA"
-    const result = await trackAddToCartElite('COMPRAR AGORA', {
-      cta_type: 'final_checkout_modal',
-      action: 'open_modal'
-    });
-    
-    console.log('🛒 AddToCart resultado:', result);
+    try {
+      const result = await trackAddToCartElite('COMPRAR AGORA', {
+        cta_type: 'final_checkout_modal',
+        action: 'open_modal'
+      });
+      
+      console.log('🛒 AddToCart resultado:', result);
+      
+      if (!result.success) {
+        console.warn('⚠️ AddToCart não foi enviado com sucesso:', result.warnings);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao disparar AddToCart:', error);
+    }
     
     // Redirecionar para o novo fluxo com modal
     openPreCheckoutModal(event);

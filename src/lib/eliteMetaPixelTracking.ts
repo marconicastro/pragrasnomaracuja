@@ -302,10 +302,35 @@ export async function trackEliteEvent(
     };
     
     // 8. Disparar via Meta Pixel (CAPIG intercepta automaticamente!)
-    if (eventType === 'custom') {
-      window.fbq('trackCustom', eventName, finalParams, { eventID });
+    // CRÍTICO: Usar fila de eventos para garantir ordem correta
+    const sendEvent = () => {
+      if (eventType === 'custom') {
+        window.fbq('trackCustom', eventName, finalParams, { eventID });
+      } else {
+        window.fbq('track', eventName, finalParams, { eventID });
+      }
+    };
+
+    // Para eventos críticos e que precisam de ordem, usar fila
+    // Conforme padrão Facebook/Stape CAPIG: PageView → ViewContent → Lead → InitiateCheckout
+    const requiresOrdering = ['PageView', 'ViewContent', 'Lead', 'InitiateCheckout'].includes(eventName);
+    if (requiresOrdering && typeof window !== 'undefined') {
+      // Importar fila apenas quando necessário (client-side)
+      const { queueEvent, eventQueue } = await import('./utils/eventQueue');
+      
+      // PageView pode pular fila apenas se for o primeiro (ainda não foi enviado)
+      const isFirstPageView = eventName === 'PageView' && !eventQueue.hasSent('PageView');
+      
+      await queueEvent(eventName as any, async () => {
+        sendEvent();
+        return { success: true, eventId: eventID };
+      }, {
+        skipQueue: isFirstPageView // PageView pode pular fila se for o primeiro
+      });
     } else {
-      window.fbq('track', eventName, finalParams, { eventID });
+      // Eventos não-críticos (ScrollDepth, AddToCart, etc) enviam imediatamente
+      // mas ainda assim respeitam PageView ter sido enviado antes
+      sendEvent();
     }
     
     // 9. Salvar no hist?rico
