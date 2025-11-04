@@ -1,63 +1,80 @@
-# 🔍 DIAGNÓSTICO: Tags não estão disparando no GTM Server-Side
+# 🔍 DIAGNÓSTICO: Tags Não Disparam
 
-**Problema:** Webhook envia para GTM Server-Side com sucesso, mas tags não disparam
+**Problema:** Evento chega ao GTM Server-Side, mas tags não disparam.
 
 ---
 
 ## 🔍 POSSÍVEIS CAUSAS
 
-### **1. Formato do payload incorreto**
-GTM Server-Side pode precisar de formato diferente do DataLayer padrão.
+### **1. Event Name Incorreto**
+Quando um evento chega via webhook `/webhook`, o GTM Server-Side pode estar convertendo o nome do evento.
 
-### **2. Endpoint incorreto**
-O endpoint `/data` pode não ser o correto para eventos server-side.
+**Verificar:**
+- No stream do GTM, qual é o `event_name` do evento?
+- O trigger está procurando por esse nome?
 
-### **3. Trigger não configurado**
-O trigger `ce - purchase` pode não estar configurado no GTM Server-Side.
+### **2. Trigger Não Aceita Webhook Client**
+O trigger pode estar configurado para aceitar apenas "Data Client".
 
-### **4. Formato do evento**
-O evento pode precisar estar em formato específico para GTM Server-Side.
+**Verificar:**
+- Trigger `ce - purchase` tem filtro de Client Name?
+- Filtro aceita "Webhook Client"?
 
----
+### **3. Variáveis Não Estão Disponíveis**
+As tags podem precisar de variáveis que não estão sendo passadas.
 
-## ✅ VERIFICAÇÕES NECESSÁRIAS
-
-### **1. Verificar formato do payload:**
-GTM Server-Side pode precisar de:
-- Formato Measurement Protocol (GA4)
-- Formato específico para eventos server-side
-- Headers específicos
-
-### **2. Verificar endpoint:**
-- `/data` - Para eventos do browser via DataLayer
-- `/collect` - Para eventos GA4
-- Outro endpoint específico?
-
-### **3. Verificar no GTM Server-Side Preview:**
-- O evento aparece no stream?
-- Qual é o formato do evento que chega?
-- Quais variáveis estão disponíveis?
+**Verificar:**
+- No stream, quais variáveis estão disponíveis?
+- As variáveis necessárias estão mapeadas?
 
 ---
 
-## 🔧 SOLUÇÕES POSSÍVEIS
+## 🔧 SOLUÇÕES PARA TESTAR
 
-### **Solução 1: Usar formato Measurement Protocol**
-GTM Server-Side pode precisar do formato GA4 Measurement Protocol.
+### **Solução 1: Verificar Event Name no Stream**
 
-### **Solução 2: Usar Client Name correto**
-Pode precisar especificar o Client Name no payload.
+1. Abrir GTM Server-Side Preview Mode
+2. Clicar no evento `purchase` no stream
+3. Verificar na aba "Dados do evento":
+   - Qual é o `event_name`?
+   - É `"purchase"` ou `"Data"`?
 
-### **Solução 3: Verificar configuração do GTM**
-- Trigger está configurado?
-- Tags estão ativas?
-- Variáveis estão corretas?
+### **Solução 2: Ajustar Trigger**
+
+Se o `event_name` for `"Data"` ao invés de `"purchase"`:
+
+1. Criar novo trigger ou ajustar existente:
+   - Tipo: Evento personalizado
+   - Nome do evento: `Data` (ou o nome que aparecer)
+   - Filtro adicional: `event = purchase` (em variáveis)
+
+### **Solução 3: Verificar Variáveis Disponíveis**
+
+No stream do GTM, verificar:
+- `event` → deve ser `"purchase"`
+- `ecommerce.transaction_id` → deve estar disponível
+- `user_data.user_id` → deve estar disponível
 
 ---
 
-## 📋 PRÓXIMOS PASSOS
+## 📝 INFORMAÇÕES NECESSÁRIAS
 
-1. Verificar no GTM Server-Side Preview Mode o formato do evento recebido
-2. Ajustar formato do payload conforme necessário
-3. Verificar configuração de triggers e tags
+Para diagnosticar melhor, preciso saber:
 
+1. **No stream do GTM Server-Side:**
+   - Qual é o `event_name` do evento?
+   - Qual é o `event` (dentro dos dados do evento)?
+   - Quais variáveis estão disponíveis?
+
+2. **No trigger `ce - purchase`:**
+   - Qual é o "Nome do evento" configurado?
+   - Há algum filtro de Client Name?
+   - Há outros filtros?
+
+3. **Nas tags:**
+   - Tag "FB - Purchase" está ativa?
+   - Tag "GA4 - All Events" está ativa?
+
+---
+
+**Status**: Aguardando informações do stream e triggers para diagnosticar
