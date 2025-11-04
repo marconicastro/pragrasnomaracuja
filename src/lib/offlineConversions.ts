@@ -941,6 +941,133 @@ export async function sendOfflinePurchase(
   }
 }
 
+// ===== GTM SERVER-SIDE =====
+
+/**
+ * Envia Purchase para GTM Server-Side (ao invés de Meta CAPI direto)
+ * 
+ * Formato: DataLayer event (mesmo formato do browser)
+ */
+export async function sendPurchaseToGTM(
+  purchaseData: OfflinePurchaseData,
+  userData: {
+    fbp?: string;
+    fbc?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+    external_id?: string;
+    client_ip_address?: string;
+    client_user_agent?: string;
+  }
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  
+  try {
+    console.log('🚀 sendPurchaseToGTM() INICIADA');
+    
+    const gtmServerUrl = process.env.GTM_SERVER_URL || 'https://event.maracujazeropragas.com';
+    const gtmEndpoint = `${gtmServerUrl}/data`;
+    
+    console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
+    
+    // Preparar dados no formato DataLayer
+    const eventData = {
+      event: 'purchase',  // Nome específico para trigger 'ce - purchase' no GTM
+      ecommerce: {
+        transaction_id: purchaseData.orderId,
+        value: purchaseData.value,
+        currency: purchaseData.currency || 'BRL',
+        items: [{
+          item_id: 'hacr962',
+          item_name: 'Sistema 4 Fases - Ebook Trips',
+          price: purchaseData.value,
+          quantity: 1,
+          item_category: 'digital_product',
+          item_brand: 'Ebook Trips'
+        }]
+      },
+      content_ids: ['hacr962'],
+      contents: [{
+        id: 'hacr962',
+        quantity: 1,
+        item_price: purchaseData.value
+      }],
+      content_name: 'Sistema 4 Fases - Ebook Trips',
+      content_type: 'product',
+      num_items: 1,
+      user_data: {
+        user_id: userData.external_id || undefined,  // external_id do KV
+        email_address: purchaseData.email,
+        phone_number: purchaseData.phone || userData.phone,
+        first_name: purchaseData.firstName || userData.firstName,
+        last_name: purchaseData.lastName || userData.lastName,
+        city: userData.city,
+        region: userData.state,
+        postal_code: userData.zip,
+        country: userData.country || 'BR'
+      },
+      // Metadata adicional
+      event_id: `${purchaseData.orderId}_${purchaseData.timestamp || Date.now()}`,
+      event_source_url: 'https://www.maracujazeropragas.com/obrigado',
+      ...(userData.client_ip_address && { client_ip_address: userData.client_ip_address }),
+      ...(userData.client_user_agent && { client_user_agent: userData.client_user_agent })
+    };
+    
+    console.log('📤 Enviando Purchase para GTM Server-Side:', {
+      endpoint: gtmEndpoint,
+      orderId: purchaseData.orderId,
+      value: purchaseData.value,
+      hasUserData: !!userData,
+      hasExternalId: !!userData.external_id
+    });
+    
+    // Enviar para GTM Server-Side
+    const response = await fetch(gtmEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(eventData)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GTM Server-Side error: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json().catch(() => ({ success: true }));
+    
+    console.log('✅ Purchase enviado para GTM Server-Side com sucesso:', {
+      orderId: purchaseData.orderId,
+      response: result
+    });
+    
+    return {
+      success: true,
+      message: `Purchase enviado para GTM Server-Side - Order ID: ${purchaseData.orderId}`
+    };
+    
+  } catch (error: any) {
+    console.error('❌ Erro ao enviar Purchase para GTM Server-Side:', error);
+    
+    // Fallback: tentar enviar via Meta CAPI direto se GTM falhar
+    console.log('🔄 Tentando fallback: enviar via Meta CAPI direto...');
+    const fallbackResult = await sendOfflinePurchase(purchaseData, userData);
+    
+    return {
+      success: fallbackResult.success,
+      error: fallbackResult.error || error.message,
+      message: fallbackResult.success 
+        ? `Purchase enviado via fallback (Meta CAPI direto) - ${fallbackResult.message}`
+        : `Erro ao enviar Purchase: ${error.message}`
+    };
+  }
+}
+
 // ===== WEBHOOK PROCESSOR =====
 
 /**

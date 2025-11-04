@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   validateCaktoWebhook,
   getUserDataFromKVOrPrisma,
-  sendOfflinePurchase,
+  sendPurchaseToGTM,
   type CaktoWebhookPayload 
 } from '@/lib/offlineConversions';
 
@@ -116,8 +116,8 @@ export async function POST(request: NextRequest) {
       client_ip_address: userData?.client_ip_address || client_ip_address
     };
     
-    // Enviar Purchase com IP
-    const result = await sendOfflinePurchase(purchaseData, enrichedUserData || {});
+    // Enviar Purchase para GTM Server-Side (ao invés de Meta CAPI direto)
+    const result = await sendPurchaseToGTM(purchaseData, enrichedUserData || {});
     
     // 4. Log de performance
     const duration = Date.now() - startTime;

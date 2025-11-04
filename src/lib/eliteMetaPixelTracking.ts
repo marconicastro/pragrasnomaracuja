@@ -655,16 +655,21 @@ export async function trackPurchaseElite(
     country: savedData.country || 'BR'
   } : undefined;
   
-  // Enviar para DataLayer
-  pushPurchase(orderId, 39.9, 'BRL', 1, userDataForGTM);
+  // Extrair valores dinâmicos do customParams (ou usar defaults)
+  const purchaseValue = customParams.value || 39.9;
+  const purchaseCurrency = customParams.currency || 'BRL';
+  const purchaseQuantity = customParams.num_items || 1;
+  
+  // Enviar para DataLayer com valores dinâmicos
+  pushPurchase(orderId, purchaseValue, purchaseCurrency, purchaseQuantity, userDataForGTM);
   
   return trackEliteEvent('Purchase', {
-    value: 39.9,
-    currency: 'BRL',
+    value: purchaseValue,
+    currency: purchaseCurrency,
     content_ids: ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
-    num_items: 1,
+    num_items: purchaseQuantity,
     ...customParams
   }, 'standard', { orderId });
 }
