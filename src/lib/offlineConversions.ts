@@ -1030,6 +1030,10 @@ export async function sendPurchaseToGTM(
       hasExternalId: !!userData.external_id
     });
     
+    // Log completo do payload para debug
+    const payload = [eventData];
+    console.log('📦 Payload completo sendo enviado:', JSON.stringify(payload, null, 2));
+    
     // Enviar para GTM Server-Side
     // IMPORTANTE: GTM Server-Side espera array de eventos (mesmo formato do browser)
     const response = await fetch(gtmEndpoint, {
@@ -1038,19 +1042,40 @@ export async function sendPurchaseToGTM(
         'Content-Type': 'application/json',
         'User-Agent': userData.client_user_agent || 'GTM-Server-Side-Webhook'
       },
-      body: JSON.stringify([eventData])  // Array de eventos (mesmo que seja um único evento)
+      body: JSON.stringify(payload)  // Array de eventos (mesmo que seja um único evento)
+    });
+    
+    // Log da resposta completa
+    const responseStatus = response.status;
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    const responseText = await response.text();
+    
+    console.log('📥 Resposta do GTM Server-Side:', {
+      status: responseStatus,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      body: responseText.substring(0, 500) // Primeiros 500 caracteres
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`GTM Server-Side error: ${response.status} - ${errorText}`);
+      console.error('❌ Erro na resposta do GTM Server-Side:', {
+        status: responseStatus,
+        body: responseText
+      });
+      throw new Error(`GTM Server-Side error: ${responseStatus} - ${responseText}`);
     }
     
-    const result = await response.json().catch(() => ({ success: true }));
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      result = { success: true, rawResponse: responseText };
+    }
     
-    console.log('✅ Purchase enviado para GTM Server-Side com sucesso:', {
+    console.log('✅ Purchase enviado para GTM Server-Side:', {
       orderId: purchaseData.orderId,
-      response: result
+      response: result,
+      status: responseStatus
     });
     
     return {
