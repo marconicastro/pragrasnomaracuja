@@ -65,7 +65,7 @@ export default function App() {
     }
   }, []);
 
-  // PageView é disparado automaticamente pelo MetaPixelStape component
+  // PageView será disparado via GTM Server-Side quando necessário
   // Não precisa disparar manualmente aqui
 
   useEffect(() => {

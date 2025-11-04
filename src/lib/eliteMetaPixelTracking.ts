@@ -1,16 +1,16 @@
 /**
- * ?? ELITE Meta Pixel Tracking - Enterprise Level
+ * ?? ELITE DataLayer Tracking - Enterprise Level
  * 
- * Sistema MAIS AVAN?ADO de tracking via Stape CAPIG Gateway:
+ * Sistema AVANÇADO de tracking via GTM Server-Side:
  * - Advanced Matching completo (14 campos)
  * - Enhanced Conversions ready
- * - Attribution tracking autom?tico
+ * - Attribution tracking automático
  * - Data quality scoring
  * - Event deduplication
  * - Real-time validation
  * - Compliance-ready
  * 
- * MANT?M: Fluxograma CAPIG Gateway (dual tracking)
+ * Todos os eventos são enviados para o DataLayer do GTM
  */
 
 import {
@@ -36,11 +36,16 @@ import {
 
 import { generateEventId } from './utils/eventId';
 
-declare global {
-  interface Window {
-    fbq: (command: string, eventName: string, parameters?: any, options?: any) => void;
-  }
-}
+import {
+  pushPageView,
+  pushViewItem,
+  pushAddToCart,
+  pushBeginCheckout,
+  pushPurchase,
+  pushGenerateLead
+} from './gtmDataLayer';
+
+// Removido: Meta Pixel não é mais usado (apenas GTM Server-Side)
 
 // ===== CONFIGURATION =====
 
@@ -241,12 +246,6 @@ export async function trackEliteEvent(
   try {
     log('info', `Tracking Elite: ${eventName}`);
     
-    // Verificar se Meta Pixel esta carregado
-    if (typeof window === 'undefined' || !window.fbq) {
-      log('warn', 'Meta Pixel nao carregado');
-      return { success: false, eventId: '', warnings: ['Meta Pixel nao carregado'] };
-    }
-    
     // 1. Gerar Event ID (centralizado)
     const eventID = generateEventId(eventName, options?.orderId);
     
@@ -262,12 +261,12 @@ export async function trackEliteEvent(
       ? Object.keys(advancedMatching).length * 7
       : (userData?.dataQualityScore || 0);
     
-    // 4. Enrichir com atribui??o
+    // 4. Enrichir com atribuição
     let enrichedParams = !options?.skipAttribution 
       ? enrichWithAttribution(customParams)
       : customParams;
     
-    // 4.5 Adicionar UTMs (se dispon?veis)
+    // 4.5 Adicionar UTMs (se disponíveis)
     const utmParams = formatUTMsForMeta();
     if (Object.keys(utmParams).length > 0) {
       enrichedParams = {
@@ -289,7 +288,7 @@ export async function trackEliteEvent(
     if (CONFIG.enableDataValidation && !options?.skipValidation) {
       validation = validateEventData(eventName, enrichedParams);
       if (validation.warnings.length > 0) {
-        log('warn', '?? Warnings:', validation.warnings);
+        log('warn', '⚠️ Warnings:', validation.warnings);
       }
     }
     
@@ -298,52 +297,23 @@ export async function trackEliteEvent(
       ...enrichedParams,
       fb_event_id: eventID,
       fb_data_quality_score: dataQualityScore,
-      fb_tracking_version: '2.0_elite'
+      fb_tracking_version: '3.0_gtm_server_side'
     };
     
-    // 8. Disparar via Meta Pixel (CAPIG intercepta automaticamente!)
-    // CRÍTICO: Usar fila de eventos para garantir ordem correta
-    const sendEvent = () => {
-      if (eventType === 'custom') {
-        window.fbq('trackCustom', eventName, finalParams, { eventID });
-      } else {
-        window.fbq('track', eventName, finalParams, { eventID });
-      }
-    };
-
-    // Para eventos críticos e que precisam de ordem, usar fila
-    // Conforme padrão Facebook/Stape CAPIG: PageView → ViewContent → Lead → InitiateCheckout
-    const requiresOrdering = ['PageView', 'ViewContent', 'Lead', 'InitiateCheckout'].includes(eventName);
-    if (requiresOrdering && typeof window !== 'undefined') {
-      // Importar fila apenas quando necessário (client-side)
-      const { queueEvent, eventQueue } = await import('./utils/eventQueue');
-      
-      // PageView pode pular fila apenas se for o primeiro (ainda não foi enviado)
-      const isFirstPageView = eventName === 'PageView' && !eventQueue.hasSent('PageView');
-      
-      await queueEvent(eventName as any, async () => {
-        sendEvent();
-        return { success: true, eventId: eventID };
-      }, {
-        skipQueue: isFirstPageView // PageView pode pular fila se for o primeiro
-      });
-    } else {
-      // Eventos não-críticos (ScrollDepth, AddToCart, etc) enviam imediatamente
-      // mas ainda assim respeitam PageView ter sido enviado antes
-      sendEvent();
-    }
+    // 8. Evento enviado para DataLayer via funções específicas (pushPageView, pushViewItem, etc)
+    // Não precisa mais enviar via Meta Pixel - GTM Server-Side faz tudo
     
-    // 9. Salvar no hist?rico
+    // 9. Salvar no histórico
     addEventToHistory(eventID, eventName, finalParams, 'browser');
     
-    // 10. Persistir meta cookies ap?s cada evento
+    // 10. Persistir meta cookies após cada evento
     persistMetaCookies();
     
-    log('info', `? ${eventName} disparado (Elite)`, {
+    log('info', `✅ ${eventName} disparado (Elite)`, {
       eventID,
       dataQualityScore,
       userDataFields: Object.keys(advancedMatching).length,
-      via: 'Meta Pixel + Stape CAPIG (dual tracking)'
+      via: 'GTM Server-Side (DataLayer)'
     });
     
     return {
@@ -354,7 +324,7 @@ export async function trackEliteEvent(
     };
     
   } catch (error: any) {
-    log('error', `? Erro ao disparar ${eventName}:`, error);
+    log('error', `❌ Erro ao disparar ${eventName}:`, error);
     return {
       success: false,
       eventId: '',
@@ -372,6 +342,23 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   const touchpoint = captureAttribution();
   addAttributionTouchpoint(touchpoint);
   
+  // Obter user data para DataLayer
+  const userData = getAdvancedUserData();
+  const userDataForGTM = userData ? {
+    user_id: userData.external_id,
+    email_address: userData.email,
+    phone_number: userData.phone,
+    first_name: userData.firstName,
+    last_name: userData.lastName,
+    city: userData.city,
+    region: userData.state,
+    postal_code: userData.zip,
+    country: userData.country
+  } : undefined;
+  
+  // Enviar para DataLayer
+  pushPageView(userDataForGTM);
+  
   return trackEliteEvent('PageView', {
     value: 39.9,
     currency: 'BRL',
@@ -387,6 +374,23 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
  * ViewContent (Elite) - COLD EVENT com enrichment automatico
  */
 export async function trackViewContentElite(customParams: Record<string, any> = {}) {
+  // Obter user data para DataLayer
+  const userData = getAdvancedUserData();
+  const userDataForGTM = userData ? {
+    user_id: userData.external_id,
+    email_address: userData.email,
+    phone_number: userData.phone,
+    first_name: userData.firstName,
+    last_name: userData.lastName,
+    city: userData.city,
+    region: userData.state,
+    postal_code: userData.zip,
+    country: userData.country
+  } : undefined;
+  
+  // Enviar para DataLayer
+  pushViewItem(39.9, 'BRL', userDataForGTM);
+  
   return trackEliteEvent('ViewContent', {
     value: 39.9,
     currency: 'BRL',
@@ -428,13 +432,30 @@ export async function trackCTAClickElite(
 }
 
 /**
- * ?? AddToCart (Elite) - APENAS para bot?o "COMPRAR AGORA"
- * Evento STANDARD enviado pelo Stape CAPIG
+ * 🛒 AddToCart (Elite) - APENAS para botão "COMPRAR AGORA"
+ * Evento enviado para GTM Server-Side via DataLayer
  */
 export async function trackAddToCartElite(
   buttonText: string = 'COMPRAR AGORA',
   customParams: Record<string, any> = {}
 ) {
+  // Obter user data para DataLayer
+  const userData = getAdvancedUserData();
+  const userDataForGTM = userData ? {
+    user_id: userData.external_id,
+    email_address: userData.email,
+    phone_number: userData.phone,
+    first_name: userData.firstName,
+    last_name: userData.lastName,
+    city: userData.city,
+    region: userData.state,
+    postal_code: userData.zip,
+    country: userData.country
+  } : undefined;
+  
+  // Enviar para DataLayer
+  pushAddToCart(39.9, 'BRL', 1, userDataForGTM);
+  
   return trackEliteEvent('AddToCart', {
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_type: 'product',
@@ -479,6 +500,22 @@ export async function trackLeadElite(
     zip: userData.zip || existingData?.zip,
     country: 'br'
   }, true);
+  
+  // Preparar user data para DataLayer
+  const userDataForGTM = {
+    user_id: savedData?.external_id,
+    email_address: userData.email,
+    phone_number: userData.phone,
+    first_name: userData.firstName,
+    last_name: userData.lastName,
+    city: userData.city || existingData?.city,
+    region: userData.state || existingData?.state,
+    postal_code: userData.zip || existingData?.zip,
+    country: 'BR'
+  };
+  
+  // Enviar para DataLayer
+  pushGenerateLead(userDataForGTM, 15.0);
   
   return trackEliteEvent('Lead', {
     // ===== VALORES (Otimiza??o de Campanha) =====
@@ -529,7 +566,7 @@ export async function trackInitiateCheckoutElite(
   const existingData = getAdvancedUserData();
   
   // Salvar/atualizar user data (MERGE com dados existentes!)
-  saveAdvancedUserData({
+  const savedData = saveAdvancedUserData({
     email: userData.email,
     phone: userData.phone,
     firstName: userData.firstName,
@@ -546,6 +583,23 @@ export async function trackInitiateCheckoutElite(
   // Suporta valor din?mico via orderDetails (para quando tiver order bump na Cakto)
   const BASE_VALUE = 39.9;
   const finalValue = orderDetails?.value || BASE_VALUE;
+  const quantity = orderDetails?.items?.length || 1;
+  
+  // Preparar user data para DataLayer
+  const userDataForGTM = {
+    user_id: savedData?.external_id,
+    email_address: userData.email,
+    phone_number: userData.phone,
+    first_name: userData.firstName,
+    last_name: userData.lastName,
+    city: userData.city || existingData?.city,
+    region: userData.state || existingData?.state,
+    postal_code: userData.zip || existingData?.zip,
+    country: 'BR'
+  };
+  
+  // Enviar para DataLayer
+  pushBeginCheckout(finalValue, 'BRL', quantity, userDataForGTM);
   
   return trackEliteEvent('InitiateCheckout', {
     value: finalValue,                                    // Valor (suporta din?mico)
@@ -553,7 +607,7 @@ export async function trackInitiateCheckoutElite(
     content_ids: orderDetails?.items || ['hacr962'],
     content_type: 'product',
     content_name: 'Sistema 4 Fases - Ebook Trips',
-    num_items: orderDetails?.items?.length || 1,
+    num_items: quantity,
     ...customParams
   }, 'standard', { 
     isColdEvent: false  // ? Warm event (user data do Lead)
@@ -574,15 +628,35 @@ export async function trackPurchaseElite(
   customParams: Record<string, any> = {}
 ) {
   // Se tiver userData, salvar
+  let savedData;
   if (userData) {
-    saveAdvancedUserData({
+    savedData = saveAdvancedUserData({
       email: userData.email,
       phone: userData.phone,
       firstName: userData.firstName,
       lastName: userData.lastName,
       fullName: `${userData.firstName} ${userData.lastName}`
     }, true);
+  } else {
+    // Obter dados existentes
+    savedData = getAdvancedUserData();
   }
+  
+  // Preparar user data para DataLayer
+  const userDataForGTM = savedData ? {
+    user_id: savedData.external_id,
+    email_address: savedData.email,
+    phone_number: savedData.phone,
+    first_name: savedData.firstName,
+    last_name: savedData.lastName,
+    city: savedData.city,
+    region: savedData.state,
+    postal_code: savedData.zip,
+    country: savedData.country || 'BR'
+  } : undefined;
+  
+  // Enviar para DataLayer
+  pushPurchase(orderId, 39.9, 'BRL', 1, userDataForGTM);
   
   return trackEliteEvent('Purchase', {
     value: 39.9,
@@ -622,6 +696,7 @@ export function getTrackingDiagnostics() {
       firstTouch: attribution?.firstTouch.source,
       lastTouch: attribution?.lastTouch.source
     },
-    pixelLoaded: typeof window !== 'undefined' && !!window.fbq
+    dataLayerLoaded: typeof window !== 'undefined' && !!window.dataLayer,
+    gtmServerSide: true
   };
 }

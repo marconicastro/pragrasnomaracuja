@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import EliteMetaPixel from '@/components/EliteMetaPixel';
 import ConsentBanner from '@/components/ConsentBanner';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,8 +18,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Google Tag Manager - Server-Side */}
+        <Script
+          id="gtm-server-side"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src="https://event.maracujazeropragas.com/85wpwsohvcad.js?"+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','8m=DQVeMTwiXiAnJTNEMiM7URJcUVhZSRcZWQwCBAkMBh0FGwYEBx8BFgMAEFgLAB4%3D');
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <EliteMetaPixel />
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src="https://event.maracujazeropragas.com/ns.html?id=GTM-WCDP2ZLH"
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
         <ConsentBanner />
         {children}
       </body>
