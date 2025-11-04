@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, X, AlertTriangle, Clock, Shield, Star, Rocket, Phone, Mail, TrendingUp, Target, Zap, Award, Users, DollarSign, ArrowRight, PlayCircle, Download } from 'lucide-react';
 import PreCheckoutModal from '@/components/PreCheckoutModal';
@@ -36,6 +36,7 @@ export default function App() {
 
   // Estado para controle de ViewContent (EVITAR DUPLICIDADE)
   const [viewContentFired, setViewContentFired] = useState(false);
+  const viewContentFiredRef = useRef(false); // Ref para evitar race condition
 
   // Estado para dados do usuário (agora com persistência)
   const [userData, setUserData] = useState<{
@@ -86,101 +87,135 @@ export default function App() {
   }, []);
 
   // useEffect para rastreamento de scroll
+  // CORRIGIDO: Usar ref + throttling para evitar múltiplas chamadas
+  const scroll50FiredRef = useRef(false);
+  const scroll75FiredRef = useRef(false);
+  
   useEffect(() => {
-    const handleScroll = async () => {
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPosition = window.scrollY;
-      const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
-
-      // Disparar evento de 50% do scroll
-      if (scrollPercentage >= 50 && !scrollEventsFired['50']) {
-        await trackScrollDepthElite(50);
-        setScrollEventsFired(prev => ({ ...prev, '50': true }));
-      }
-
-      // Disparar evento de 75% do scroll
-      if (scrollPercentage >= 75 && !scrollEventsFired['75']) {
-        await trackScrollDepthElite(75);
-        setScrollEventsFired(prev => ({ ...prev, '75': true }));
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [scrollEventsFired]);
-
-  // useEffect para ViewContent baseado em timing (EVITAR DUPLICIDADE)
-  // MELHORADO: Disparar mais cedo (10s) e também ao carregar página (após PageView)
-  useEffect(() => {
-    // IMPORTANTE: ViewContent deve sempre disparar após PageView
-    // Aguardar um pouco após PageView para garantir ordem correta
-    const initialDelay = setTimeout(async () => {
-      if (!viewContentFired) {
-        try {
-          await trackViewContentElite({
-            trigger_type: 'page_load',
-            time_on_page: 2
-          });
-          
-          setViewContentFired(true);
-          console.log('🎯 ViewContent disparado por page_load (2s após PageView)');
-        } catch (error) {
-          console.error('❌ Erro ao disparar ViewContent:', error);
-        }
-      }
-    }, 2000); // 2 segundos após PageView (garantir ordem)
-
-    // Disparar ViewContent após 10 segundos na página (reduzido de 15s para melhorar taxa de disparo)
-    const viewContentTimer = setTimeout(async () => {
-      if (!viewContentFired) {
-        try {
-          await trackViewContentElite({
-            trigger_type: 'timing',
-            time_on_page: 10
-          });
-          
-          setViewContentFired(true);
-          console.log('🎯 ViewContent disparado por timing (10s)');
-        } catch (error) {
-          console.error('❌ Erro ao disparar ViewContent:', error);
-        }
-      }
-    }, 10000); // 10 segundos (reduzido para melhorar cobertura)
-
-    // Disparar ViewContent ao atingir 20% de scroll (reduzido de 25% para melhorar taxa de disparo)
-    const handleScrollForViewContent = async () => {
-      if (!viewContentFired) {
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    
+    const handleScroll = () => {
+      // Throttle: processar apenas a cada 200ms
+      if (scrollTimeout) return;
+      
+      scrollTimeout = setTimeout(() => {
         const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
         const scrollPosition = window.scrollY;
         const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
 
-        if (scrollPercentage >= 20) { // Reduzido de 25% para 20%
-          try {
-            await trackViewContentElite({
-              trigger_type: 'scroll',
-              scroll_depth: 20
-            });
-            
-            setViewContentFired(true);
-            console.log('🎯 ViewContent disparado por scroll (20%)');
-            
-            // Remover listener após disparar
-            window.removeEventListener('scroll', handleScrollForViewContent);
-          } catch (error) {
-            console.error('❌ Erro ao disparar ViewContent:', error);
-          }
+        // Disparar evento de 50% do scroll (apenas uma vez)
+        if (scrollPercentage >= 50 && !scroll50FiredRef.current && !scrollEventsFired['50']) {
+          scroll50FiredRef.current = true;
+          setScrollEventsFired(prev => ({ ...prev, '50': true }));
+          trackScrollDepthElite(50).catch(console.error);
         }
-      }
+
+        // Disparar evento de 75% do scroll (apenas uma vez)
+        if (scrollPercentage >= 75 && !scroll75FiredRef.current && !scrollEventsFired['75']) {
+          scroll75FiredRef.current = true;
+          setScrollEventsFired(prev => ({ ...prev, '75': true }));
+          trackScrollDepthElite(75).catch(console.error);
+        }
+        
+        scrollTimeout = null;
+      }, 200); // Throttle de 200ms (aumentado para evitar múltiplas chamadas)
     };
 
-    window.addEventListener('scroll', handleScrollForViewContent);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
+  }, [scrollEventsFired]);
+
+  // useEffect para ViewContent baseado em timing (EVITAR DUPLICIDADE)
+  // CORRIGIDO: Usar useRef para evitar race condition entre múltiplos triggers
+  useEffect(() => {
+    // IMPORTANTE: ViewContent deve sempre disparar após PageView
+    // Aguardar um pouco após PageView para garantir ordem correta
+    const initialDelay = setTimeout(() => {
+      if (!viewContentFiredRef.current) {
+        viewContentFiredRef.current = true;
+        setViewContentFired(true);
+        
+        trackViewContentElite({
+          trigger_type: 'page_load',
+          time_on_page: 2
+        })
+        .then(() => {
+          console.log('🎯 ViewContent disparado por page_load (2s após PageView)');
+        })
+        .catch((error) => {
+          console.error('❌ Erro ao disparar ViewContent:', error);
+          viewContentFiredRef.current = false;
+          setViewContentFired(false);
+        });
+      }
+    }, 2000); // 2 segundos após PageView (garantir ordem)
+
+    // Disparar ViewContent após 10 segundos na página (backup caso initialDelay não dispare)
+    const viewContentTimer = setTimeout(() => {
+      if (!viewContentFiredRef.current) {
+        viewContentFiredRef.current = true;
+        setViewContentFired(true);
+        
+        trackViewContentElite({
+          trigger_type: 'timing',
+          time_on_page: 10
+        })
+        .then(() => {
+          console.log('🎯 ViewContent disparado por timing (10s)');
+        })
+        .catch((error) => {
+          console.error('❌ Erro ao disparar ViewContent:', error);
+          viewContentFiredRef.current = false;
+          setViewContentFired(false);
+        });
+      }
+    }, 10000); // 10 segundos (backup)
+
+    // Disparar ViewContent ao atingir 20% de scroll
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    const handleScrollForViewContent = () => {
+      if (scrollTimeout || viewContentFiredRef.current) return;
+      
+      scrollTimeout = setTimeout(() => {
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPosition = window.scrollY;
+        const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
+
+        if (scrollPercentage >= 20 && !viewContentFiredRef.current) {
+          viewContentFiredRef.current = true;
+          setViewContentFired(true);
+          
+          trackViewContentElite({
+            trigger_type: 'scroll',
+            scroll_depth: 20
+          })
+          .then(() => {
+            console.log('🎯 ViewContent disparado por scroll (20%)');
+            window.removeEventListener('scroll', handleScrollForViewContent);
+          })
+          .catch((error) => {
+            console.error('❌ Erro ao disparar ViewContent:', error);
+            viewContentFiredRef.current = false;
+            setViewContentFired(false);
+          });
+        }
+        
+        scrollTimeout = null;
+      }, 200); // Throttle de 200ms
+    };
+
+    window.addEventListener('scroll', handleScrollForViewContent, { passive: true });
 
     return () => {
       clearTimeout(initialDelay);
       clearTimeout(viewContentTimer);
       window.removeEventListener('scroll', handleScrollForViewContent);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
     };
-  }, [viewContentFired]);
+  }, []); // Array vazio - executar apenas uma vez
 
   // Função para abrir o modal de pré-checkout
   const openPreCheckoutModal = (event: React.MouseEvent) => {
