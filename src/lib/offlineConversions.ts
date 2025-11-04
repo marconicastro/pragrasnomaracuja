@@ -970,7 +970,9 @@ export async function sendPurchaseToGTM(
     console.log('🚀 sendPurchaseToGTM() INICIADA');
     
     const gtmServerUrl = process.env.GTM_SERVER_URL || 'https://event.maracujazeropragas.com';
-    const gtmEndpoint = `${gtmServerUrl}/data`;
+    // IMPORTANTE: Especificar Client Name na URL para eventos server-side
+    // O Client Name deve ser 'Data Client' para processar eventos do webhook
+    const gtmEndpoint = `${gtmServerUrl}/data?client_name=Data Client`;
     
     console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
     
@@ -1026,12 +1028,14 @@ export async function sendPurchaseToGTM(
     });
     
     // Enviar para GTM Server-Side
+    // IMPORTANTE: GTM Server-Side espera array de eventos (mesmo formato do browser)
     const response = await fetch(gtmEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': userData.client_user_agent || 'GTM-Server-Side-Webhook'
       },
-      body: JSON.stringify(eventData)
+      body: JSON.stringify([eventData])  // Array de eventos (mesmo que seja um único evento)
     });
     
     if (!response.ok) {
