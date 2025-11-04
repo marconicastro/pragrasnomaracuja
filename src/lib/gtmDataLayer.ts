@@ -241,6 +241,8 @@ export function pushBeginCheckout(
 
 /**
  * 💰 purchase
+ * 
+ * Evento: 'purchase' (nome específico para trigger do GTM)
  */
 export function pushPurchase(
   transactionId: string,
@@ -252,7 +254,7 @@ export function pushPurchase(
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   
   pushToDataLayer({
-    event: 'purchase',
+    event: 'purchase', // Nome específico para trigger 'ce - purchase' no GTM
     ecommerce: {
       transaction_id: transactionId,
       value: value,
@@ -267,6 +269,8 @@ export function pushPurchase(
 
 /**
  * 📝 generate_lead
+ * 
+ * Evento: 'generate_lead' (nome específico para trigger do GTM)
  */
 export function pushGenerateLead(
   userData: Partial<UserData>,
@@ -275,7 +279,7 @@ export function pushGenerateLead(
   const contentData = prepareContentData();
   
   pushToDataLayer({
-    event: 'generate_lead',
+    event: 'generate_lead', // Nome específico para trigger 'ce - generate_lead' no GTM
     ...(value && {
       ecommerce: {
         value: value,
