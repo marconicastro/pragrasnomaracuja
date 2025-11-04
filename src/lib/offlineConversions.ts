@@ -970,10 +970,9 @@ export async function sendPurchaseToGTM(
     console.log('🚀 sendPurchaseToGTM() INICIADA');
     
     const gtmServerUrl = process.env.GTM_SERVER_URL || 'https://event.maracujazeropragas.com';
-    // IMPORTANTE: Para eventos server-side (webhook), usar Client específico
-    // Se não tiver Client customizado, usar "Data Client" (pode não funcionar)
-    // RECOMENDADO: Criar Client "Webhook Client" no GTM Server-Side
-    const clientName = process.env.GTM_WEBHOOK_CLIENT_NAME || 'Data Client';
+    // IMPORTANTE: Para eventos server-side (webhook), usar Client "Webhook Client"
+    // Data Client não aceita eventos server-side diretos (só eventos do browser via Data Tags)
+    const clientName = process.env.GTM_WEBHOOK_CLIENT_NAME || 'Webhook Client';
     const gtmEndpoint = `${gtmServerUrl}/data?client_name=${encodeURIComponent(clientName)}`;
     
     console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
