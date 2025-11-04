@@ -321,6 +321,9 @@ export function saveAdvancedUserData(
   const existingData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
   
+  // Session (manter existente ou criar novo)
+  const sessionId = existingData?.sessionId || generateSessionId();
+  
   // Merge de dados (novos sobrescrevem antigos)
   const mergedData: UserDataComplete = {
     ...existingData,
@@ -331,7 +334,11 @@ export function saveAdvancedUserData(
     fbc: metaCookies.fbc || existingData?.fbc,
     
     // Session (manter existente ou criar novo)
-    sessionId: existingData?.sessionId || generateSessionId(),
+    sessionId: sessionId,
+    
+    // External ID (usar sessionId como external_id - Meta requer)
+    // CRÍTICO: external_id deve ser único por sessão/usuário
+    external_id: userData.external_id || existingData?.external_id || sessionId,
     
     // Timestamps
     firstSeen: existingData?.firstSeen || Date.now(),

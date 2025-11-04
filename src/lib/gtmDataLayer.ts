@@ -187,6 +187,8 @@ export function pushViewItem(
       items: [prepareEcommerceItem()]
     },
     ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
+    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
     user_data: prepareUserData(userData)
   });
 }
@@ -210,6 +212,8 @@ export function pushAddToCart(
       items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
     },
     ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
+    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
     num_items: quantity,
     user_data: prepareUserData(userData)
   });
@@ -234,6 +238,8 @@ export function pushBeginCheckout(
       items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
     },
     ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
+    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
     num_items: quantity,
     user_data: prepareUserData(userData)
   });
@@ -262,6 +268,8 @@ export function pushPurchase(
       items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
     },
     ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
+    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
     num_items: quantity,
     user_data: prepareUserData(userData)
   });
