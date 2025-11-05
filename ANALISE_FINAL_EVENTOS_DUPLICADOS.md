@@ -108,3 +108,6 @@ Pelos logs do console:
 
 Se confirmar que são requisições diferentes, **está tudo correto!** ✅
 
+
+
+

@@ -151,3 +151,6 @@ Se aparecer no Meta ou GA4 → **Está funcionando perfeitamente!** ✅
 **Última atualização**: 2025-11-04 20:00:00
 **Status**: ✅ Webhook funcionando, aguardando validação no Meta/GA4
 
+
+
+

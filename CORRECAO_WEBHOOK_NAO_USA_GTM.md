@@ -79,3 +79,6 @@ git push
 
 **Se aparecer `🔄 Tentando fallback`**, significa que GTM Server-Side retornou erro.
 
+
+
+

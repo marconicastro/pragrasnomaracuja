@@ -145,3 +145,6 @@ Para testar as correções:
 
 ✅ **Eventos agora disparam apenas 1x cada!**
 
+
+
+

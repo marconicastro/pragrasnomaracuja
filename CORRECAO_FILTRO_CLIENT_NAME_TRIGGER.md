@@ -78,3 +78,6 @@ Após remover o filtro de Client Name:
 
 **Status**: Problema identificado! Remover filtro "Client Name contém Data Client"
 
+
+
+

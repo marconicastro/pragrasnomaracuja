@@ -267,3 +267,6 @@ Procurar por:
 - **Meta Events Manager:** https://business.facebook.com/events_manager2/
 - **GA4 Real-Time:** https://analytics.google.com/
 
+
+
+

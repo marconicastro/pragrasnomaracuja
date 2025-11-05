@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveUserTracking } from '@/lib/userTrackingStore';
+import { 
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+  normalizeCity,
+  normalizeState,
+  normalizeZip,
+  normalizeCountry
+} from '@/lib/utils/metaDataNormalizer';
 
 /**
  * API Route: Salva fbp/fbc + Attribution quando Lead acontece
@@ -49,16 +58,27 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // ⚠️ NORMALIZAÇÃO CRÍTICA: Normalizar TODOS os dados para padrão Facebook antes de salvar
+    // Garante consistência mesmo se dados vierem do formulário em formato inconsistente
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedFirstName = firstName ? normalizeName(firstName) : undefined;
+    const normalizedLastName = lastName ? normalizeName(lastName) : undefined;
+    const normalizedPhone = phone ? normalizePhone(phone) : undefined;
+    const normalizedCity = city ? normalizeCity(city) : undefined;
+    const normalizedState = state ? normalizeState(state) : undefined;
+    const normalizedZip = zip ? normalizeZip(zip) : undefined;
+    const normalizedCountry = normalizeCountry(undefined); // BR por padrão
+    
     const success = await saveUserTracking({
-      email,
+      email: normalizedEmail,  // ✅ Normalizado
       fbp,
       fbc,
-      firstName,
-      lastName,
-      phone,
-      city,
-      state,
-      zip,
+      firstName: normalizedFirstName,  // ✅ Normalizado
+      lastName: normalizedLastName,     // ✅ Normalizado
+      phone: normalizedPhone,         // ✅ Normalizado
+      city: normalizedCity,            // ✅ Normalizado
+      state: normalizedState,          // ✅ Normalizado
+      zip: normalizedZip,              // ✅ Normalizado
       // Attribution data
       attributionJourney,
       firstTouchSource,

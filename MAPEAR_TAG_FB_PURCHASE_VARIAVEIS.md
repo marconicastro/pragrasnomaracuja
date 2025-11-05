@@ -283,3 +283,4 @@ A tag Stape Facebook Conversion API **hashea automaticamente** os seguintes camp
 **Última atualização**: 2025-01-05
 **Versão**: 1.0
 
+

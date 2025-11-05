@@ -154,3 +154,6 @@ URL: /obrigado?order_id=TEST_123&email=teste@email.com&value=39.9
 - Testar na página `/obrigado` e verificar no GTM Preview Mode
 - Verificar se todas as tags estão configuradas corretamente no GTM
 
+
+
+

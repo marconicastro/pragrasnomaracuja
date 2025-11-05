@@ -99,3 +99,6 @@ Meta e GA4 recebem Purchase ✅
 
 Se as tags não existirem, precisamos criá-las. Mas geralmente elas já existem e só precisam estar configuradas corretamente.
 
+
+
+

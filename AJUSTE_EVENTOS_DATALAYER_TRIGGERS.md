@@ -101,3 +101,6 @@
 ✅ **Nomes estão corretos e correspondem aos triggers específicos do GTM!**
 
 
+
+
+

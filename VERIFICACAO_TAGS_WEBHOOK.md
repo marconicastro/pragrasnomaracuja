@@ -115,3 +115,6 @@ Precisamos verificar se os triggers aceitam eventos do "Webhook Client" também.
 - Remover filtro de Client Name do trigger, OU
 - Adicionar "Webhook Client" ao filtro
 
+
+
+

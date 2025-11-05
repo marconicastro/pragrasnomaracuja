@@ -71,3 +71,6 @@
 
 **Status**: Criar variável Event Data e ajustar trigger
 
+
+
+

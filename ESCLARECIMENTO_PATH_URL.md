@@ -86,3 +86,6 @@ Accepted Path Settings:
 
 **A URL já está correta!** Só precisa configurar o "Accepted Path Settings" no Client para que ele aceite requisições no path `/data`.
 
+
+
+

@@ -148,3 +148,6 @@ Webhook → sendPurchaseToGTM() → GTM Server-Side /data
 - Client pode não estar configurado corretamente
 - Precisamos verificar logs e configuração
 
+
+
+

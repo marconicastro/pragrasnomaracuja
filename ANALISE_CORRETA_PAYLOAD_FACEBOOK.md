@@ -132,3 +132,6 @@ return trackEliteEvent('InitiateCheckout', {
 2. Verificar se `content_name` e `content_type` estão sendo enviados no DataLayer
 3. Verificar se o GTM Server-Side está mapeando corretamente estes campos para o Meta
 
+
+
+

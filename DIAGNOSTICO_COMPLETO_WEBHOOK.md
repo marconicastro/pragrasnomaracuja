@@ -121,3 +121,6 @@ Procurar por:
 - Ou usar outro método de integração
 - Ou manter fallback para Meta CAPI direto
 
+
+
+

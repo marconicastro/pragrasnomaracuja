@@ -114,3 +114,6 @@ Após ajustar o trigger:
 
 **Status**: Problema identificado! Ajustar trigger para `event_name = "Data"` + filtro `event = "purchase"`
 
+
+
+

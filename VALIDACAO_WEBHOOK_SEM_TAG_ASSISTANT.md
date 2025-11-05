@@ -157,3 +157,6 @@ O fato de não aparecer no Tag Assistant do servidor é uma **limitação do Pre
 **Última atualização**: 2025-11-04 20:05:00
 **Status**: ✅ Webhook funcionando, aguardando validação no Meta/GA4
 
+
+
+

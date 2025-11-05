@@ -191,3 +191,4 @@ Após criar todas as variáveis com estes paths:
 **Última atualização**: 2025-01-05
 **Versão**: 1.0 - CONFIRMADO BASEADO NA ESTRUTURA REAL
 
+

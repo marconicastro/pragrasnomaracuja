@@ -115,3 +115,6 @@ Com essas informações, identifico exatamente o problema!
 
 **Status**: Aguardando informações do stream e trigger para identificar o problema
 
+
+
+

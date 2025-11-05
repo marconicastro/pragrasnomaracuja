@@ -7,6 +7,8 @@
 
 'use server';
 
+import { normalizePhone as normalizePhoneUtil } from './utils/metaDataNormalizer';
+
 // ===== INTERFACES =====
 
 export interface UserTrackingData {
@@ -81,7 +83,7 @@ export async function saveUserTracking(data: Omit<UserTrackingData, 'createdAt' 
       
       // Salvar por telefone tamb?m (para busca alternativa)
       if (data.phone) {
-        const phoneNormalized = normalizePhone(data.phone);
+        const phoneNormalized = normalizePhoneUtil(data.phone);
         await kv.set(`user:phone:${phoneNormalized}`, trackingData);
       }
       
@@ -131,7 +133,7 @@ export async function getUserTracking(
       
       // 2. Buscar por telefone (fallback)
       if (phone) {
-        const phoneNormalized = normalizePhone(phone);
+        const phoneNormalized = normalizePhoneUtil(phone);
         userData = await kv.get<UserTrackingData>(`user:phone:${phoneNormalized}`);
         
         if (userData) {
@@ -152,20 +154,4 @@ export async function getUserTracking(
     console.error('? Erro ao buscar no Vercel KV:', error);
     return null;
   }
-}
-
-// ===== UTILITIES =====
-
-function normalizePhone(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
-  
-  if (cleaned.startsWith('55')) {
-    return cleaned;
-  }
-  
-  if (cleaned.length >= 10 && cleaned.length <= 11) {
-    return `55${cleaned}`;
-  }
-  
-  return cleaned;
 }

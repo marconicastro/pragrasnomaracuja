@@ -140,3 +140,6 @@ useEffect(() => {
 
 ✅ **Eventos agora disparam apenas 1x cada!**
 
+
+
+

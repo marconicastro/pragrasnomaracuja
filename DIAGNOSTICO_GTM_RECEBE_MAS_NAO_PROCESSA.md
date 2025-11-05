@@ -99,3 +99,6 @@ const clientName = process.env.GTM_WEBHOOK_CLIENT_NAME || 'Webhook Client';
 - Mas **não processa** porque Data Client pode não aceitar server-side events
 - **Solução:** Criar Client específico "Webhook Client" para processar eventos do webhook
 
+
+
+

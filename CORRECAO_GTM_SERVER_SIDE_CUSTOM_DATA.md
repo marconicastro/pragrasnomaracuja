@@ -134,3 +134,6 @@ Adicionar `content_name` e `content_type` ao Custom Data de:
 
 ✅ **External ID:** Já está configurado corretamente (`{{ed - user_id}}`)
 
+
+
+

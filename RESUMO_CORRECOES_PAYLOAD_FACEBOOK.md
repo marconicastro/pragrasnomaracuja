@@ -93,3 +93,6 @@
 ⚠️ **Ação necessária:**
 - Verificar mapeamento de `user_id` → `external_id` no GTM Server-Side
 
+
+
+

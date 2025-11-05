@@ -177,3 +177,6 @@ POST /api/webhook-cakto
 ✅ **Fallback para Meta CAPI direto se necessário**
 ✅ **Todos os dados do KV incluídos (external_id, fbp, fbc, etc.)**
 
+
+
+

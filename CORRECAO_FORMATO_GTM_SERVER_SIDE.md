@@ -133,3 +133,6 @@ User-Agent: GTM-Server-Side-Webhook (ou client_user_agent se disponível)
 - Mesmo que seja um único evento
 - GTM Server-Side espera este formato
 
+
+
+

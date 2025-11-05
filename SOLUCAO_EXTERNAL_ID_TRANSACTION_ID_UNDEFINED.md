@@ -177,3 +177,6 @@ order_id              {{dlv - ecommerce.transaction_id}}    ✅ Funciona!
 - `{{dlv - user_data.user_id}}` para external_id
 - `{{dlv - ecommerce.transaction_id}}` para transaction_id
 
+
+
+

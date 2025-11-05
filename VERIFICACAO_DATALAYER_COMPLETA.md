@@ -175,3 +175,6 @@ events.forEach(e => {
 - `content_name` → presente em todos os eventos de ecommerce
 - `content_type` → presente em todos os eventos de ecommerce
 
+
+
+

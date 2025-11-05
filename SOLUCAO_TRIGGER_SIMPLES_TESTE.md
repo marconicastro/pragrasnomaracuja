@@ -104,3 +104,6 @@ O evento pode estar em formato diferente. Verificar:
 
 **Status**: Criar trigger novo e simples para testar
 
+
+
+

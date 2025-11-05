@@ -82,3 +82,6 @@ Se o evento está sendo roteado para "Data Client", podemos ajustar os triggers 
 
 **Status**: Evento chegou, mas precisa ajustar roteamento ou triggers
 
+
+
+

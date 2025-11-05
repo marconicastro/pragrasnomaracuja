@@ -200,3 +200,4 @@ Se o código já está transformando para formato DataLayer (`ecommerce.currency
 **Última atualização**: 2025-01-05
 **Versão**: 1.0
 
+

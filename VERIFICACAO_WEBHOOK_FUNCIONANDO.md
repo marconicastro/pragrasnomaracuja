@@ -82,3 +82,6 @@
 **Última atualização**: 2025-11-04 19:59:54
 **Status**: ✅ Webhook funcionando, aguardando verificação no GTM
 
+
+
+

@@ -45,3 +45,6 @@ Após configurar o path `/webhook` no "Webhook Client":
 
 **Status**: ✅ Código atualizado, aguardando configuração no GTM Server-Side
 
+
+
+

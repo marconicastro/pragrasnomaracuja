@@ -5,6 +5,12 @@ import {
   sendPurchaseToGTM,
   type CaktoWebhookPayload 
 } from '@/lib/offlineConversions';
+import { 
+  normalizeEmail, 
+  splitNormalizedName,
+  normalizePhone,
+  logNormalization
+} from '@/lib/utils/metaDataNormalizer';
 
 /**
  * 📨 Webhook Cakto - Offline Conversions (Purchase)
@@ -91,20 +97,43 @@ export async function POST(request: NextRequest) {
     
     console.log('📍 IP capturado do webhook:', client_ip_address || 'não disponível');
     
-    // Buscar user data (KV + Prisma fallback)
-    const userData = await getUserDataFromKVOrPrisma(
-      payload.data.customer.email,
-      payload.data.customer.phone
+    // ⚠️ NORMALIZAÇÃO CRÍTICA: Normalizar dados do webhook para padrão Facebook
+    // Garante que todos os dados sigam o padrão do Facebook antes de usar
+    const originalData = {
+      email: payload.data.customer.email,
+      name: payload.data.customer.name,
+      phone: payload.data.customer.phone
+    };
+    
+    // Normalizar email (lowercase + trim)
+    const normalizedEmail = normalizeEmail(payload.data.customer.email);
+    
+    // Normalizar nome e extrair first/last name (title case)
+    const { firstName, lastName } = splitNormalizedName(payload.data.customer.name);
+    
+    // Normalizar telefone (apenas dígitos + código país)
+    const normalizedPhone = normalizePhone(payload.data.customer.phone);
+    
+    // Log de normalização (se houver mudanças)
+    logNormalization(
+      originalData,
+      { email: normalizedEmail, name: `${firstName} ${lastName}`.trim(), phone: normalizedPhone },
+      'Webhook Cakto - Normalização'
     );
     
-    // Extrair dados
-    const nameParts = payload.data.customer.name.split(' ');
+    // Buscar user data (KV + Prisma fallback) - usar email NORMALIZADO!
+    const userData = await getUserDataFromKVOrPrisma(
+      normalizedEmail,  // ✅ Email normalizado (lowercase)
+      normalizedPhone    // ✅ Telefone normalizado
+    );
+    
+    // Preparar purchaseData com dados NORMALIZADOS
     const purchaseData = {
       orderId: payload.data.refId,
-      email: payload.data.customer.email,
-      firstName: nameParts[0],
-      lastName: nameParts.slice(1).join(' ') || undefined,
-      phone: payload.data.customer.phone,
+      email: normalizedEmail,  // ✅ Email normalizado (lowercase)
+      firstName,               // ✅ Nome normalizado (title case)
+      lastName: lastName || undefined,
+      phone: normalizedPhone,  // ✅ Telefone normalizado
       value: payload.data.amount,
       currency: 'BRL',
       timestamp: payload.data.paidAt ? new Date(payload.data.paidAt).getTime() : Date.now()

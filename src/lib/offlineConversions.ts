@@ -10,6 +10,15 @@
 
 import crypto from 'crypto';
 import { validateFbc } from './utils/fbcValidator';
+import { 
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+  normalizeCity,
+  normalizeState,
+  normalizeZip,
+  normalizeCountry
+} from './utils/metaDataNormalizer';
 
 // ===== INTERFACES =====
 
@@ -435,18 +444,22 @@ export async function sendOfflinePurchase(
       throw new Error('Stape URL ou Pixel ID n?o configurado');
     }
     
-    // Preparar user_data (hashear PII)
+    // ⚠️ NORMALIZAÇÃO CRÍTICA: Normalizar TODOS os dados para padrão Facebook antes de hash
+    // Garante consistência mesmo se dados vierem em formato inconsistente
+    const normalizedEmail = normalizeEmail(purchaseData.email);
+    const normalizedFirstName = purchaseData.firstName ? normalizeName(purchaseData.firstName) : undefined;
+    const normalizedLastName = purchaseData.lastName ? normalizeName(purchaseData.lastName) : undefined;
+    const normalizedPhone = purchaseData.phone ? normalizePhone(purchaseData.phone) : undefined;
+    
+    // Preparar user_data (hashear PII normalizado)
     const user_data: Record<string, any> = {
-      em: hashSHA256(purchaseData.email),
+      em: hashSHA256(normalizedEmail),
     };
     
-    // Adicionar dados do formul?rio (se tiver)
-    if (purchaseData.firstName) user_data.fn = hashSHA256(purchaseData.firstName);
-    if (purchaseData.lastName) user_data.ln = hashSHA256(purchaseData.lastName);
-    if (purchaseData.phone) {
-      const phoneClean = purchaseData.phone.replace(/\D/g, '');
-      user_data.ph = hashSHA256(phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`);
-    }
+    // Adicionar dados normalizados (se tiver)
+    if (normalizedFirstName) user_data.fn = hashSHA256(normalizedFirstName);
+    if (normalizedLastName) user_data.ln = hashSHA256(normalizedLastName);
+    if (normalizedPhone) user_data.ph = hashSHA256(normalizedPhone);
     
     // Adicionar dados persistidos (CRÍTICO para atribuição!)
     if (userData.fbp) {
@@ -508,31 +521,35 @@ export async function sendOfflinePurchase(
       console.log('✅ external_id gerado (fallback):', user_data.external_id);
     }
     
-    // Geolocalização (do Lead salvo) - DEVE HASHEAR!
+    // Geolocalização (do Lead salvo) - NORMALIZAR E HASHEAR!
     // CRÍTICO: Sempre enviar (49% → 100% cobertura!)
     if (userData.city) {
-      user_data.ct = hashSHA256(userData.city.toLowerCase().trim());
-      console.log('✅ City adicionada:', userData.city);
+      const normalizedCity = normalizeCity(userData.city);
+      user_data.ct = hashSHA256(normalizedCity);
+      console.log('✅ City adicionada (normalizada):', normalizedCity);
     } else {
       console.warn('⚠️ City ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.state) {
-      user_data.st = hashSHA256(userData.state.toLowerCase().trim());
-      console.log('✅ State adicionado:', userData.state);
+      const normalizedState = normalizeState(userData.state);
+      user_data.st = hashSHA256(normalizedState);
+      console.log('✅ State adicionado (normalizado):', normalizedState);
     } else {
       console.warn('⚠️ State ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.zip) {
-      user_data.zp = hashSHA256(userData.zip.replace(/\D/g, '').trim());
-      console.log('✅ ZIP adicionado:', userData.zip);
+      const normalizedZip = normalizeZip(userData.zip);
+      user_data.zp = hashSHA256(normalizedZip);
+      console.log('✅ ZIP adicionado (normalizado):', normalizedZip);
     } else {
       console.warn('⚠️ ZIP ausente (cobertura reduzida: -3 DQS)');
     }
     
-    // País sempre BR (DEVE HASHEAR!) - SEMPRE enviar (garante 100% cobertura)
-    user_data.country = hashSHA256('br');
+    // País sempre BR (NORMALIZAR E HASHEAR!) - SEMPRE enviar (garante 100% cobertura)
+    const normalizedCountry = normalizeCountry(userData.country);
+    user_data.country = hashSHA256(normalizedCountry);
     
     // ✅ IP e User Agent - +3.36% conversões! (CRÍTICO para EQM)
     // Esses campos NÃO são hasheados (conforme doc Meta)
@@ -1005,14 +1022,14 @@ export async function sendPurchaseToGTM(
       num_items: 1,
       user_data: {
         user_id: userData.external_id || undefined,  // external_id do KV
-        email_address: purchaseData.email,
-        phone_number: purchaseData.phone || userData.phone,
-        first_name: purchaseData.firstName || userData.firstName,
-        last_name: purchaseData.lastName || userData.lastName,
-        city: userData.city,
-        region: userData.state,
-        postal_code: userData.zip,
-        country: userData.country || 'BR'
+        email_address: normalizeEmail(purchaseData.email),  // ✅ Normalizado
+        phone_number: (purchaseData.phone || userData.phone) ? normalizePhone(purchaseData.phone || userData.phone || '') : undefined,  // ✅ Normalizado
+        first_name: (purchaseData.firstName || userData.firstName) ? normalizeName(purchaseData.firstName || userData.firstName || '') : undefined,  // ✅ Normalizado
+        last_name: (purchaseData.lastName || userData.lastName) ? normalizeName(purchaseData.lastName || userData.lastName || '') : undefined,  // ✅ Normalizado
+        city: userData.city ? normalizeCity(userData.city) : undefined,  // ✅ Normalizado
+        region: userData.state ? normalizeState(userData.state) : undefined,  // ✅ Normalizado
+        postal_code: userData.zip ? normalizeZip(userData.zip) : undefined,  // ✅ Normalizado
+        country: normalizeCountry(userData.country)  // ✅ Normalizado
       },
       // Metadata adicional
       event_id: `${purchaseData.orderId}_${purchaseData.timestamp || Date.now()}`,

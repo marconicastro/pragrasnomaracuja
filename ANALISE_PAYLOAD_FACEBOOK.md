@@ -190,3 +190,6 @@ Isso é **EXCELENTE** para conversões server-side!
 
 **Tudo funcionando perfeitamente!** 🚀
 
+
+
+

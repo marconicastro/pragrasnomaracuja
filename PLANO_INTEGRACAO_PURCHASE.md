@@ -90,3 +90,6 @@ pushPurchase(orderId, purchaseValue, purchaseCurrency, purchaseQuantity, userDat
 2. Verificar configuração do GTM
 3. Testar e validar
 
+
+
+

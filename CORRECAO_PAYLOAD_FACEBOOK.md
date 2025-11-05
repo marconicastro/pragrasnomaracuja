@@ -121,3 +121,6 @@ export function pushBeginCheckout(
 2. Adicionar campos faltantes ao DataLayer se necessário
 3. Testar e verificar se os campos aparecem no payload final
 
+
+
+

@@ -98,3 +98,6 @@ GTM Server-Side pode precisar do formato GA4 Measurement Protocol para eventos s
 - Pode precisar passar pelo Data Client de forma diferente
 - Pode ser necessário usar outro método (ex: Custom Client)
 
+
+
+

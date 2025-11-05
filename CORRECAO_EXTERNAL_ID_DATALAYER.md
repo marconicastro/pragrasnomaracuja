@@ -85,3 +85,6 @@ const mergedData: UserDataComplete = {
 ✅ **Próximo passo:**
 - Testar e verificar se `external_id` aparece no payload do Meta
 
+
+
+

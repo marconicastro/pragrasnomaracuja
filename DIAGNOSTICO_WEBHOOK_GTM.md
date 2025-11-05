@@ -81,3 +81,6 @@ console.log('📦 Event Data:', JSON.stringify(eventData, null, 2));
 
 **Se aparecer `🔄 Tentando fallback`**, significa que GTM Server-Side falhou.
 
+
+
+

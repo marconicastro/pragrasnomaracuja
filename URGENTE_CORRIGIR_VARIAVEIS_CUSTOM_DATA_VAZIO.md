@@ -162,3 +162,4 @@ Meta deve retornar **200 OK** ao invés de **400**.
 **Última atualização**: 2025-01-05
 **Versão**: 1.0 - URGENTE
 
+

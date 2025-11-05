@@ -183,3 +183,4 @@ Após criar/corrigir todas as variáveis com paths começando com `0.`:
 **Última atualização**: 2025-01-05
 **Versão**: 1.0 - CONFIRMADO: Dados estão em `0: {...}`
 
+

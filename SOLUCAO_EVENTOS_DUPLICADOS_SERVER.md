@@ -70,3 +70,6 @@ Com isso, vou saber se:
 - ✅ Os eventos estão duplicados no DataLayer (problema no código)
 - ✅ Os eventos aparecem 1x no DataLayer mas 2x no GTM (problema no GTM Server-Side)
 
+
+
+
