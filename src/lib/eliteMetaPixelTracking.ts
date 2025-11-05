@@ -356,8 +356,12 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
     country: userData.country
   } : undefined;
   
-  // Enviar para DataLayer
-  pushPageView(userDataForGTM);
+  // Gerar event_id antes de enviar para DataLayer
+  const { generateEventId } = await import('./utils/eventId');
+  const eventID = generateEventId('PageView');
+  
+  // Enviar para DataLayer com event_id
+  pushPageView(userDataForGTM, eventID);
   
   return trackEliteEvent('PageView', {
     value: 39.9,
@@ -388,8 +392,12 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     country: userData.country
   } : undefined;
   
-  // Enviar para DataLayer
-  pushViewItem(39.9, 'BRL', userDataForGTM);
+  // Gerar event_id antes de enviar para DataLayer
+  const { generateEventId } = await import('./utils/eventId');
+  const eventID = generateEventId('ViewContent');
+  
+  // Enviar para DataLayer com event_id
+  pushViewItem(39.9, 'BRL', userDataForGTM, eventID);
   
   return trackEliteEvent('ViewContent', {
     value: 39.9,
@@ -453,8 +461,12 @@ export async function trackAddToCartElite(
     country: userData.country
   } : undefined;
   
-  // Enviar para DataLayer
-  pushAddToCart(39.9, 'BRL', 1, userDataForGTM);
+  // Gerar event_id antes de enviar para DataLayer
+  const { generateEventId } = await import('./utils/eventId');
+  const eventID = generateEventId('AddToCart');
+  
+  // Enviar para DataLayer com event_id
+  pushAddToCart(39.9, 'BRL', 1, userDataForGTM, eventID);
   
   return trackEliteEvent('AddToCart', {
     content_name: 'Sistema 4 Fases - Ebook Trips',
@@ -514,8 +526,12 @@ export async function trackLeadElite(
     country: 'BR'
   };
   
-  // Enviar para DataLayer
-  pushGenerateLead(userDataForGTM, 15.0);
+  // Gerar event_id antes de enviar para DataLayer
+  const { generateEventId } = await import('./utils/eventId');
+  const eventID = generateEventId('Lead');
+  
+  // Enviar para DataLayer com event_id
+  pushGenerateLead(userDataForGTM, 15.0, eventID);
   
   return trackEliteEvent('Lead', {
     // ===== VALORES (Otimiza??o de Campanha) =====
@@ -598,8 +614,12 @@ export async function trackInitiateCheckoutElite(
     country: 'BR'
   };
   
-  // Enviar para DataLayer
-  pushBeginCheckout(finalValue, 'BRL', quantity, userDataForGTM);
+  // Gerar event_id antes de enviar para DataLayer
+  const { generateEventId } = await import('./utils/eventId');
+  const eventID = generateEventId('InitiateCheckout');
+  
+  // Enviar para DataLayer com event_id
+  pushBeginCheckout(finalValue, 'BRL', quantity, userDataForGTM, eventID);
   
   return trackEliteEvent('InitiateCheckout', {
     value: finalValue,                                    // Valor (suporta din?mico)
