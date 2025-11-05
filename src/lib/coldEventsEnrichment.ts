@@ -15,6 +15,16 @@
 'use client';
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
+import { 
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+  normalizeCity,
+  normalizeState,
+  normalizeZip,
+  normalizeCountry,
+  splitNormalizedName
+} from './utils/metaDataNormalizer';
 
 // ===== INTERFACES =====
 
@@ -239,40 +249,48 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
   const sources: string[] = [];
   const user_data: Record<string, any> = {};
   
-  // 1. PRIORIDADE: Dados persistidos (usu?rio j? preencheu antes)
+  // 1. PRIORIDADE: Dados persistidos (usuário já preencheu antes - segunda visita!)
+  // ⚠️ NORMALIZAÇÃO CRÍTICA: Usar funções centralizadas para garantir padrão Facebook
   const persistedData = getAdvancedUserData();
   if (persistedData) {
     if (persistedData.email) {
-      user_data.em = persistedData.email.toLowerCase().trim();
+      const normalizedEmail = normalizeEmail(persistedData.email);
+      user_data.em = normalizedEmail;  // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_email');
     }
     if (persistedData.phone) {
-      const phoneClean = persistedData.phone.replace(/\D/g, '');
-      user_data.ph = phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`;
+      const normalizedPhone = normalizePhone(persistedData.phone);
+      user_data.ph = normalizedPhone;  // ✅ Normalizado (dígitos + 55)
       sources.push('persisted_phone');
     }
     if (persistedData.firstName) {
-      user_data.fn = persistedData.firstName.toLowerCase().trim();
+      const normalizedFirstName = normalizeName(persistedData.firstName);
+      user_data.fn = normalizedFirstName;  // ✅ Normalizado (title case)
       sources.push('persisted_first_name');
     }
     if (persistedData.lastName) {
-      user_data.ln = persistedData.lastName.toLowerCase().trim();
+      const normalizedLastName = normalizeName(persistedData.lastName);
+      user_data.ln = normalizedLastName;  // ✅ Normalizado (title case)
       sources.push('persisted_last_name');
     }
     if (persistedData.city) {
-      user_data.ct = persistedData.city.toLowerCase().trim();
+      const normalizedCity = normalizeCity(persistedData.city);
+      user_data.ct = normalizedCity;  // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_city');
     }
     if (persistedData.state) {
-      user_data.st = persistedData.state.toLowerCase().trim();
+      const normalizedState = normalizeState(persistedData.state);
+      user_data.st = normalizedState;  // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_state');
     }
     if (persistedData.zip) {
-      user_data.zp = persistedData.zip.replace(/\D/g, '');
+      const normalizedZip = normalizeZip(persistedData.zip);
+      user_data.zp = normalizedZip;  // ✅ Normalizado (apenas dígitos)
       sources.push('persisted_zip');
     }
     if (persistedData.country) {
-      user_data.country = persistedData.country.toLowerCase();
+      const normalizedCountry = normalizeCountry(persistedData.country);
+      user_data.country = normalizedCountry;  // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_country');
     }
     if (persistedData.external_id) {
@@ -281,35 +299,46 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     }
   }
   
-  // 2. Progressive data (usu?rio come?ou a preencher MAS ainda n?o submeteu)
+  // 2. Progressive data (usuário começou a preencher MAS ainda não submeteu)
+  // ⚠️ NORMALIZAÇÃO CRÍTICA: Usar funções centralizadas
   const progressive = getProgressiveData();
   if (progressive.email && !user_data.em) {
-    user_data.em = progressive.email;
+    const normalizedEmail = normalizeEmail(progressive.email);
+    user_data.em = normalizedEmail;  // ✅ Normalizado
     sources.push('progressive_email');
   }
   if (progressive.phone && !user_data.ph) {
-    const phoneClean = progressive.phone.replace(/\D/g, '');
-    user_data.ph = phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`;
+    const normalizedPhone = normalizePhone(progressive.phone);
+    user_data.ph = normalizedPhone;  // ✅ Normalizado
     sources.push('progressive_phone');
   }
   if (progressive.name && !user_data.fn) {
-    const nameParts = progressive.name.split(' ');
-    if (nameParts.length >= 2) {
-      user_data.fn = nameParts[0].toLowerCase().trim();
-      user_data.ln = nameParts.slice(1).join(' ').toLowerCase().trim();
+    const { firstName, lastName } = splitNormalizedName(progressive.name);
+    if (firstName) {
+      user_data.fn = normalizeName(firstName);  // ✅ Normalizado
+      sources.push('progressive_first_name');
+    }
+    if (lastName) {
+      user_data.ln = normalizeName(lastName);  // ✅ Normalizado
+      sources.push('progressive_last_name');
+    }
+    if (firstName || lastName) {
       sources.push('progressive_name');
     }
   }
   if (progressive.city && !user_data.ct) {
-    user_data.ct = progressive.city;
+    const normalizedCity = normalizeCity(progressive.city);
+    user_data.ct = normalizedCity;  // ✅ Normalizado
     sources.push('progressive_city');
   }
   if (progressive.state && !user_data.st) {
-    user_data.st = progressive.state;
+    const normalizedState = normalizeState(progressive.state);
+    user_data.st = normalizedState;  // ✅ Normalizado
     sources.push('progressive_state');
   }
   if (progressive.zip && !user_data.zp) {
-    user_data.zp = progressive.zip;
+    const normalizedZip = normalizeZip(progressive.zip);
+    user_data.zp = normalizedZip;  // ✅ Normalizado
     sources.push('progressive_zip');
   }
   
