@@ -1153,11 +1153,10 @@ export async function processCaktoWebhook(
       };
     }
     
-    // Extrair dados do cliente
+    // Extrair dados do cliente - usar função centralizada
     const customer = payload.data.customer;
-    const nameParts = customer.name.split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ');
+    const { splitNormalizedName } = await import('./utils/metaDataNormalizer');
+    const { firstName, lastName } = splitNormalizedName(customer.name);
     
     // Preparar dados da compra
     const purchaseData: OfflinePurchaseData = {

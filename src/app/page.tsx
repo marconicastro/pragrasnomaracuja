@@ -256,12 +256,15 @@ export default function App() {
     console.log('💾 Dados salvos persistentemente:', userDataToSave);
 
     // Preparar dados do usuário para tracking ELITE
-    const nameParts = cleanFullName.split(' ');
+    // ✅ Usar função centralizada para garantir separação correta (sobrenome = todos os nomes restantes)
+    const { splitNormalizedName } = await import('@/lib/utils/metaDataNormalizer');
+    const { firstName, lastName } = splitNormalizedName(cleanFullName);
+    
     const trackingUserData = {
       email: formData.email,
       phone: phoneClean,
-      firstName: nameParts[0],
-      lastName: nameParts.slice(1).join(' '),
+      firstName,
+      lastName,
       city: formData.city?.trim(),
       state: formData.state?.trim(),
       zip: formData.cep?.replace(/\D/g, '')
