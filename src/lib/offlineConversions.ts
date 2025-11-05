@@ -515,9 +515,9 @@ export async function sendOfflinePurchase(
     if (userData.external_id) {
       user_data.external_id = userData.external_id;
     } else {
-      // Gerar external_id baseado no email (fallback se não tiver session)
+      // Gerar external_id baseado no email NORMALIZADO (fallback se não tiver session)
       // SEMPRE gerar para garantir 100% cobertura!
-      user_data.external_id = `purchase_${hashSHA256(purchaseData.email).substring(0, 16)}`;
+      user_data.external_id = `purchase_${hashSHA256(normalizedEmail).substring(0, 16)}`;
       console.log('✅ external_id gerado (fallback):', user_data.external_id);
     }
     
