@@ -1030,20 +1030,19 @@ export async function sendPurchaseToGTM(
     });
     
     // Log completo do payload para debug
-    // CORREÇÃO: Enviar objeto direto ao invés de array para variáveis Event Data funcionarem
-    // O GTM Server-Side processa arrays colocando dados em [0], causando variáveis undefined
-    const payload = eventData;  // Objeto direto, não array
+    // IMPORTANTE: GTM Server-Side espera array de eventos
+    const payload = [eventData];  // Array de eventos
     console.log('📦 Payload completo sendo enviado:', JSON.stringify(payload, null, 2));
     
     // Enviar para GTM Server-Side
-    // IMPORTANTE: Enviando objeto direto para variáveis Event Data acessarem no nível raiz
+    // GTM Server-Side processa arrays e coloca dados em [0], então variáveis precisam usar 0.ecommerce.currency
     const response = await fetch(gtmEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': userData.client_user_agent || 'GTM-Server-Side-Webhook'
       },
-      body: JSON.stringify(payload)  // Objeto direto para variáveis Event Data funcionarem
+      body: JSON.stringify(payload)  // Array de eventos (formato esperado pelo GTM)
     });
     
     // Log da resposta completa
