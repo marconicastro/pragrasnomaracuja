@@ -550,7 +550,10 @@ export async function trackAddToCartElite(
     cta_type: 'purchase_button',
     cta_text: buttonText,
     ...customParams
-  }, 'standard', { isColdEvent: true });
+  }, 'standard', { 
+    isColdEvent: true,
+    eventId: eventID  // ✅ Passar eventID para garantir mesmo ID
+  });
 }
 
 /**
@@ -626,7 +629,10 @@ export async function trackLeadElite(
     lead_type: 'organic_form',                        // Tipo de lead
     
     ...customParams
-  }, 'standard');
+  }, 'standard', { 
+    isColdEvent: false,  // ? Warm event (user data completo)
+    eventId: eventID     // ✅ Passar eventID para garantir mesmo ID
+  });
 }
 
 /**
