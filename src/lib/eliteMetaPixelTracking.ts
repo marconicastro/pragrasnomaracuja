@@ -338,23 +338,63 @@ export async function trackEliteEvent(
 /**
  * PageView (Elite) - COLD EVENT com enrichment automatico
  */
+/**
+ * Converte user_data do formato Meta abreviado para formato GTM completo
+ */
+function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
+  user_id: string;
+  email_address: string;
+  phone_number: string;
+  first_name: string;
+  last_name: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  country: string;
+}> {
+  const converted: any = {};
+  
+  // Converter campos abreviados (Meta) para formato completo (GTM)
+  if (enriched.external_id) converted.user_id = enriched.external_id;
+  if (enriched.em) converted.email_address = enriched.em;
+  if (enriched.ph) converted.phone_number = enriched.ph;
+  if (enriched.fn) converted.first_name = enriched.fn;
+  if (enriched.ln) converted.last_name = enriched.ln;
+  if (enriched.ct) converted.city = enriched.ct;
+  if (enriched.st) converted.region = enriched.st;
+  if (enriched.zp) converted.postal_code = enriched.zp;
+  if (enriched.country) converted.country = enriched.country;
+  
+  return Object.keys(converted).length > 0 ? converted : undefined;
+}
+
 export async function trackPageViewElite(customParams: Record<string, any> = {}) {
   const touchpoint = captureAttribution();
   addAttributionTouchpoint(touchpoint);
   
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
-  const userDataForGTM = userData ? {
-    user_id: userData.external_id,
-    email_address: userData.email,
-    phone_number: userData.phone,
-    first_name: userData.firstName,
-    last_name: userData.lastName,
-    city: userData.city,
-    region: userData.state,
-    postal_code: userData.zip,
-    country: userData.country
-  } : undefined;
+  let userDataForGTM: any = undefined;
+  
+  if (userData) {
+    // Se tiver dados persistidos, usar diretamente
+    userDataForGTM = {
+      user_id: userData.external_id,
+      email_address: userData.email,
+      phone_number: userData.phone,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      city: userData.city,
+      region: userData.state,
+      postal_code: userData.zip,
+      country: userData.country
+    };
+  } else {
+    // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
+    const { enrichColdEvent } = await import('./coldEventsEnrichment');
+    const enriched = await enrichColdEvent();
+    userDataForGTM = convertEnrichedToGTMFormat(enriched.user_data);
+  }
   
   // Gerar event_id antes de enviar para DataLayer
   const { generateEventId } = await import('./utils/eventId');
