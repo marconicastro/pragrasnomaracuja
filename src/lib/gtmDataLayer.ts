@@ -43,6 +43,8 @@ interface UserData {
   region?: string;
   postal_code?: string;
   country?: string;
+  fbp?: string;  // ✅ Facebook Browser ID (crítico para deduplicação)
+  fbc?: string;   // ✅ Facebook Click ID (crítico para atribuição)
 }
 
 interface DataLayerEvent {
@@ -100,13 +102,14 @@ function prepareEcommerceItem(
 
 /**
  * Prepara user_data no formato do GTM
+ * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
  */
 function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
   if (!userData || Object.keys(userData).length === 0) {
     return undefined;
   }
 
-  return {
+  const prepared: UserData = {
     user_id: userData.user_id,
     email_address: userData.email_address,
     phone_number: userData.phone_number,
@@ -117,6 +120,12 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     postal_code: userData.postal_code,
     country: userData.country || 'BR'
   };
+
+  // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+  if (userData.fbp) prepared.fbp = userData.fbp;
+  if (userData.fbc) prepared.fbc = userData.fbc;
+
+  return prepared;
 }
 
 /**
@@ -143,7 +152,13 @@ function prepareContentData(
  * 
  * IMPORTANTE: Se event_id não for fornecido, será gerado automaticamente
  */
-export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): void {
+/**
+ * Delay para garantir que servidor chegue primeiro no Facebook
+ * Servidor envia imediatamente, browser aguarda para ser backup
+ */
+const BROWSER_DELAY_MS = 200; // 200ms delay para garantir que servidor chegue primeiro
+
+export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): Promise<void> {
   if (typeof window === 'undefined') return;
   
   ensureDataLayer();
@@ -163,11 +178,16 @@ export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): vo
     event_id: finalEventId
   } : eventData;
   
+  // ✅ DELAY NO BROWSER: Aguardar para garantir que servidor chegue primeiro
+  // Servidor envia imediatamente (mais rico), browser envia depois (backup)
+  // Meta processa servidor (primeiro), desduplica browser (segundo)
+  await new Promise(resolve => setTimeout(resolve, BROWSER_DELAY_MS));
+  
   try {
     window.dataLayer.push(eventDataWithId);
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 DataLayer push:', eventDataWithId);
+      console.log('📊 DataLayer push (com delay para servidor chegar primeiro):', eventDataWithId);
     }
   } catch (error) {
     console.error('❌ Erro ao enviar para DataLayer:', error);
@@ -195,6 +215,10 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -238,6 +262,10 @@ export function pushViewItem(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
     user_data: preparedUserData
   }, eventId);
@@ -281,6 +309,10 @@ export function pushAddToCart(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -324,6 +356,10 @@ export function pushBeginCheckout(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -342,6 +378,7 @@ export function pushPurchase(
   userData?: Partial<UserData>
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
+  const preparedUserData = prepareUserData(userData);
   
   pushToDataLayer({
     event: 'purchase', // Nome específico para trigger 'ce - purchase' no GTM
@@ -355,7 +392,24 @@ export function pushPurchase(
     content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
     content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
     num_items: quantity,
-    user_data: prepareUserData(userData)
+    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
+    value: value,
+    currency: currency,
+    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData?.city && { city: preparedUserData.city }),
+    ...(preparedUserData?.region && { region: preparedUserData.region }),
+    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
+    ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    // ✅ Campos também dentro de user_data (para compatibilidade)
+    user_data: preparedUserData
   });
 }
 
@@ -392,6 +446,10 @@ export function pushGenerateLead(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
+    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
+    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);

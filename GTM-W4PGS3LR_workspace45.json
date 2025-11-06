@@ -1,6 +1,6 @@
 {
     "exportFormatVersion": 2,
-    "exportTime": "2025-11-06 12:23:45",
+    "exportTime": "2025-11-06 18:40:31",
     "containerVersion": {
         "path": "accounts/6311132475/containers/229856759/versions/0",
         "accountId": "6311132475",
@@ -516,7 +516,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.first_name}}"
+                                        "value": "{{ed - first_name}}"
                                     }
                                 ]
                             },
@@ -531,7 +531,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.last_name}}"
+                                        "value": "{{ed - last_name}}"
                                     }
                                 ]
                             },
@@ -546,7 +546,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.email_address}}"
+                                        "value": "{{ed - email_address}}"
                                     }
                                 ]
                             },
@@ -561,7 +561,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.phone_number}}"
+                                        "value": "{{ed - phone_number}}"
                                     }
                                 ]
                             },
@@ -591,7 +591,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.city}}"
+                                        "value": "{{ed - city}}"
                                     }
                                 ]
                             },
@@ -606,7 +606,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.country}}"
+                                        "value": "{{ed - country}}"
                                     }
                                 ]
                             },
@@ -621,7 +621,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.region}}"
+                                        "value": "{{ed - region}}"
                                     }
                                 ]
                             },
@@ -636,7 +636,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.postal_code}}"
+                                        "value": "{{ed - postal_code}}"
                                     }
                                 ]
                             }
@@ -721,7 +721,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed -ecommerce.value}}"
+                                        "value": "{{ed - value}}"
                                     }
                                 ]
                             },
@@ -736,7 +736,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - ecommerce.currency}}"
+                                        "value": "{{ed - currency}}"
                                     }
                                 ]
                             },
@@ -767,6 +767,21 @@
                                         "type": "TEMPLATE",
                                         "key": "value",
                                         "value": "{{ed - content_type}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "num_items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - num_items}}"
                                     }
                                 ]
                             }
@@ -819,7 +834,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762351982701",
+                "fingerprint": "1762439300762",
                 "firingTriggerId": [
                     "14"
                 ],
@@ -879,7 +894,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.first_name}}"
+                                        "value": "{{ed - first_name}}"
                                     }
                                 ]
                             },
@@ -894,7 +909,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.last_name}}"
+                                        "value": "{{ed - last_name}}"
                                     }
                                 ]
                             },
@@ -909,7 +924,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.email_address}}"
+                                        "value": "{{ed - email_address}}"
                                     }
                                 ]
                             },
@@ -924,7 +939,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.phone_number}}"
+                                        "value": "{{ed - phone_number}}"
                                     }
                                 ]
                             },
@@ -954,7 +969,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.city}}"
+                                        "value": "{{ed - city}}"
                                     }
                                 ]
                             },
@@ -969,7 +984,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.country}}"
+                                        "value": "{{ed - country}}"
                                     }
                                 ]
                             },
@@ -984,7 +999,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.region}}"
+                                        "value": "{{ed - region}}"
                                     }
                                 ]
                             },
@@ -999,7 +1014,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.postal_code}}"
+                                        "value": "{{ed - postal_code}}"
                                     }
                                 ]
                             }
@@ -1129,7 +1144,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - ecommerce.currency}}"
+                                        "value": "{{ed - currency}}"
                                     }
                                 ]
                             },
@@ -1144,7 +1159,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed -ecommerce.value}}"
+                                        "value": "{{ed - value}}"
                                     }
                                 ]
                             }
@@ -1202,7 +1217,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762370591356",
+                "fingerprint": "1762439093701",
                 "firingTriggerId": [
                     "52"
                 ],
@@ -1262,7 +1277,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.first_name}}"
+                                        "value": "{{ed - first_name}}"
                                     }
                                 ]
                             },
@@ -1277,7 +1292,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.last_name}}"
+                                        "value": "{{ed - last_name}}"
                                     }
                                 ]
                             },
@@ -1292,7 +1307,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.email_address}}"
+                                        "value": "{{ed - email_address}}"
                                     }
                                 ]
                             },
@@ -1307,7 +1322,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.phone_number}}"
+                                        "value": "{{ed - phone_number}}"
                                     }
                                 ]
                             },
@@ -1322,7 +1337,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.city}}"
+                                        "value": "{{ed - city}}"
                                     }
                                 ]
                             },
@@ -1337,7 +1352,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.region}}"
+                                        "value": "{{ed - region}}"
                                     }
                                 ]
                             },
@@ -1352,7 +1367,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.postal_code}}"
+                                        "value": "{{ed - postal_code}}"
                                     }
                                 ]
                             },
@@ -1367,7 +1382,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.country}}"
+                                        "value": "{{ed - country}}"
                                     }
                                 ]
                             },
@@ -1497,7 +1512,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed -ecommerce.value}}"
+                                        "value": "{{ed - value}}"
                                     }
                                 ]
                             },
@@ -1512,7 +1527,22 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - ecommerce.currency}}"
+                                        "value": "{{ed - currency}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "num_items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - num_items}}"
                                     }
                                 ]
                             }
@@ -1570,7 +1600,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762370505218",
+                "fingerprint": "1762439196530",
                 "firingTriggerId": [
                     "58"
                 ],
@@ -1630,7 +1660,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.first_name}}"
+                                        "value": "{{ed - first_name}}"
                                     }
                                 ]
                             },
@@ -1645,7 +1675,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.last_name}}"
+                                        "value": "{{ed - last_name}}"
                                     }
                                 ]
                             },
@@ -1660,7 +1690,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.email_address}}"
+                                        "value": "{{ed - email_address}}"
                                     }
                                 ]
                             },
@@ -1675,7 +1705,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.phone_number}}"
+                                        "value": "{{ed - phone_number}}"
                                     }
                                 ]
                             },
@@ -1705,7 +1735,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.city}}"
+                                        "value": "{{ed - city}}"
                                     }
                                 ]
                             },
@@ -1720,7 +1750,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.country}}"
+                                        "value": "{{ed - country}}"
                                     }
                                 ]
                             },
@@ -1735,7 +1765,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.region}}"
+                                        "value": "{{ed - region}}"
                                     }
                                 ]
                             },
@@ -1750,7 +1780,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.postal_code}}"
+                                        "value": "{{ed - postal_code}}"
                                     }
                                 ]
                             }
@@ -1835,7 +1865,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed -ecommerce.value}}"
+                                        "value": "{{ed - value}}"
                                     }
                                 ]
                             },
@@ -1850,7 +1880,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - ecommerce.currency}}"
+                                        "value": "{{ed - currency}}"
                                     }
                                 ]
                             },
@@ -1875,12 +1905,27 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "name",
-                                        "value": "contet_type"
+                                        "value": "content_type"
                                     },
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
                                         "value": "{{ed - content_type}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "num_items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - num_items}}"
                                     }
                                 ]
                             }
@@ -1938,7 +1983,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762367643480",
+                "fingerprint": "1762438858002",
                 "firingTriggerId": [
                     "40"
                 ],
@@ -1998,7 +2043,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.first_name}}"
+                                        "value": "{{ed - first_name}}"
                                     }
                                 ]
                             },
@@ -2013,7 +2058,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.last_name}}"
+                                        "value": "{{ed - last_name}}"
                                     }
                                 ]
                             },
@@ -2028,7 +2073,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.email_address}}"
+                                        "value": "{{ed - email_address}}"
                                     }
                                 ]
                             },
@@ -2043,7 +2088,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.phone_number}}"
+                                        "value": "{{ed - phone_number}}"
                                     }
                                 ]
                             },
@@ -2073,7 +2118,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.city}}"
+                                        "value": "{{ed - city}}"
                                     }
                                 ]
                             },
@@ -2088,7 +2133,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.country}}"
+                                        "value": "{{ed - country}}"
                                     }
                                 ]
                             },
@@ -2103,7 +2148,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.region}}"
+                                        "value": "{{ed - region}}"
                                     }
                                 ]
                             },
@@ -2118,7 +2163,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - user_data.postal_code}}"
+                                        "value": "{{ed - postal_code}}"
                                     }
                                 ]
                             }
@@ -2203,7 +2248,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed -ecommerce.value}}"
+                                        "value": "{{ed - value}}"
                                     }
                                 ]
                             },
@@ -2218,7 +2263,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{ed - ecommerce.currency}}"
+                                        "value": "{{ed - currency}}"
                                     }
                                 ]
                             },
@@ -2321,7 +2366,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762367662095",
+                "fingerprint": "1762438794760",
                 "firingTriggerId": [
                     "50"
                 ],
@@ -2352,9 +2397,261 @@
                         "value": "all"
                     },
                     {
+                        "type": "LIST",
+                        "key": "userProperties",
+                        "list": [
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "email"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - email_address}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "first_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - first_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "last_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - last_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "phone_number"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - phone_number}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "city"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - city}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "region"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - region}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "country"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - country}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "portal_code"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - postal_code}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "external_id"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{cs - x-stape-user-id}}"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "type": "TEMPLATE",
                         "key": "eventName",
                         "value": "{{Event Name}}"
+                    },
+                    {
+                        "type": "LIST",
+                        "key": "eventParameters",
+                        "list": [
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "cuurency"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - currency}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "value"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - value}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "contents"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - contents}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_ids"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_ids}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_type"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_type}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "num_items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - num_items}}"
+                                    }
+                                ]
+                            }
+                        ]
                     },
                     {
                         "type": "TEMPLATE",
@@ -2367,7 +2664,7 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762299415999",
+                "fingerprint": "1762439469731",
                 "firingTriggerId": [
                     "70"
                 ],
@@ -2395,6 +2692,147 @@
                         "type": "TEMPLATE",
                         "key": "epToIncludeDropdown",
                         "value": "all"
+                    },
+                    {
+                        "type": "LIST",
+                        "key": "userProperties",
+                        "list": [
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "email"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - email_address}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "first_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - first_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "last_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - last_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "phone_number"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - phone_number}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "city"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - city}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "region"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - region}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "country"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - country}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "postal_cade"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - postal_code}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "external_id"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{cs - x-stape-user-id}}"
+                                    }
+                                ]
+                            }
+                        ]
                     },
                     {
                         "type": "TEMPLATE",
@@ -2449,6 +2887,81 @@
                                         "value": "{{webhook-ed - ecommerce.transaction_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "contents"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - contents}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_ids"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_ids}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_name"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_name}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "content_type"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - content_type}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "num_items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - num_items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -2463,7 +2976,7 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762370731187",
+                "fingerprint": "1762439389146",
                 "firingTriggerId": [
                     "37"
                 ],
@@ -3354,7 +3867,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "86",
-                "name": "ed - ecommerce.currency",
+                "name": "ed - currency",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3365,10 +3878,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "ecommerce.currency"
+                        "value": "currency"
                     }
                 ],
-                "fingerprint": "1762429912197",
+                "fingerprint": "1762437172717",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3398,7 +3911,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "88",
-                "name": "ed -ecommerce.value",
+                "name": "ed - value",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3409,10 +3922,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "ecommerce.value"
+                        "value": "value"
                     }
                 ],
-                "fingerprint": "1762429948326",
+                "fingerprint": "1762437186810",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3442,7 +3955,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "90",
-                "name": "ed - user_data.city",
+                "name": "ed - city",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3453,10 +3966,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.city"
+                        "value": "city"
                     }
                 ],
-                "fingerprint": "1762429861598",
+                "fingerprint": "1762437602844",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3464,7 +3977,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "91",
-                "name": "ed - user_data.country",
+                "name": "ed - user_data.address.country",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3475,10 +3988,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.country"
+                        "value": "user_data.address.country"
                     }
                 ],
-                "fingerprint": "1762429824656",
+                "fingerprint": "1762435666824",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3500,7 +4013,7 @@
                         "value": "user_data.email_address"
                     }
                 ],
-                "fingerprint": "1762429555056",
+                "fingerprint": "1762437380816",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3508,7 +4021,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "93",
-                "name": "ed - user_data.first_name",
+                "name": "ed - user_data.address.first_name",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3519,10 +4032,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.first_name"
+                        "value": "user_data.address.first_name"
                     }
                 ],
-                "fingerprint": "1762429738665",
+                "fingerprint": "1762435767803",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3530,7 +4043,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "94",
-                "name": "ed - user_data.last_name",
+                "name": "ed - user_data.address.last_name",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3541,10 +4054,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.last_name"
+                        "value": "user_data.address.last_name"
                     }
                 ],
-                "fingerprint": "1762429722137",
+                "fingerprint": "1762435820150",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3566,7 +4079,7 @@
                         "value": "user_data.phone_number"
                     }
                 ],
-                "fingerprint": "1762429583756",
+                "fingerprint": "1762437427576",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3574,7 +4087,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "96",
-                "name": "ed - user_data.postal_code",
+                "name": "ed - user_data.address.postal_code",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3585,10 +4098,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.postal_code"
+                        "value": "user_data.address.postal_code"
                     }
                 ],
-                "fingerprint": "1762429797927",
+                "fingerprint": "1762435864292",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3596,7 +4109,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "97",
-                "name": "ed - user_data.region",
+                "name": "ed - user_data.address.region",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3607,10 +4120,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.region"
+                        "value": "user_data.address.region"
                     }
                 ],
-                "fingerprint": "1762429757815",
+                "fingerprint": "1762435640917",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3618,7 +4131,7 @@
                 "accountId": "6311132475",
                 "containerId": "229856759",
                 "variableId": "98",
-                "name": "ed - user_data.user_id",
+                "name": "ed - user_data.address.user_id",
                 "type": "ed",
                 "parameter": [
                     {
@@ -3629,10 +4142,10 @@
                     {
                         "type": "TEMPLATE",
                         "key": "keyPath",
-                        "value": "user_data.user_id"
+                        "value": "user_data.address.user_id"
                     }
                 ],
-                "fingerprint": "1762429772526",
+                "fingerprint": "1762435881740",
                 "parentFolderId": "8",
                 "formatValue": {}
             },
@@ -3677,6 +4190,204 @@
                     }
                 ],
                 "fingerprint": "1762430978515",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "101",
+                "name": "ed - email_address",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "email_address"
+                    }
+                ],
+                "fingerprint": "1762437545084",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "102",
+                "name": "ed - user_data.address.city",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "user_data.address.city"
+                    }
+                ],
+                "fingerprint": "1762437656576",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "103",
+                "name": "ed - country",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "country"
+                    }
+                ],
+                "fingerprint": "1762437686788",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "104",
+                "name": "ed - first_name",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "first_name"
+                    }
+                ],
+                "fingerprint": "1762437717718",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "105",
+                "name": "ed - last_name",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "last_name"
+                    }
+                ],
+                "fingerprint": "1762437773340",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "106",
+                "name": "ed - postal_code",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "postal_code"
+                    }
+                ],
+                "fingerprint": "1762437797702",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "107",
+                "name": "ed - region",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "region"
+                    }
+                ],
+                "fingerprint": "1762437828521",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "108",
+                "name": "ed - user_id",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "user_id"
+                    }
+                ],
+                "fingerprint": "1762437857366",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "109",
+                "name": "ed - phone_number",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "phone_number"
+                    }
+                ],
+                "fingerprint": "1762438414871",
                 "parentFolderId": "8",
                 "formatValue": {}
             }
@@ -3731,7 +4442,7 @@
                 "name": "Client Name"
             }
         ],
-        "fingerprint": "1762431824615",
+        "fingerprint": "1762454430602",
         "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6311132475/containers/229856759/versions/0?apiLink=version",
         "customTemplate": [
             {

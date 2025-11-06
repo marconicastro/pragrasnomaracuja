@@ -1,6 +1,6 @@
 {
     "exportFormatVersion": 2,
-    "exportTime": "2025-11-06 12:24:04",
+    "exportTime": "2025-11-06 18:40:51",
     "containerVersion": {
         "path": "accounts/6311132475/containers/228923953/versions/0",
         "accountId": "6311132475",
@@ -53,7 +53,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -353,12 +353,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762262117875",
+                "fingerprint": "1762452277088",
                 "firingTriggerId": [
                     "202"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -381,7 +382,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -681,12 +682,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762262070706",
+                "fingerprint": "1762452277088",
                 "firingTriggerId": [
                     "205"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -709,7 +711,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -1009,12 +1011,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762262189029",
+                "fingerprint": "1762452277128",
                 "firingTriggerId": [
                     "170"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1037,7 +1040,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -1337,12 +1340,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762262667893",
+                "fingerprint": "1762452277089",
                 "firingTriggerId": [
                     "228"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1370,7 +1374,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -1554,12 +1558,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762254018530",
+                "fingerprint": "1762452277089",
                 "firingTriggerId": [
                     "222"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1582,7 +1587,7 @@
                     {
                         "type": "TEMPLATE",
                         "key": "eventId",
-                        "value": "{{Unique Event ID}}"
+                        "value": "{{event_id}}"
                     },
                     {
                         "type": "TEMPLATE",
@@ -1882,12 +1887,13 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762262036299",
+                "fingerprint": "1762452277129",
                 "firingTriggerId": [
                     "216"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -2343,7 +2349,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -2796,7 +2802,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -3249,7 +3255,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -3627,7 +3633,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -3749,7 +3755,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -4202,7 +4208,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     },
                                     {
                                         "type": "TEMPLATE",
@@ -4400,7 +4406,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -4738,7 +4744,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -5071,7 +5077,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -5409,7 +5415,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -5742,7 +5748,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -6075,7 +6081,7 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "parameterValue",
-                                        "value": "{{Unique Event ID}}"
+                                        "value": "{{event_id}}"
                                     }
                                 ]
                             },
@@ -6965,9 +6971,26 @@
                 "accountId": "6311132475",
                 "containerId": "228923953",
                 "variableId": "248",
-                "name": "Unique Event ID",
-                "type": "cvt_228923953_247",
-                "fingerprint": "1761596731810",
+                "name": "event_id",
+                "type": "v",
+                "parameter": [
+                    {
+                        "type": "INTEGER",
+                        "key": "dataLayerVersion",
+                        "value": "2"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "name",
+                        "value": "event_id"
+                    }
+                ],
+                "fingerprint": "1762448911669",
                 "parentFolderId": "177",
                 "formatValue": {}
             },
@@ -7277,7 +7300,7 @@
                 "name": "Environment Name"
             }
         ],
-        "fingerprint": "1762431843879",
+        "fingerprint": "1762454451122",
         "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6311132475/containers/228923953/versions/0?apiLink=version",
         "customTemplate": [
             {

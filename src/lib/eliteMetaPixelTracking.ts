@@ -86,6 +86,13 @@ function isEventIdRecent(eventId: string): boolean {
   const lastTime = recentEventIds.get(eventId);
   
   if (lastTime && (now - lastTime) < DUPLICATION_WINDOW_MS) {
+    console.warn('⚠️ Event ID duplicado detectado (cache):', {
+      eventId,
+      lastTime: new Date(lastTime).toISOString(),
+      now: new Date(now).toISOString(),
+      diff: now - lastTime,
+      stack: new Error().stack?.split('\n').slice(1, 4).join('\n')
+    });
     return true; // Evento foi disparado recentemente
   }
   
@@ -375,6 +382,7 @@ export async function trackEliteEvent(
  */
 /**
  * Converte user_data do formato Meta abreviado para formato GTM completo
+ * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
  */
 function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   user_id: string;
@@ -386,6 +394,8 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   region: string;
   postal_code: string;
   country: string;
+  fbp: string;
+  fbc: string;
 }> {
   const converted: any = {};
   
@@ -400,6 +410,10 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   if (enriched.zp) converted.postal_code = enriched.zp;
   if (enriched.country) converted.country = enriched.country;
   
+  // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+  if (enriched.fbp) converted.fbp = enriched.fbp;
+  if (enriched.fbc) converted.fbc = enriched.fbc;
+  
   return Object.keys(converted).length > 0 ? converted : undefined;
 }
 
@@ -409,6 +423,7 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
+  const metaCookies = getMetaCookies();
   let userDataForGTM: any = undefined;
   
   if (userData) {
@@ -422,7 +437,10 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
       city: userData.city,
       region: userData.state,
       postal_code: userData.zip,
-      country: userData.country
+      country: userData.country,
+      // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+      ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+      ...(metaCookies.fbc && { fbc: metaCookies.fbc })
     };
   } else {
     // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
@@ -498,6 +516,7 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
+  const metaCookies = getMetaCookies();
   const userDataForGTM = userData ? {
     user_id: userData.external_id,
     email_address: userData.email,
@@ -507,7 +526,10 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     city: userData.city,
     region: userData.state,
     postal_code: userData.zip,
-    country: userData.country
+    country: userData.country,
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
   } : undefined;
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -587,6 +609,7 @@ export async function trackAddToCartElite(
 ) {
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
+  const metaCookies = getMetaCookies();
   const userDataForGTM = userData ? {
     user_id: userData.external_id,
     email_address: userData.email,
@@ -596,7 +619,10 @@ export async function trackAddToCartElite(
     city: userData.city,
     region: userData.state,
     postal_code: userData.zip,
-    country: userData.country
+    country: userData.country,
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
   } : undefined;
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -672,6 +698,7 @@ export async function trackLeadElite(
   }, true);
   
   // Preparar user data para DataLayer
+  const metaCookies = getMetaCookies();
   const userDataForGTM = {
     user_id: savedData?.external_id,
     email_address: userData.email,
@@ -681,7 +708,10 @@ export async function trackLeadElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
-    country: 'BR'
+    country: 'BR',
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -780,6 +810,7 @@ export async function trackInitiateCheckoutElite(
   const quantity = orderDetails?.items?.length || 1;
   
   // Preparar user data para DataLayer
+  const metaCookies = getMetaCookies();
   const userDataForGTM = {
     user_id: savedData?.external_id,
     email_address: userData.email,
@@ -789,7 +820,10 @@ export async function trackInitiateCheckoutElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
-    country: 'BR'
+    country: 'BR',
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -863,6 +897,7 @@ export async function trackPurchaseElite(
   }
   
   // Preparar user data para DataLayer
+  const metaCookies = getMetaCookies();
   const userDataForGTM = savedData ? {
     user_id: savedData.external_id,
     email_address: savedData.email,
@@ -872,7 +907,10 @@ export async function trackPurchaseElite(
     city: savedData.city,
     region: savedData.state,
     postal_code: savedData.zip,
-    country: savedData.country || 'BR'
+    country: savedData.country || 'BR',
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
+    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
+    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
   } : undefined;
   
   // Extrair valores dinâmicos do customParams (ou usar defaults)
