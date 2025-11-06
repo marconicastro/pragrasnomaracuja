@@ -70,6 +70,38 @@ function log(level: 'debug' | 'info' | 'warn' | 'error', ...args: any[]) {
   }
 }
 
+// ===== PREVENÇÃO DE DUPLICAÇÃO =====
+/**
+ * Cache de event_ids recentes para prevenir duplicação
+ * Armazena event_id e timestamp para verificar se evento foi disparado recentemente
+ */
+const recentEventIds = new Map<string, number>();
+const DUPLICATION_WINDOW_MS = 2000; // 2 segundos
+
+/**
+ * Verifica se event_id foi usado recentemente (prevenir duplicação)
+ */
+function isEventIdRecent(eventId: string): boolean {
+  const now = Date.now();
+  const lastTime = recentEventIds.get(eventId);
+  
+  if (lastTime && (now - lastTime) < DUPLICATION_WINDOW_MS) {
+    return true; // Evento foi disparado recentemente
+  }
+  
+  // Atualizar timestamp
+  recentEventIds.set(eventId, now);
+  
+  // Limpar cache antigo (mais de 10 segundos)
+  for (const [id, time] of recentEventIds.entries()) {
+    if (now - time > 10000) {
+      recentEventIds.delete(id);
+    }
+  }
+  
+  return false;
+}
+
 // ===== ADVANCED MATCHING =====
 
 /**
@@ -695,7 +727,24 @@ export async function trackInitiateCheckoutElite(
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   // Isso garante que browser e server usem o mesmo event_id para deduplicação
   const { generateEventId } = await import('./utils/eventId');
-  const eventID = generateEventId('InitiateCheckout');
+  let eventID = generateEventId('InitiateCheckout');
+  
+  // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
+  let attempts = 0;
+  while (isEventIdRecent(eventID) && attempts < 5) {
+    console.warn('⚠️ Event ID duplicado detectado, gerando novo:', eventID);
+    eventID = generateEventId('InitiateCheckout');
+    attempts++;
+  }
+  
+  if (attempts >= 5) {
+    console.error('❌ Não foi possível gerar event_id único após 5 tentativas');
+    return {
+      success: false,
+      eventId: '',
+      warnings: ['Não foi possível gerar event_id único']
+    };
+  }
   
   // Enviar para DataLayer com event_id
   pushBeginCheckout(finalValue, 'BRL', quantity, userDataForGTM, eventID);
