@@ -445,7 +445,24 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
-  const eventID = generateEventId('PageView');
+  let eventID = generateEventId('PageView');
+  
+  // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
+  let attempts = 0;
+  while (isEventIdRecent(eventID) && attempts < 5) {
+    console.warn('⚠️ Event ID duplicado detectado (PageView), gerando novo:', eventID);
+    eventID = generateEventId('PageView');
+    attempts++;
+  }
+  
+  if (attempts >= 5) {
+    console.error('❌ Não foi possível gerar event_id único para PageView após 5 tentativas');
+    return {
+      success: false,
+      eventId: '',
+      warnings: ['Não foi possível gerar event_id único']
+    };
+  }
   
   // Enviar para DataLayer com event_id
   pushPageView(userDataForGTM, eventID);
@@ -495,7 +512,24 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
-  const eventID = generateEventId('ViewContent');
+  let eventID = generateEventId('ViewContent');
+  
+  // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
+  let attempts = 0;
+  while (isEventIdRecent(eventID) && attempts < 5) {
+    console.warn('⚠️ Event ID duplicado detectado (ViewContent), gerando novo:', eventID);
+    eventID = generateEventId('ViewContent');
+    attempts++;
+  }
+  
+  if (attempts >= 5) {
+    console.error('❌ Não foi possível gerar event_id único para ViewContent após 5 tentativas');
+    return {
+      success: false,
+      eventId: '',
+      warnings: ['Não foi possível gerar event_id único']
+    };
+  }
   
   // ✅ Enviar para DataLayer com preço dinâmico
   pushViewItem(value, currency, userDataForGTM, eventID);
@@ -567,7 +601,24 @@ export async function trackAddToCartElite(
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
-  const eventID = generateEventId('AddToCart');
+  let eventID = generateEventId('AddToCart');
+  
+  // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
+  let attempts = 0;
+  while (isEventIdRecent(eventID) && attempts < 5) {
+    console.warn('⚠️ Event ID duplicado detectado (AddToCart), gerando novo:', eventID);
+    eventID = generateEventId('AddToCart');
+    attempts++;
+  }
+  
+  if (attempts >= 5) {
+    console.error('❌ Não foi possível gerar event_id único para AddToCart após 5 tentativas');
+    return {
+      success: false,
+      eventId: '',
+      warnings: ['Não foi possível gerar event_id único']
+    };
+  }
   
   // Enviar para DataLayer com event_id
   pushAddToCart(39.9, 'BRL', 1, userDataForGTM, eventID);
@@ -635,7 +686,24 @@ export async function trackLeadElite(
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
-  const eventID = generateEventId('Lead');
+  let eventID = generateEventId('Lead');
+  
+  // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
+  let attempts = 0;
+  while (isEventIdRecent(eventID) && attempts < 5) {
+    console.warn('⚠️ Event ID duplicado detectado (Lead), gerando novo:', eventID);
+    eventID = generateEventId('Lead');
+    attempts++;
+  }
+  
+  if (attempts >= 5) {
+    console.error('❌ Não foi possível gerar event_id único para Lead após 5 tentativas');
+    return {
+      success: false,
+      eventId: '',
+      warnings: ['Não foi possível gerar event_id único']
+    };
+  }
   
   // Enviar para DataLayer com event_id
   pushGenerateLead(userDataForGTM, 15.0, eventID);
