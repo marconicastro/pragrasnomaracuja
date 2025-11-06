@@ -235,6 +235,7 @@ export async function trackEliteEvent(
     skipAttribution?: boolean;
     skipValidation?: boolean;
     isColdEvent?: boolean;
+    eventId?: string;  // ✅ Permitir passar eventID externo para garantir mesmo ID
   }
 ): Promise<{
   success: boolean;
@@ -246,8 +247,10 @@ export async function trackEliteEvent(
   try {
     log('info', `Tracking Elite: ${eventName}`);
     
-    // 1. Gerar Event ID (centralizado)
-    const eventID = generateEventId(eventName, options?.orderId);
+    // 1. Gerar Event ID (centralizado) ou usar o fornecido
+    // ✅ Se eventId foi fornecido (ex: de trackInitiateCheckoutElite), usar ele
+    // Isso garante que browser e server usem o mesmo event_id
+    const eventID = options?.eventId || generateEventId(eventName, options?.orderId);
     
     // 2. Preparar Advanced Matching (COM ENRICHMENT para eventos frios!)
     const isColdEvent = options?.isColdEvent ?? false;
@@ -677,13 +680,17 @@ export async function trackInitiateCheckoutElite(
     country: 'BR'
   };
   
-  // Gerar event_id antes de enviar para DataLayer
+  // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
+  // Isso garante que browser e server usem o mesmo event_id para deduplicação
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('InitiateCheckout');
   
   // Enviar para DataLayer com event_id
   pushBeginCheckout(finalValue, 'BRL', quantity, userDataForGTM, eventID);
   
+  // ✅ Passar eventID para trackEliteEvent para garantir mesmo ID
+  // Mas trackEliteEvent não envia para Meta Pixel - apenas prepara dados
+  // O Stape.io intercepta do DataLayer e envia para Facebook
   return trackEliteEvent('InitiateCheckout', {
     value: finalValue,                                    // Valor (suporta din?mico)
     currency: 'BRL',
@@ -693,7 +700,8 @@ export async function trackInitiateCheckoutElite(
     num_items: quantity,
     ...customParams
   }, 'standard', { 
-    isColdEvent: false  // ? Warm event (user data do Lead)
+    isColdEvent: false,  // ? Warm event (user data do Lead)
+    eventId: eventID     // ✅ Passar eventID para garantir mesmo ID
   });
 }
 
