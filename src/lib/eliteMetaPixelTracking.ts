@@ -428,8 +428,19 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
 
 /**
  * ViewContent (Elite) - COLD EVENT com enrichment automatico
+ * 
+ * ✅ Permite preço dinâmico via customParams para resolver alerta do Facebook
+ * sobre preços fixos em ViewContent
  */
 export async function trackViewContentElite(customParams: Record<string, any> = {}) {
+  // ✅ Permitir preço dinâmico via customParams (resolve alerta do Facebook)
+  const value = customParams.value ?? 39.9;
+  const currency = customParams.currency || 'BRL';
+  const contentIds = customParams.content_ids || ['hacr962'];
+  const contentName = customParams.content_name || 'Sistema 4 Fases - Ebook Trips';
+  const contentType = customParams.content_type || 'product';
+  const contentCategory = customParams.content_category || 'digital_product';
+  
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
   const userDataForGTM = userData ? {
@@ -448,16 +459,16 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('ViewContent');
   
-  // Enviar para DataLayer com event_id
-  pushViewItem(39.9, 'BRL', userDataForGTM, eventID);
+  // ✅ Enviar para DataLayer com preço dinâmico
+  pushViewItem(value, currency, userDataForGTM, eventID);
   
   return trackEliteEvent('ViewContent', {
-    value: 39.9,
-    currency: 'BRL',
-    content_ids: ['hacr962'],
-    content_type: 'product',
-    content_name: 'Sistema 4 Fases - Ebook Trips',
-    content_category: 'digital_product',
+    value: value,  // ✅ Dinâmico (resolve alerta do Facebook)
+    currency: currency,
+    content_ids: contentIds,
+    content_type: contentType,
+    content_name: contentName,
+    content_category: contentCategory,
     ...customParams
   }, 'standard', { isColdEvent: true });
 }
