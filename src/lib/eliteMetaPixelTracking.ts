@@ -411,7 +411,7 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
     }
   }
   
-  // Gerar event_id antes de enviar para DataLayer
+  // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('PageView');
   
@@ -426,7 +426,10 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
     content_name: 'Sistema 4 Fases - Ebook Trips',
     content_category: 'digital_product',
     ...customParams
-  }, 'standard', { isColdEvent: true });
+  }, 'standard', { 
+    isColdEvent: true,
+    eventId: eventID  // ✅ Passar eventID para garantir mesmo ID
+  });
 }
 
 /**
@@ -458,7 +461,7 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     country: userData.country
   } : undefined;
   
-  // Gerar event_id antes de enviar para DataLayer
+  // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('ViewContent');
   
@@ -473,7 +476,10 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     content_name: contentName,
     content_category: contentCategory,
     ...customParams
-  }, 'standard', { isColdEvent: true });
+  }, 'standard', { 
+    isColdEvent: true,
+    eventId: eventID  // ✅ Passar eventID para garantir mesmo ID
+  });
 }
 
 /**
@@ -527,7 +533,7 @@ export async function trackAddToCartElite(
     country: userData.country
   } : undefined;
   
-  // Gerar event_id antes de enviar para DataLayer
+  // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('AddToCart');
   
@@ -592,7 +598,7 @@ export async function trackLeadElite(
     country: 'BR'
   };
   
-  // Gerar event_id antes de enviar para DataLayer
+  // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
   const eventID = generateEventId('Lead');
   
