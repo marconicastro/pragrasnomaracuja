@@ -222,8 +222,10 @@ export function pushViewItem(
       items: [prepareEcommerceItem()]
     },
     ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
+    // ✅ CRÍTICO: content_name e content_type devem estar no nível raiz para GTM Server-Side
+    content_name: PRODUCT_CONFIG.item_name,
+    content_type: PRODUCT_CONFIG.content_type,
+    num_items: 1,
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
@@ -236,7 +238,7 @@ export function pushViewItem(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
+    // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
     user_data: preparedUserData
   }, eventId);
 }
