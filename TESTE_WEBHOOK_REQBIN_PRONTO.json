@@ -1,5 +1,5 @@
 {
-  "secret": "SUBSTITUIR_PELO_SECRET_DO_ENV",
+  "secret": "12f4848f-35e9-41a8-8da4-1032642e3e89",
   "event": "purchase_approved",
   "data": {
     "id": "test_order_123",

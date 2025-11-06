@@ -271,6 +271,8 @@ export async function getUserDataFromKVOrPrisma(
         email: kvData.email,
         hasFbp: !!kvData.fbp,
         hasFbc: !!kvData.fbc,
+        fbc: kvData.fbc ? kvData.fbc.substring(0, 40) + '...' : 'undefined', // 🔍 DEBUG
+        fbcLength: kvData.fbc?.length || 0, // 🔍 DEBUG
         hasCity: !!kvData.city,
         hasState: !!kvData.state,
         hasZip: !!kvData.zip,
@@ -473,12 +475,25 @@ export async function sendOfflinePurchase(
     // CRÍTICO: fbc DEVE ser preservado EXATAMENTE como vem do cookie
     // Qualquer modificação (lowercase, truncamento, etc) causa erro no Meta CAPI
     if (userData.fbc) {
+      console.log('🔍 DEBUG fbc antes de validar:', {
+        fbc: userData.fbc.substring(0, 40) + '...',
+        fbcLength: userData.fbc.length,
+        hasFbc: !!userData.fbc
+      });
+      
       const { sanitizeFbc } = await import('./utils/fbcSanitizer');
       const sanitizedFbc = sanitizeFbc(userData.fbc);
+      
+      console.log('🔍 DEBUG fbc após sanitizar:', {
+        sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
+        isValid: !!sanitizedFbc
+      });
       
       if (sanitizedFbc) {
         // Validação completa: formato + timestamp dentro de 24h
         const fbcValidation = validateFbc(sanitizedFbc);
+        
+        console.log('🔍 DEBUG fbc validação:', fbcValidation);
         
         if (fbcValidation.valid) {
           // PRESERVAR EXATAMENTE como está (sem nenhuma modificação!)
@@ -506,7 +521,16 @@ export async function sendOfflinePurchase(
         }
       } else {
         console.warn('⚠️ fbc não passou na sanitização básica - não enviando');
+        console.warn('🔍 DEBUG fbc sanitização:', {
+          original: userData.fbc ? userData.fbc.substring(0, 40) + '...' : 'undefined',
+          sanitized: sanitizedFbc
+        });
       }
+    } else {
+      console.warn('⚠️ fbc não encontrado em userData:', {
+        hasUserData: !!userData,
+        hasFbc: !!userData?.fbc
+      });
     }
     
     // External ID (session) - NÃO hashear (conforme doc Meta)
