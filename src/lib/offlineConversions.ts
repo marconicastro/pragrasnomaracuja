@@ -1019,6 +1019,37 @@ export async function sendPurchaseToGTM(
     console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
     console.log('🔧 Client Name:', clientName);
     
+    // ✅ Validar e preparar fbc antes de criar user_data
+    let validatedFbc: string | undefined = undefined;
+    if (userData.fbc) {
+      console.log('🔍 DEBUG fbc antes de validar:', {
+        fbc: userData.fbc.substring(0, 40) + '...',
+        fbcLength: userData.fbc.length,
+        hasFbc: !!userData.fbc
+      });
+      
+      const { sanitizeFbc } = await import('./utils/fbcSanitizer');
+      const { validateFbc } = await import('./utils/fbcValidator');
+      const sanitizedFbc = sanitizeFbc(userData.fbc);
+      
+      console.log('🔍 DEBUG fbc após sanitizar:', {
+        sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
+        isValid: !!sanitizedFbc
+      });
+      
+      if (sanitizedFbc) {
+        const fbcValidation = validateFbc(sanitizedFbc);
+        console.log('🔍 DEBUG fbc validação:', fbcValidation);
+        
+        if (fbcValidation.valid) {
+          validatedFbc = sanitizedFbc;
+          console.log('✅ fbc válido, será incluído no Purchase');
+        } else {
+          console.warn('⚠️ fbc inválido no sendPurchaseToGTM:', fbcValidation.reason);
+        }
+      }
+    }
+    
     // Preparar dados no formato DataLayer
     const eventData = {
       event: 'purchase',  // Nome específico para trigger 'ce - purchase' no GTM
@@ -1053,7 +1084,10 @@ export async function sendPurchaseToGTM(
         city: userData.city ? normalizeCity(userData.city) : undefined,  // ✅ Normalizado
         region: userData.state ? normalizeState(userData.state) : undefined,  // ✅ Normalizado
         postal_code: userData.zip ? normalizeZip(userData.zip) : undefined,  // ✅ Normalizado
-        country: normalizeCountry(userData.country)  // ✅ Normalizado
+        country: normalizeCountry(userData.country),  // ✅ Normalizado
+        // ✅ Adicionar fbp e fbc (CRÍTICO para atribuição!)
+        ...(userData.fbp && { fbp: userData.fbp }),
+        ...(validatedFbc && { fbc: validatedFbc })
       },
       // Metadata adicional
       event_id: `${purchaseData.orderId}_${purchaseData.timestamp || Date.now()}`,
