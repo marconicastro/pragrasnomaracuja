@@ -394,6 +394,18 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
     const { enrichColdEvent } = await import('./coldEventsEnrichment');
     const enriched = await enrichColdEvent();
     userDataForGTM = convertEnrichedToGTMFormat(enriched.user_data);
+    
+    // ✅ CRÍTICO: Garantir que sempre temos um objeto (mesmo que vazio)
+    // O convertEnrichedToGTMFormat pode retornar undefined se não houver dados suficientes
+    if (!userDataForGTM) {
+      userDataForGTM = {};
+    }
+    
+    // ✅ ADICIONAR: Se enriched tiver external_id mas convertEnrichedToGTMFormat não converteu
+    // Isso garante que user_id sempre esteja presente se disponível
+    if (enriched.user_data.external_id && !userDataForGTM.user_id) {
+      userDataForGTM.user_id = enriched.user_data.external_id;
+    }
   }
   
   // Gerar event_id antes de enviar para DataLayer
