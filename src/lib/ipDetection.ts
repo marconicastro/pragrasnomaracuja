@@ -28,20 +28,20 @@ export async function getClientIPFromFrontend(): Promise<string | null> {
           const data = await response.json();
           const ip = data.ip || data.IPv4 || data.ip_address;
           if (ip && isValidIP(ip)) {
-            console.log(`🌐 IP obtido via ${service}:`, ip);
+            logger.log(`🌐 IP obtido via ${service}:`, ip);
             return ip;
           }
         }
       } catch (error) {
-        console.warn(`❌ Falha ao obter IP de ${service}:`, error);
+        logger.warn(`❌ Falha ao obter IP de ${service}:`, error);
         continue;
       }
     }
 
-    console.log('⚠️ Não foi possível obter IP no frontend (normal e esperado)');
+    logger.log('⚠️ Não foi possível obter IP no frontend (normal e esperado)');
     return null;
   } catch (error) {
-    console.warn('❌ Erro na detecção de IP:', error);
+    logger.warn('❌ Erro na detecção de IP:', error);
     return null;
   }
 }

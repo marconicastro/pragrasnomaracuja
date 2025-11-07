@@ -35,6 +35,7 @@ import {
 } from './coldEventsEnrichment';
 
 import { generateEventId } from './utils/eventId';
+import { logger, trackingLogger } from './utils/logger';
 
 import {
   pushPageView,
@@ -86,7 +87,8 @@ function isEventIdRecent(eventId: string): boolean {
   const lastTime = recentEventIds.get(eventId);
   
   if (lastTime && (now - lastTime) < DUPLICATION_WINDOW_MS) {
-    console.warn('⚠️ Event ID duplicado detectado (cache):', {
+    trackingLogger.deduplication(eventId, 'duplicado');
+    logger.warn('Event ID duplicado detectado (cache)', {
       eventId,
       lastTime: new Date(lastTime).toISOString(),
       now: new Date(now).toISOString(),
@@ -482,13 +484,14 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    console.warn('⚠️ Event ID duplicado detectado (PageView), gerando novo:', eventID);
+    trackingLogger.deduplication(eventID, 'duplicado');
+    logger.warn('Event ID duplicado detectado (PageView), gerando novo', { eventId: eventID });
     eventID = generateEventId('PageView');
     attempts++;
   }
   
   if (attempts >= 5) {
-    console.error('❌ Não foi possível gerar event_id único para PageView após 5 tentativas');
+    logger.error('Não foi possível gerar event_id único para PageView após 5 tentativas', undefined, { event: 'PageView' });
     return {
       success: false,
       eventId: '',
@@ -553,13 +556,14 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    console.warn('⚠️ Event ID duplicado detectado (ViewContent), gerando novo:', eventID);
+    trackingLogger.deduplication(eventID, 'duplicado');
+    logger.warn('Event ID duplicado detectado (ViewContent), gerando novo', { eventId: eventID });
     eventID = generateEventId('ViewContent');
     attempts++;
   }
   
   if (attempts >= 5) {
-    console.error('❌ Não foi possível gerar event_id único para ViewContent após 5 tentativas');
+    logger.error('Não foi possível gerar event_id único para ViewContent após 5 tentativas', undefined, { event: 'ViewContent' });
     return {
       success: false,
       eventId: '',
@@ -646,13 +650,14 @@ export async function trackAddToCartElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    console.warn('⚠️ Event ID duplicado detectado (AddToCart), gerando novo:', eventID);
+    trackingLogger.deduplication(eventID, 'duplicado');
+    logger.warn('Event ID duplicado detectado (AddToCart), gerando novo', { eventId: eventID });
     eventID = generateEventId('AddToCart');
     attempts++;
   }
   
   if (attempts >= 5) {
-    console.error('❌ Não foi possível gerar event_id único para AddToCart após 5 tentativas');
+    logger.error('Não foi possível gerar event_id único para AddToCart após 5 tentativas', undefined, { event: 'AddToCart' });
     return {
       success: false,
       eventId: '',
@@ -735,13 +740,14 @@ export async function trackLeadElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    console.warn('⚠️ Event ID duplicado detectado (Lead), gerando novo:', eventID);
+    trackingLogger.deduplication(eventID, 'duplicado');
+    logger.warn('Event ID duplicado detectado (Lead), gerando novo', { eventId: eventID });
     eventID = generateEventId('Lead');
     attempts++;
   }
   
   if (attempts >= 5) {
-    console.error('❌ Não foi possível gerar event_id único para Lead após 5 tentativas');
+    logger.error('Não foi possível gerar event_id único para Lead após 5 tentativas', undefined, { event: 'Lead' });
     return {
       success: false,
       eventId: '',
@@ -848,13 +854,14 @@ export async function trackInitiateCheckoutElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    console.warn('⚠️ Event ID duplicado detectado, gerando novo:', eventID);
+    trackingLogger.deduplication(eventID, 'duplicado');
+    logger.warn('Event ID duplicado detectado, gerando novo', { eventId: eventID });
     eventID = generateEventId('InitiateCheckout');
     attempts++;
   }
   
   if (attempts >= 5) {
-    console.error('❌ Não foi possível gerar event_id único após 5 tentativas');
+    logger.error('Não foi possível gerar event_id único após 5 tentativas', undefined, { event: 'InitiateCheckout' });
     return {
       success: false,
       eventId: '',

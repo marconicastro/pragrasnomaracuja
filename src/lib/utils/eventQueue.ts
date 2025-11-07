@@ -87,7 +87,7 @@ class EventQueue {
       const result = await fn();
       this.sentEvents.add(type);
       this.lastEventTime.set(type, Date.now());
-      console.log(`✅ ${type} enviado imediatamente (skipQueue)`);
+      logger.log(`✅ ${type} enviado imediatamente (skipQueue)`);
       return result;
     }
 
@@ -117,7 +117,7 @@ class EventQueue {
     this.queue.push(event);
     this.queue.sort((a, b) => a.priority - b.priority);
 
-    console.log(`📋 ${type} adicionado à fila (prioridade: ${event.priority})`);
+    logger.log(`📋 ${type} adicionado à fila (prioridade: ${event.priority})`);
 
     // Processar fila se não estiver processando
     if (!this.processing) {
@@ -159,7 +159,7 @@ class EventQueue {
         );
 
         if (missingRequirements.length > 0) {
-          console.warn(`⏳ ${event.type} aguardando eventos:`, missingRequirements);
+          logger.warn(`⏳ ${event.type} aguardando eventos:`, missingRequirements);
           // Reinserir no início da fila (mantém prioridade)
           this.queue.unshift(event);
           await this.delay(500); // Aguardar 500ms antes de tentar novamente
@@ -176,7 +176,7 @@ class EventQueue {
             const timeSinceLast = Date.now() - lastTime;
             const remainingDelay = delayConfig.delay - timeSinceLast;
             if (remainingDelay > 0) {
-              console.log(`⏱️ ${event.type} aguardando ${remainingDelay}ms após ${delayConfig.after}...`);
+              logger.log(`⏱️ ${event.type} aguardando ${remainingDelay}ms após ${delayConfig.after}...`);
               await this.delay(remainingDelay);
             }
           }
@@ -185,18 +185,18 @@ class EventQueue {
 
       // Verificar delay mínimo geral
       if (event.minDelayMs && event.minDelayMs > 0) {
-        console.log(`⏱️ ${event.type} aguardando ${event.minDelayMs}ms...`);
+        logger.log(`⏱️ ${event.type} aguardando ${event.minDelayMs}ms...`);
         await this.delay(event.minDelayMs);
       }
 
       try {
-        console.log(`🚀 Processando ${event.type}...`);
+        logger.log(`🚀 Processando ${event.type}...`);
         const result = await event.fn();
         this.sentEvents.add(event.type);
         this.lastEventTime.set(event.type, Date.now());
-        console.log(`✅ ${event.type} enviado com sucesso`);
+        logger.log(`✅ ${event.type} enviado com sucesso`);
       } catch (error) {
-        console.error(`❌ Erro ao processar ${event.type}:`, error);
+        logger.error(`❌ Erro ao processar ${event.type}:`, error);
         // Não reinserir - deixar passar para próximo evento
       }
     }

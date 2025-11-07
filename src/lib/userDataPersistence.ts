@@ -38,11 +38,11 @@ const cleanExpiredData = (): void => {
       const data: PersistedUserData = JSON.parse(stored);
       if (!isDataValid(data)) {
         localStorage.removeItem(STORAGE_KEY);
-        console.log('🗑️ Dados expirados removidos do localStorage');
+        logger.log('🗑️ Dados expirados removidos do localStorage');
       }
     }
   } catch (error) {
-    console.warn('⚠️ Erro ao limpar dados expirados:', error);
+    logger.warn('⚠️ Erro ao limpar dados expirados:', error);
     localStorage.removeItem(STORAGE_KEY);
   }
 };
@@ -70,12 +70,12 @@ export const saveUserData = (userData: {
     };
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedData));
-    console.log('💾 Dados do usuário salvos com sessão mantida:', {
+    logger.log('💾 Dados do usuário salvos com sessão mantida:', {
       ...persistedData,
       sessionId: currentSessionId
     });
   } catch (error) {
-    console.warn('⚠️ Erro ao salvar dados do usuário:', error);
+    logger.warn('⚠️ Erro ao salvar dados do usuário:', error);
   }
 };
 
@@ -88,13 +88,13 @@ export const getPersistedUserData = (): PersistedUserData | null => {
     if (stored) {
       const data: PersistedUserData = JSON.parse(stored);
       if (isDataValid(data) && data.consent) {
-        console.log('📥 Dados recuperados do localStorage:', data);
+        logger.log('📥 Dados recuperados do localStorage:', data);
         return data;
       }
     }
     return null;
   } catch (error) {
-    console.warn('⚠️ Erro ao recuperar dados persistidos:', error);
+    logger.warn('⚠️ Erro ao recuperar dados persistidos:', error);
     return null;
   }
 };
@@ -108,11 +108,11 @@ export const getSessionId = (): string => {
     const storedSessionId = localStorage.getItem('zc_persistent_session');
     if (storedSessionId) {
       sessionId = storedSessionId;
-      console.log('🔄 Sessão recuperada do localStorage:', sessionId);
+      logger.log('🔄 Sessão recuperada do localStorage:', sessionId);
     } else {
       // Gerar nova sessão apenas se não existir em nenhum lugar
       sessionId = generateSessionId();
-      console.log('🆕 Nova sessão gerada:', sessionId);
+      logger.log('🆕 Nova sessão gerada:', sessionId);
     }
     
     // Armazenar em ambos os lugares para persistência
@@ -128,7 +128,7 @@ export const updateSessionId = (): string => {
   const newSessionId = generateSessionId();
   sessionStorage.setItem(SESSION_KEY, newSessionId);
   localStorage.setItem('zc_persistent_session', newSessionId);
-  console.log('🔄 Sessão atualizada:', newSessionId);
+  logger.log('🔄 Sessão atualizada:', newSessionId);
   return newSessionId;
 };
 
@@ -144,9 +144,9 @@ export const clearPersistedData = (): void => {
   try {
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(SESSION_KEY);
-    console.log('🗑️ Todos os dados do usuário foram removidos');
+    logger.log('🗑️ Todos os dados do usuário foram removidos');
   } catch (error) {
-    console.warn('⚠️ Erro ao limpar dados:', error);
+    logger.warn('⚠️ Erro ao limpar dados:', error);
   }
 };
 
@@ -217,14 +217,14 @@ export const initializePersistence = (): PersistedUserData | null => {
   const data = getPersistedUserData();
   
   if (data) {
-    console.log('🎯 Usuário identificado via dados persistidos:', {
+    logger.log('🎯 Usuário identificado via dados persistidos:', {
       email: data.email,
       fullName: data.fullName,
       sessionId: data.sessionId,
       daysStored: Math.round((Date.now() - data.timestamp) / (24 * 60 * 60 * 1000))
     });
   } else {
-    console.log('👤 Novo usuário detectado, sem dados persistidos');
+    logger.log('👤 Novo usuário detectado, sem dados persistidos');
   }
   
   return data;

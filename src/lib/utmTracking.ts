@@ -223,7 +223,7 @@ function saveFirstTouch(utms: UTMParameters): void {
   const existing = localStorage.getItem(STORAGE_KEYS.FIRST_TOUCH);
   if (!existing) {
     localStorage.setItem(STORAGE_KEYS.FIRST_TOUCH, JSON.stringify(utms));
-    console.log('?? First Touch UTM capturado:', utms);
+    logger.log('?? First Touch UTM capturado:', utms);
   }
 }
 
@@ -232,7 +232,7 @@ function saveFirstTouch(utms: UTMParameters): void {
  */
 function saveLastTouch(utms: UTMParameters): void {
   localStorage.setItem(STORAGE_KEYS.LAST_TOUCH, JSON.stringify(utms));
-  console.log('?? Last Touch UTM atualizado:', utms);
+  logger.log('?? Last Touch UTM atualizado:', utms);
 }
 
 /**
@@ -251,7 +251,7 @@ function addToHistory(utms: UTMParameters): void {
     history.push(utms);
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
   } catch (error) {
-    console.warn('Erro ao salvar hist?rico de UTMs:', error);
+    logger.warn('Erro ao salvar hist?rico de UTMs:', error);
   }
 }
 
@@ -439,7 +439,7 @@ export function clearUTMData(): void {
   localStorage.removeItem(STORAGE_KEYS.HISTORY);
   sessionStorage.removeItem(STORAGE_KEYS.SESSION);
   
-  console.log('??? Dados de UTM limpos');
+  logger.log('??? Dados de UTM limpos');
 }
 
 /**

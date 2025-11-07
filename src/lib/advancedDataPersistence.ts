@@ -124,7 +124,7 @@ export function getMetaCookies(): { fbp?: string; fbc?: string } {
       acc[key] = value ? decodeURIComponent(value) : value;
     } catch (error) {
       // Se falhar decode, usar valor raw (melhor que perder cookie)
-      console.warn('⚠️ Erro ao decodificar cookie:', key, error);
+      logger.warn('⚠️ Erro ao decodificar cookie:', key, error);
       acc[key] = value;
     }
     return acc;
@@ -137,7 +137,7 @@ export function getMetaCookies(): { fbp?: string; fbc?: string } {
   
   // Validação básica (sem modificar!)
   if (sanitizedFbc && !sanitizedFbc.startsWith('fb.1.')) {
-    console.warn('⚠️ fbc formato inválido (não começa com "fb.1."):', sanitizedFbc.substring(0, 30));
+    logger.warn('⚠️ fbc formato inválido (não começa com "fb.1."):', sanitizedFbc.substring(0, 30));
     return {
       fbp: cookies['_fbp'],
       fbc: undefined // Não enviar fbc inválido
@@ -160,7 +160,7 @@ export function persistMetaCookies(): void {
   if (cookies.fbp || cookies.fbc) {
     // JSON.stringify preserva strings corretamente (não modifica fbc)
     localStorage.setItem(KEYS.META_COOKIES, JSON.stringify(cookies));
-    console.log('✅ Meta cookies persistidos (fbc preservado exatamente):', {
+    logger.log('✅ Meta cookies persistidos (fbc preservado exatamente):', {
       hasFbp: !!cookies.fbp,
       hasFbc: !!cookies.fbc,
       fbcPreview: cookies.fbc ? cookies.fbc.substring(0, 30) + '...' : 'none'
@@ -241,7 +241,7 @@ export function addAttributionTouchpoint(touchpoint: AttributionTouchpoint): voi
   }
   
   localStorage.setItem(KEYS.ATTRIBUTION, JSON.stringify(journey));
-  console.log('?? Touchpoint adicionado:', touchpoint);
+  logger.log('?? Touchpoint adicionado:', touchpoint);
 }
 
 /**
@@ -361,7 +361,7 @@ export function saveAdvancedUserData(
   // Persistir meta cookies tamb?m
   persistMetaCookies();
   
-  console.log('?? User data salvo (Advanced):', {
+  logger.log('?? User data salvo (Advanced):', {
     dataQualityScore: mergedData.dataQualityScore,
     fields: Object.keys(mergedData).filter(k => mergedData[k as keyof UserDataComplete])
   });
@@ -503,7 +503,7 @@ export function clearAllUserData(): void {
   
   sessionStorage.clear();
   
-  console.log('??? Todos os dados do usu?rio foram removidos (LGPD compliance)');
+  logger.log('??? Todos os dados do usu?rio foram removidos (LGPD compliance)');
 }
 
 // ===== INITIALIZATION =====
@@ -523,7 +523,7 @@ export function initializeAdvancedPersistence(): UserJourney | null {
   const journey = getCompleteUserJourney();
   
   if (journey) {
-    console.log('?? Sistema Avan?ado de Persist?ncia Inicializado:', {
+    logger.log('?? Sistema Avan?ado de Persist?ncia Inicializado:', {
       dataQualityScore: journey.dataQualityScore,
       touchpoints: journey.attributionJourney.length,
       events: journey.eventHistory.length

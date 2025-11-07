@@ -12,6 +12,7 @@ declare global {
 }
 
 import { normalizeUserData } from './utils/metaDataNormalizer';
+import { logger } from './utils/logger';
 
 // ===== CONFIGURAÇÃO =====
 
@@ -208,12 +209,15 @@ export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: strin
   
   try {
     window.dataLayer.push(eventDataWithId);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📊 DataLayer push (com delay para servidor chegar primeiro):', eventDataWithId);
-    }
+    logger.debug('📊 DataLayer push (com delay para servidor chegar primeiro)', {
+      event: eventDataWithId.event,
+      event_id: finalEventId
+    });
   } catch (error) {
-    console.error('❌ Erro ao enviar para DataLayer:', error);
+    logger.error('Erro ao enviar para DataLayer', error, {
+      component: 'gtmDataLayer',
+      event: eventData.event
+    });
   }
 }
 

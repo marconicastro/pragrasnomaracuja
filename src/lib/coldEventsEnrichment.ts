@@ -15,6 +15,7 @@
 'use client';
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
+import { logger } from './utils/logger';
 import { 
   normalizeEmail,
   normalizeName,
@@ -126,7 +127,7 @@ export async function getIPGeolocation(): Promise<IPGeolocation | null> {
       
       // SO retorna se tiver dados REAIS
       if (!data.country_code) {
-        console.warn('IP geolocation API retornou dados invalidos');
+        logger.warn('IP geolocation API retornou dados invalidos');
         return null;
       }
       
@@ -363,7 +364,7 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     }
     
     user_data.external_id = sessionId;
-    console.log('✅ External ID gerado/recuperado:', sessionId);
+    logger.log('✅ External ID gerado/recuperado:', sessionId);
   }
   
   // 3. Meta cookies (SEMPRE - crítico!)
@@ -414,7 +415,7 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
             country: geo.country
           }, false); // Sem consent ainda (s? geo p?blica)
           
-          console.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
+          logger.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
         }
       }
       // Se API falhar, NAO adiciona nada (ZERO dados fake!)
@@ -443,7 +444,7 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
   // 6. Calcular Data Quality Score
   const dataQualityScore = calculateColdEventQuality(user_data);
   
-  console.log('?? Cold event enriched:', {
+  logger.log('?? Cold event enriched:', {
     fields: Object.keys(user_data).length,
     dataQualityScore,
     sources

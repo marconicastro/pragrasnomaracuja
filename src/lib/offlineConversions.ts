@@ -10,6 +10,7 @@
 
 import crypto from 'crypto';
 import { validateFbc } from './utils/fbcValidator';
+import { logger } from './utils/logger';
 import { 
   normalizeEmail,
   normalizeName,
@@ -96,21 +97,21 @@ export function validateCaktoWebhook(
 ): boolean {
   try {
     if (!payload.secret) {
-      console.error('? Webhook sem campo "secret"');
+      logger.error('? Webhook sem campo "secret"');
       return false;
     }
     
     // Compara??o segura
     if (payload.secret !== expectedSecret) {
-      console.error('? Secret inv?lido no webhook');
+      logger.error('? Secret inv?lido no webhook');
       return false;
     }
     
-    console.log('? Webhook Cakto validado com sucesso');
+    logger.log('? Webhook Cakto validado com sucesso');
     return true;
     
   } catch (error) {
-    console.error('? Erro ao validar webhook:', error);
+    logger.error('? Erro ao validar webhook:', error);
     return false;
   }
 }
@@ -189,7 +190,7 @@ export async function getUserDataByEmailOrPhone(
       
       if (userData) {
         matchedBy = 'email';
-        console.log('✅ User data encontrado por EMAIL:', email);
+        logger.log('✅ User data encontrado por EMAIL:', email);
       }
     }
     
@@ -207,14 +208,14 @@ export async function getUserDataByEmailOrPhone(
       
       if (userData) {
         matchedBy = 'phone';
-        console.log('✅ User data encontrado por TELEFONE:', phone);
+        logger.log('✅ User data encontrado por TELEFONE:', phone);
       }
     }
     
     await prisma.$disconnect();
     
     if (!userData) {
-      console.warn('⚠️ User data NÃO encontrado:', { email, phone });
+      logger.warn('⚠️ User data NÃO encontrado:', { email, phone });
       return null;
     }
     
@@ -231,7 +232,7 @@ export async function getUserDataByEmailOrPhone(
     };
     
   } catch (error) {
-    console.error('? Erro ao buscar user data:', error);
+    logger.error('? Erro ao buscar user data:', error);
     return null;
   }
 }
@@ -267,7 +268,7 @@ export async function getUserDataFromKVOrPrisma(
     const kvData = await getUserTracking(email, phone);
     
     if (kvData) {
-      console.log('✅ User data encontrado no Vercel KV:', {
+      logger.log('✅ User data encontrado no Vercel KV:', {
         email: kvData.email,
         hasFbp: !!kvData.fbp,
         hasFbc: !!kvData.fbc,
@@ -298,10 +299,10 @@ export async function getUserDataFromKVOrPrisma(
         ...kvData
       };
     } else {
-      console.warn('⚠️ User data NÃO encontrado no KV:', { email, phone });
+      logger.warn('⚠️ User data NÃO encontrado no KV:', { email, phone });
     }
   } catch (error) {
-    console.warn('⚠️ Vercel KV não disponível, tentando Prisma:', error);
+    logger.warn('⚠️ Vercel KV não disponível, tentando Prisma:', error);
   }
   
   // 2. FALLBACK: Usar Prisma se KV não disponível (somente se DATABASE_URL configurado)
@@ -309,11 +310,11 @@ export async function getUserDataFromKVOrPrisma(
     if (process.env.DATABASE_URL) {
       return await getUserDataByEmailOrPhone(email, phone);
     } else {
-      console.warn('⚠️ Prisma não disponível (DATABASE_URL não configurado)');
+      logger.warn('⚠️ Prisma não disponível (DATABASE_URL não configurado)');
       return null;
     }
   } catch (error) {
-    console.error('❌ Erro ao buscar no Prisma:', error);
+    logger.error('❌ Erro ao buscar no Prisma:', error);
     return null;
   }
 }
@@ -375,7 +376,7 @@ export async function saveUserTrackingData(data: {
     
     await prisma.$disconnect();
     
-    console.log('? User tracking data salvo:', {
+    logger.log('? User tracking data salvo:', {
       email: data.email,
       hasFbp: !!data.fbp,
       hasFbc: !!data.fbc
@@ -384,7 +385,7 @@ export async function saveUserTrackingData(data: {
     return true;
     
   } catch (error) {
-    console.error('? Erro ao salvar user tracking data:', error);
+    logger.error('? Erro ao salvar user tracking data:', error);
     return false;
   }
 }
@@ -426,7 +427,7 @@ export async function sendOfflinePurchase(
   
   try {
     // DEBUG: Ver exatamente o que recebemos do KV
-    console.log('🔍 DEBUG - userData recebido do KV:', {
+    logger.log('🔍 DEBUG - userData recebido do KV:', {
       hasFbp: !!userData.fbp,
       hasFbc: !!userData.fbc,
       hasCity: !!userData.city,
@@ -466,16 +467,16 @@ export async function sendOfflinePurchase(
     // Adicionar dados persistidos (CRÍTICO para atribuição!)
     if (userData.fbp) {
       user_data.fbp = userData.fbp;
-      console.log('✅ fbp adicionado');
+      logger.log('✅ fbp adicionado');
     } else {
-      console.warn('⚠️ fbp ausente (impacto: -20 DQS)');
+      logger.warn('⚠️ fbp ausente (impacto: -20 DQS)');
     }
     
     // fbc: VALIDAR antes de enviar (Meta rejeita fbc fake/modificado!)
     // CRÍTICO: fbc DEVE ser preservado EXATAMENTE como vem do cookie
     // Qualquer modificação (lowercase, truncamento, etc) causa erro no Meta CAPI
     if (userData.fbc) {
-      console.log('🔍 DEBUG fbc antes de validar:', {
+      logger.log('🔍 DEBUG fbc antes de validar:', {
         fbc: userData.fbc.substring(0, 40) + '...',
         fbcLength: userData.fbc.length,
         hasFbc: !!userData.fbc
@@ -484,7 +485,7 @@ export async function sendOfflinePurchase(
       const { sanitizeFbc } = await import('./utils/fbcSanitizer');
       const sanitizedFbc = sanitizeFbc(userData.fbc);
       
-      console.log('🔍 DEBUG fbc após sanitizar:', {
+      logger.log('🔍 DEBUG fbc após sanitizar:', {
         sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
         isValid: !!sanitizedFbc
       });
@@ -493,13 +494,13 @@ export async function sendOfflinePurchase(
         // Validação completa: formato + timestamp dentro de 24h
         const fbcValidation = validateFbc(sanitizedFbc);
         
-        console.log('🔍 DEBUG fbc validação:', fbcValidation);
+        logger.log('🔍 DEBUG fbc validação:', fbcValidation);
         
         if (fbcValidation.valid) {
           // PRESERVAR EXATAMENTE como está (sem nenhuma modificação!)
           user_data.fbc = sanitizedFbc;
-          console.log('✅ fbc válido, preservado exatamente e dentro da janela de 24h');
-          console.log('🔍 fbc preview:', sanitizedFbc.substring(0, 40) + '...');
+          logger.log('✅ fbc válido, preservado exatamente e dentro da janela de 24h');
+          logger.log('🔍 fbc preview:', sanitizedFbc.substring(0, 40) + '...');
         } else {
           // DEBUG: Mostrar detalhes do fbc expirado
           const parts = sanitizedFbc.split('.');
@@ -508,8 +509,8 @@ export async function sendOfflinePurchase(
           const diff = now - fbcTimestamp;
           const diffHours = (diff / 3600).toFixed(2);
           
-          console.warn('⚠️ fbc inválido detectado:', fbcValidation.reason);
-          console.warn('🔍 DEBUG fbc:', {
+          logger.warn('⚠️ fbc inválido detectado:', fbcValidation.reason);
+          logger.warn('🔍 DEBUG fbc:', {
             fbcTimestamp,
             nowTimestamp: now,
             diffSeconds: diff,
@@ -520,14 +521,14 @@ export async function sendOfflinePurchase(
           // NÃO adicionar fbc inválido!
         }
       } else {
-        console.warn('⚠️ fbc não passou na sanitização básica - não enviando');
-        console.warn('🔍 DEBUG fbc sanitização:', {
+        logger.warn('⚠️ fbc não passou na sanitização básica - não enviando');
+        logger.warn('🔍 DEBUG fbc sanitização:', {
           original: userData.fbc ? userData.fbc.substring(0, 40) + '...' : 'undefined',
           sanitized: sanitizedFbc
         });
       }
     } else {
-      console.warn('⚠️ fbc não encontrado em userData:', {
+      logger.warn('⚠️ fbc não encontrado em userData:', {
         hasUserData: !!userData,
         hasFbc: !!userData?.fbc
       });
@@ -542,7 +543,7 @@ export async function sendOfflinePurchase(
       // Gerar external_id baseado no email NORMALIZADO (fallback se não tiver session)
       // SEMPRE gerar para garantir 100% cobertura!
       user_data.external_id = `purchase_${hashSHA256(normalizedEmail).substring(0, 16)}`;
-      console.log('✅ external_id gerado (fallback):', user_data.external_id);
+      logger.log('✅ external_id gerado (fallback):', user_data.external_id);
     }
     
     // Geolocalização (do Lead salvo) - NORMALIZAR E HASHEAR!
@@ -550,25 +551,25 @@ export async function sendOfflinePurchase(
     if (userData.city) {
       const normalizedCity = normalizeCity(userData.city);
       user_data.ct = hashSHA256(normalizedCity);
-      console.log('✅ City adicionada (normalizada):', normalizedCity);
+      logger.log('✅ City adicionada (normalizada):', normalizedCity);
     } else {
-      console.warn('⚠️ City ausente (cobertura reduzida: -5 DQS)');
+      logger.warn('⚠️ City ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.state) {
       const normalizedState = normalizeState(userData.state);
       user_data.st = hashSHA256(normalizedState);
-      console.log('✅ State adicionado (normalizado):', normalizedState);
+      logger.log('✅ State adicionado (normalizado):', normalizedState);
     } else {
-      console.warn('⚠️ State ausente (cobertura reduzida: -5 DQS)');
+      logger.warn('⚠️ State ausente (cobertura reduzida: -5 DQS)');
     }
     
     if (userData.zip) {
       const normalizedZip = normalizeZip(userData.zip);
       user_data.zp = hashSHA256(normalizedZip);
-      console.log('✅ ZIP adicionado (normalizado):', normalizedZip);
+      logger.log('✅ ZIP adicionado (normalizado):', normalizedZip);
     } else {
-      console.warn('⚠️ ZIP ausente (cobertura reduzida: -3 DQS)');
+      logger.warn('⚠️ ZIP ausente (cobertura reduzida: -3 DQS)');
     }
     
     // País sempre BR (NORMALIZAR E HASHEAR!) - SEMPRE enviar (garante 100% cobertura)
@@ -579,16 +580,16 @@ export async function sendOfflinePurchase(
     // Esses campos NÃO são hasheados (conforme doc Meta)
     if (userData.client_ip_address) {
       user_data.client_ip_address = userData.client_ip_address;
-      console.log('📍 IP adicionado:', userData.client_ip_address);
+      logger.log('📍 IP adicionado:', userData.client_ip_address);
     } else {
-      console.warn('⚠️ IP ausente (impacto: -1.68% conversões)');
+      logger.warn('⚠️ IP ausente (impacto: -1.68% conversões)');
     }
     
     if (userData.client_user_agent) {
       user_data.client_user_agent = userData.client_user_agent;
-      console.log('🖥️ User Agent adicionado:', userData.client_user_agent.substring(0, 50) + '...');
+      logger.log('🖥️ User Agent adicionado:', userData.client_user_agent.substring(0, 50) + '...');
     } else {
-      console.warn('⚠️ User Agent ausente (impacto: -1.68% conversões)');
+      logger.warn('⚠️ User Agent ausente (impacto: -1.68% conversões)');
     }
     
     // Preparar evento - SEMPRE usar timestamp ATUAL (melhor prática)
@@ -596,7 +597,7 @@ export async function sendOfflinePurchase(
     const now = Math.floor(Date.now() / 1000);
     const eventTime = now;
     
-    console.log('🕐 Timestamp do evento:', {
+    logger.log('🕐 Timestamp do evento:', {
       unix: eventTime,
       iso: new Date(eventTime * 1000).toISOString(),
       local: new Date(eventTime * 1000).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
@@ -659,9 +660,9 @@ export async function sendOfflinePurchase(
         customData.fb_attribution_journey = userDataTyped.attributionJourney;
       }
       
-      console.log('✅ Attribution data do Lead encontrada e adicionada ao Purchase!');
+      logger.log('✅ Attribution data do Lead encontrada e adicionada ao Purchase!');
     } else {
-      console.log('ℹ️ Attribution data não disponível (user não tinha Lead salvo)');
+      logger.log('ℹ️ Attribution data não disponível (user não tinha Lead salvo)');
     }
     
     // SOMENTE adicionar UTMs SE tiver dados REAIS do Lead
@@ -676,9 +677,9 @@ export async function sendOfflinePurchase(
       customData.utm_touch_count = userDataTyped.utmTouchCount;
       customData.utm_channels = userDataTyped.utmChannels;
       
-      console.log('✅ UTM data do Lead encontrada e adicionada ao Purchase!');
+      logger.log('✅ UTM data do Lead encontrada e adicionada ao Purchase!');
     } else {
-      console.log('ℹ️ UTM data não disponível (user não tinha UTMs no Lead)');
+      logger.log('ℹ️ UTM data não disponível (user não tinha UTMs no Lead)');
     }
     
     // Metadata sobre match (SOMENTE se matched)
@@ -714,17 +715,17 @@ export async function sendOfflinePurchase(
       // Validar fbclid: deve ter formato válido (geralmente 24+ caracteres alfanuméricos)
       if (userDataTyped.fbclid && isValidUrlParam(userDataTyped.fbclid) && userDataTyped.fbclid.length >= 20) {
         urlParams.set('fbclid', userDataTyped.fbclid);
-        console.log('✅ fbclid adicionado à URL:', userDataTyped.fbclid.substring(0, 20) + '...');
+        logger.log('✅ fbclid adicionado à URL:', userDataTyped.fbclid.substring(0, 20) + '...');
       } else if (userDataTyped.fbclid) {
-        console.warn('⚠️ fbclid inválido (muito curto ou formato incorreto), não adicionando à URL');
+        logger.warn('⚠️ fbclid inválido (muito curto ou formato incorreto), não adicionando à URL');
       }
       
       // Validar gclid: deve ter formato válido (geralmente 20+ caracteres)
       if (userDataTyped.gclid && isValidUrlParam(userDataTyped.gclid) && userDataTyped.gclid.length >= 15) {
         urlParams.set('gclid', userDataTyped.gclid);
-        console.log('✅ gclid adicionado à URL:', userDataTyped.gclid.substring(0, 20) + '...');
+        logger.log('✅ gclid adicionado à URL:', userDataTyped.gclid.substring(0, 20) + '...');
       } else if (userDataTyped.gclid) {
-        console.warn('⚠️ gclid inválido (muito curto ou formato incorreto), não adicionando à URL');
+        logger.warn('⚠️ gclid inválido (muito curto ou formato incorreto), não adicionando à URL');
       }
       
       // UTMs do Lead (first touch ou last touch - prioridade para last touch)
@@ -761,14 +762,14 @@ export async function sendOfflinePurchase(
       // Se tiver parâmetros válidos, adicionar à URL
       if (urlParams.toString()) {
         eventSourceUrl = `${eventSourceUrl}?${urlParams.toString()}`;
-        console.log('✅ event_source_url com parâmetros válidos:', eventSourceUrl.substring(0, 150) + (eventSourceUrl.length > 150 ? '...' : ''));
+        logger.log('✅ event_source_url com parâmetros válidos:', eventSourceUrl.substring(0, 150) + (eventSourceUrl.length > 150 ? '...' : ''));
       } else {
-        console.log('ℹ️ Nenhum parâmetro válido para adicionar à event_source_url');
+        logger.log('ℹ️ Nenhum parâmetro válido para adicionar à event_source_url');
       }
     }
 
     // DEBUG: Ver o que será enviado no user_data
-    console.log('🔍 DEBUG - user_data final antes de enviar:', {
+    logger.log('🔍 DEBUG - user_data final antes de enviar:', {
       hasEmail: !!user_data.em,
       hasPhone: !!user_data.ph,
       hasFirstName: !!user_data.fn,
@@ -804,7 +805,7 @@ export async function sendOfflinePurchase(
     };
     
     // DEBUG: Log do payload completo (apenas user_data para verificar)
-    console.log('🔍 DEBUG - user_data no payload:', JSON.stringify({
+    logger.log('🔍 DEBUG - user_data no payload:', JSON.stringify({
       em: user_data.em ? '***' : undefined,
       ph: user_data.ph ? '***' : undefined,
       fn: user_data.fn ? '***' : undefined,
@@ -850,21 +851,21 @@ export async function sendOfflinePurchase(
     if (testEventCode) {
       capigPayloadFinal.test_event_code = testEventCode;
       metaPayloadFinal.test_event_code = testEventCode;
-      console.log('🧪 Test Event Code ativado:', testEventCode);
+      logger.log('🧪 Test Event Code ativado:', testEventCode);
     }
     
-    console.log('📦 Payload CAPIG preparado (com pixel_id - requerido para server-side):', {
+    logger.log('📦 Payload CAPIG preparado (com pixel_id - requerido para server-side):', {
       pixelId: capigPayloadFinal.pixel_id,
       hasData: !!capigPayloadFinal.data,
       eventCount: capigPayloadFinal.data?.length,
       partnerAgent: capigPayloadFinal.partner_agent
     });
-    console.log('📦 Payload Meta preparado (com pixel_id):', {
+    logger.log('📦 Payload Meta preparado (com pixel_id):', {
       pixelId: metaPayloadFinal.pixel_id,
       eventCount: metaPayloadFinal.data?.length
     });
-    console.log('📊 Purchase Data Quality Score:', dataQualityScore);
-    console.log('🌐 event_source_url:', eventSourceUrl);
+    logger.log('📊 Purchase Data Quality Score:', dataQualityScore);
+    logger.log('🌐 event_source_url:', eventSourceUrl);
     
     // ⚠️ LIMITAÇÃO IDENTIFICADA: Stape CAPIG não suporta server-side events via fetch direto
     // CAPIG funciona apenas para browser events (via fbq + server_event_uri)
@@ -879,7 +880,7 @@ export async function sendOfflinePurchase(
     // não para receber eventos server-side via REST API
     
     // ✅ Enviar direto via Meta CAPI (funciona 100%, DQS 85, EQM ~8.0)
-    console.log('📤 Enviando Purchase via Meta CAPI direto (CAPIG não suporta server-side events):', {
+    logger.log('📤 Enviando Purchase via Meta CAPI direto (CAPIG não suporta server-side events):', {
       orderId: purchaseData.orderId,
       pixelId,
       hasFbp: !!userData.fbp,
@@ -925,7 +926,7 @@ export async function sendOfflinePurchase(
         custom_data_keys: Object.keys(event.custom_data)
       }))
     };
-    console.log('🔍 DEBUG - Payload completo que será enviado ao Meta:', JSON.stringify(payloadDebug, null, 2));
+    logger.log('🔍 DEBUG - Payload completo que será enviado ao Meta:', JSON.stringify(payloadDebug, null, 2));
     
     // Enviar direto (não usar CAPIG para server-side events)
     response = await fetch(metaEndpoint, {
@@ -941,7 +942,7 @@ export async function sendOfflinePurchase(
       throw new Error(`Meta CAPI error: ${response.status} - ${errorText}`);
     }
     
-    console.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (funcionando 100%!)');
+    logger.log('✅ SUCCESS: Purchase enviado via Meta CAPI direto (funcionando 100%!)');
     
     // Parse response (pode ser JSON ou vazio)
     let result: any = {};
@@ -952,14 +953,14 @@ export async function sendOfflinePurchase(
       } else {
         // Resposta vazia (Meta às vezes retorna 200 sem body)
         result = { success: true, events_received: 1 };
-        console.log('ℹ️ Resposta vazia do servidor (assumindo sucesso)');
+        logger.log('ℹ️ Resposta vazia do servidor (assumindo sucesso)');
       }
     } catch (parseError) {
-      console.warn('⚠️ Erro ao parsear resposta (assumindo sucesso se status 200):', parseError);
+      logger.warn('⚠️ Erro ao parsear resposta (assumindo sucesso se status 200):', parseError);
       result = { success: true, events_received: 1 };
     }
     
-    console.log('✅ Purchase processado:', {
+    logger.log('✅ Purchase processado:', {
       orderId: purchaseData.orderId,
       eventID,
       via: 'Meta CAPI direto',
@@ -974,7 +975,7 @@ export async function sendOfflinePurchase(
     };
     
   } catch (error: any) {
-    console.error('? Erro ao enviar offline purchase:', error);
+    logger.error('? Erro ao enviar offline purchase:', error);
     return { 
       success: false, 
       error: error.message 
@@ -1008,7 +1009,7 @@ export async function sendPurchaseToGTM(
 ): Promise<{ success: boolean; error?: string; message?: string }> {
   
   try {
-    console.log('🚀 sendPurchaseToGTM() INICIADA');
+    logger.log('🚀 sendPurchaseToGTM() INICIADA');
     
     const gtmServerUrl = process.env.GTM_SERVER_URL || 'https://event.maracujazeropragas.com';
     // IMPORTANTE: Usar Data Client para processar eventos server-side também
@@ -1016,13 +1017,13 @@ export async function sendPurchaseToGTM(
     const clientName = process.env.GTM_WEBHOOK_CLIENT_NAME || 'Data Client';
     const gtmEndpoint = `${gtmServerUrl}/data?client_name=${encodeURIComponent(clientName)}`;
     
-    console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
-    console.log('🔧 Client Name:', clientName);
+    logger.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
+    logger.log('🔧 Client Name:', clientName);
     
     // ✅ Validar e preparar fbc antes de criar user_data
     let validatedFbc: string | undefined = undefined;
     if (userData.fbc) {
-      console.log('🔍 DEBUG fbc antes de validar:', {
+      logger.log('🔍 DEBUG fbc antes de validar:', {
         fbc: userData.fbc.substring(0, 40) + '...',
         fbcLength: userData.fbc.length,
         hasFbc: !!userData.fbc
@@ -1032,20 +1033,20 @@ export async function sendPurchaseToGTM(
       const { validateFbc } = await import('./utils/fbcValidator');
       const sanitizedFbc = sanitizeFbc(userData.fbc);
       
-      console.log('🔍 DEBUG fbc após sanitizar:', {
+      logger.log('🔍 DEBUG fbc após sanitizar:', {
         sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
         isValid: !!sanitizedFbc
       });
       
       if (sanitizedFbc) {
         const fbcValidation = validateFbc(sanitizedFbc);
-        console.log('🔍 DEBUG fbc validação:', fbcValidation);
+        logger.log('🔍 DEBUG fbc validação:', fbcValidation);
         
         if (fbcValidation.valid) {
           validatedFbc = sanitizedFbc;
-          console.log('✅ fbc válido, será incluído no Purchase');
+          logger.log('✅ fbc válido, será incluído no Purchase');
         } else {
-          console.warn('⚠️ fbc inválido no sendPurchaseToGTM:', fbcValidation.reason);
+          logger.warn('⚠️ fbc inválido no sendPurchaseToGTM:', fbcValidation.reason);
         }
       }
     }
@@ -1115,7 +1116,7 @@ export async function sendPurchaseToGTM(
       ...(userData.client_user_agent && { client_user_agent: userData.client_user_agent })
     };
     
-    console.log('📤 Enviando Purchase para GTM Server-Side:', {
+    logger.log('📤 Enviando Purchase para GTM Server-Side:', {
       endpoint: gtmEndpoint,
       orderId: purchaseData.orderId,
       value: purchaseData.value,
@@ -1126,7 +1127,7 @@ export async function sendPurchaseToGTM(
     // Log completo do payload para debug
     // IMPORTANTE: GTM Server-Side espera array de eventos
     const payload = [eventData];  // Array de eventos
-    console.log('📦 Payload completo sendo enviado:', JSON.stringify(payload, null, 2));
+    logger.log('📦 Payload completo sendo enviado:', JSON.stringify(payload, null, 2));
     
     // Enviar para GTM Server-Side
     // GTM Server-Side processa arrays e coloca dados em [0], então variáveis precisam usar 0.ecommerce.currency
@@ -1144,7 +1145,7 @@ export async function sendPurchaseToGTM(
     const responseHeaders = Object.fromEntries(response.headers.entries());
     const responseText = await response.text();
     
-    console.log('📥 Resposta do GTM Server-Side:', {
+    logger.log('📥 Resposta do GTM Server-Side:', {
       status: responseStatus,
       statusText: response.statusText,
       headers: responseHeaders,
@@ -1152,7 +1153,7 @@ export async function sendPurchaseToGTM(
     });
     
     if (!response.ok) {
-      console.error('❌ Erro na resposta do GTM Server-Side:', {
+      logger.error('❌ Erro na resposta do GTM Server-Side:', {
         status: responseStatus,
         body: responseText
       });
@@ -1166,7 +1167,7 @@ export async function sendPurchaseToGTM(
       result = { success: true, rawResponse: responseText };
     }
     
-    console.log('✅ Purchase enviado para GTM Server-Side:', {
+    logger.log('✅ Purchase enviado para GTM Server-Side:', {
       orderId: purchaseData.orderId,
       response: result,
       status: responseStatus
@@ -1178,10 +1179,10 @@ export async function sendPurchaseToGTM(
     };
     
   } catch (error: any) {
-    console.error('❌ Erro ao enviar Purchase para GTM Server-Side:', error);
+    logger.error('❌ Erro ao enviar Purchase para GTM Server-Side:', error);
     
     // Fallback: tentar enviar via Meta CAPI direto se GTM falhar
-    console.log('🔄 Tentando fallback: enviar via Meta CAPI direto...');
+    logger.log('🔄 Tentando fallback: enviar via Meta CAPI direto...');
     const fallbackResult = await sendOfflinePurchase(purchaseData, userData);
     
     return {
@@ -1204,7 +1205,7 @@ export async function processCaktoWebhook(
 ): Promise<{ success: boolean; message: string }> {
   
   try {
-    console.log('📤 Webhook Cakto recebido:', {
+    logger.log('📤 Webhook Cakto recebido:', {
       event: payload.event,
       orderId: payload.data.refId,
       email: payload.data.customer.email,
@@ -1214,7 +1215,7 @@ export async function processCaktoWebhook(
     
     // Validar se ? um evento de compra aprovada
     if (payload.event !== 'purchase_approved') {
-      console.log(`📤 Evento "${payload.event}" ignorado (n?o ? purchase_approved)`);
+      logger.log(`📤 Evento "${payload.event}" ignorado (n?o ? purchase_approved)`);
       return {
         success: true,
         message: `Evento ${payload.event} recebido mas ignorado`
@@ -1223,7 +1224,7 @@ export async function processCaktoWebhook(
     
     // Validar se o pagamento foi confirmado
     if (payload.data.status !== 'paid') {
-      console.log(`📤 Status "${payload.data.status}" ignorado (n?o ? paid)`);
+      logger.log(`📤 Status "${payload.data.status}" ignorado (n?o ? paid)`);
       return {
         success: true,
         message: `Status ${payload.data.status} ignorado`
@@ -1259,13 +1260,13 @@ export async function processCaktoWebhook(
     );
     
     if (!userData) {
-      console.warn('📤 User data N?O encontrado:', {
+      logger.warn('📤 User data N?O encontrado:', {
         email: purchaseData.email,
         phone: purchaseData.phone
       });
-      console.warn('📤 Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
+      logger.warn('📤 Purchase ser? enviado sem fbp/fbc (atribui??o pode ser prejudicada)');
     } else {
-      console.log('? User data encontrado:', {
+      logger.log('? User data encontrado:', {
         matchedBy: userData.matchedBy,
         email: purchaseData.email,
         hasFbp: !!userData.fbp,
@@ -1274,7 +1275,7 @@ export async function processCaktoWebhook(
       
       // Alerta se encontrou por telefone (email diferente)
       if (userData.matchedBy === 'phone') {
-        console.log('📤 Match por TELEFONE! Usu?rio usou email diferente no checkout');
+        logger.log('📤 Match por TELEFONE! Usu?rio usou email diferente no checkout');
       }
     }
     
@@ -1294,7 +1295,7 @@ export async function processCaktoWebhook(
     };
     
   } catch (error: any) {
-    console.error('? Erro ao processar webhook Cakto:', error);
+    logger.error('? Erro ao processar webhook Cakto:', error);
     return {
       success: false,
       message: error.message
