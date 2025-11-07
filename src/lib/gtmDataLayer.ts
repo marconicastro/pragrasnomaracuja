@@ -251,13 +251,14 @@ export function pushViewItem(
 ): void {
   const contentData = prepareContentData();
   const preparedUserData = prepareUserData(userData);
+  const itemsArray = [prepareEcommerceItem()];
   
   pushToDataLayer({
     event: 'view_item',
     ecommerce: {
       value: value,
       currency: currency,
-      items: [prepareEcommerceItem()]
+      items: itemsArray
     },
     ...contentData,
     // ✅ CRÍTICO: content_name e content_type devem estar no nível raiz para GTM Server-Side
@@ -267,6 +268,8 @@ export function pushViewItem(
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
+    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+    items: itemsArray,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
     ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
@@ -300,13 +303,14 @@ export function pushAddToCart(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
+  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
   
   pushToDataLayer({
     event: 'add_to_cart',
     ecommerce: {
       value: value,
       currency: currency,
-      items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
+      items: itemsArray
     },
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
@@ -315,6 +319,8 @@ export function pushAddToCart(
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
+    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+    items: itemsArray,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
     ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
@@ -348,13 +354,14 @@ export function pushBeginCheckout(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
+  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
   
   pushToDataLayer({
     event: 'begin_checkout',
     ecommerce: {
       value: value,
       currency: currency,
-      items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
+      items: itemsArray
     },
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
@@ -363,6 +370,8 @@ export function pushBeginCheckout(
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
+    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+    items: itemsArray,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
     ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
@@ -396,6 +405,7 @@ export function pushPurchase(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
+  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
   
   pushToDataLayer({
     event: 'purchase', // Nome específico para trigger 'ce - purchase' no GTM
@@ -403,7 +413,7 @@ export function pushPurchase(
       transaction_id: transactionId,
       value: value,
       currency: currency,
-      items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
+      items: itemsArray
     },
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
@@ -412,6 +422,8 @@ export function pushPurchase(
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
+    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+    items: itemsArray,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
     ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
