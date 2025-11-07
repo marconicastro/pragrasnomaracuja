@@ -3,18 +3,18 @@ import { NextResponse } from "next/server";
 // Interface para dados do cliente
 interface ClientInfo {
   ip: string;
-  city: string;
-  region: string;
-  regionCode: string;
+  city?: string;
+  region?: string;
+  regionCode?: string;
   country: string;
   countryCode: string;
-  postalCode: string;
-  timezone: string;
-  isp: string;
-  org: string;
-  as: string;
-  lat: number;
-  lon: number;
+  postalCode?: string;
+  timezone?: string;
+  isp?: string;
+  org?: string;
+  as?: string;
+  lat?: number;
+  lon?: number;
 }
 
 // Função para obter IP real do cliente
@@ -267,15 +267,15 @@ function getDefaultBrazilData(ip: string): Partial<ClientInfo> {
   
   return {
     ip: ip,
-    city: null,
-    region: null,
-    regionCode: null,
+    city: undefined,
+    region: undefined,
+    regionCode: undefined,
     country: 'brasil',
     countryCode: 'br',
-    postalCode: null,
+    postalCode: undefined,
     timezone: 'America/Sao_Paulo',
-    isp: null,
-    org: null,
+    isp: undefined,
+    org: undefined,
     lat: -14.235,
     lon: -51.925
   };
