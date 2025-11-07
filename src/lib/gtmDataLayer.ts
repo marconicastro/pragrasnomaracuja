@@ -227,9 +227,9 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
@@ -278,9 +278,9 @@ export function pushViewItem(
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
@@ -329,9 +329,9 @@ export function pushAddToCart(
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
@@ -380,9 +380,9 @@ export function pushBeginCheckout(
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
@@ -432,9 +432,9 @@ export function pushPurchase(
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
@@ -475,9 +475,9 @@ export function pushGenerateLead(
     ...(preparedUserData.city && { city: preparedUserData.city }),
     ...(preparedUserData.region && { region: preparedUserData.region }),
     ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: country e user_id (só enviar se tiverem valor válido)
+    ...(preparedUserData.country && { country: preparedUserData.country }),
+    ...(preparedUserData.user_id && { user_id: preparedUserData.user_id }),
     // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),

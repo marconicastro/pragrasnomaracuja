@@ -1081,9 +1081,9 @@ export async function sendPurchaseToGTM(
       value: purchaseData.value,
       currency: purchaseData.currency || 'BRL',
       items: itemsArray,
-      // ✅ CRÍTICO: country e user_id no nível raiz (necessário para Advanced Matching)
-      country: normalizeCountry(userData.country),
-      user_id: userData.external_id || undefined,
+      // ✅ CRÍTICO: country e user_id no nível raiz (só enviar se válidos)
+      ...(normalizeCountry(userData.country) && { country: normalizeCountry(userData.country) }),
+      ...(userData.external_id && { user_id: userData.external_id }),
       // ✅ Campos user_data no nível raiz
       ...(purchaseData.email && { email_address: normalizeEmail(purchaseData.email) }),
       ...((purchaseData.phone || userData.phone) && { phone_number: normalizePhone(purchaseData.phone || userData.phone || '') }),
