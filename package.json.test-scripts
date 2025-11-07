@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test": "jest --watch",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "test:coverage": "jest --coverage --coverageThreshold='{\"global\":{\"statements\":70,\"branches\":60,\"functions\":70,\"lines\":70}}'",
+    "test:unit": "jest --testPathPattern=__tests__",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit"
+  }
+}

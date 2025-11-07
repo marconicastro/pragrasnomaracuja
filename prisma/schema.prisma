@@ -1,53 +1,66 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ===== OFFLINE CONVERSIONS =====
+// ===== USER TRACKING & CONVERSIONS =====
 
 model UserTracking {
   id        String   @id @default(cuid())
   email     String   @unique
-  fbp       String?
-  fbc       String?
+  
+  // Meta tracking identifiers
+  fbp       String?  // Facebook Browser ID
+  fbc       String?  // Facebook Click ID
+  
+  // User data
   firstName String?
   lastName  String?
   phone     String?
   city      String?
   state     String?
   zip       String?
-  country   String?
+  country   String?  @default("br")
+  
+  // Attribution data
+  firstTouchSource  String?
+  firstTouchMedium  String?
+  lastTouchSource   String?
+  lastTouchMedium   String?
+  touchpointCount   Int?     @default(1)
+  
+  // UTM data (last touch)
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmContent        String?
+  utmTerm           String?
+  
+  // Click IDs
+  fbclid            String?
+  gclid             String?
+  
+  // Session tracking
+  sessionId         String?
+  clientIpAddress   String?
+  clientUserAgent   String?
+  
+  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
+  // Indexes for performance
   @@index([email])
   @@index([phone])
+  @@index([fbp])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([utmSource, utmMedium])
 }
