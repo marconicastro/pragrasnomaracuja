@@ -1051,20 +1051,22 @@ export async function sendPurchaseToGTM(
     }
     
     // Preparar dados no formato DataLayer
+    const itemsArray = [{
+      item_id: 'hacr962',
+      item_name: 'Sistema 4 Fases - Ebook Trips',
+      price: purchaseData.value,
+      quantity: 1,
+      item_category: 'digital_product',
+      item_brand: 'Ebook Trips'
+    }];
+    
     const eventData = {
       event: 'purchase',  // Nome específico para trigger 'ce - purchase' no GTM
       ecommerce: {
         transaction_id: purchaseData.orderId,
         value: purchaseData.value,
         currency: purchaseData.currency || 'BRL',
-        items: [{
-          item_id: 'hacr962',
-          item_name: 'Sistema 4 Fases - Ebook Trips',
-          price: purchaseData.value,
-          quantity: 1,
-          item_category: 'digital_product',
-          item_brand: 'Ebook Trips'
-        }]
+        items: itemsArray
       },
       content_ids: ['hacr962'],
       contents: [{
@@ -1075,6 +1077,23 @@ export async function sendPurchaseToGTM(
       content_name: 'Sistema 4 Fases - Ebook Trips',
       content_type: 'product',
       num_items: 1,
+      // ✅ CRÍTICO: Campos no nível raiz para GTM Server-Side
+      value: purchaseData.value,
+      currency: purchaseData.currency || 'BRL',
+      items: itemsArray,
+      // ✅ CRÍTICO: country e user_id no nível raiz (necessário para Advanced Matching)
+      country: normalizeCountry(userData.country),
+      user_id: userData.external_id || undefined,
+      // ✅ Campos user_data no nível raiz
+      ...(purchaseData.email && { email_address: normalizeEmail(purchaseData.email) }),
+      ...((purchaseData.phone || userData.phone) && { phone_number: normalizePhone(purchaseData.phone || userData.phone || '') }),
+      ...((purchaseData.firstName || userData.firstName) && { first_name: normalizeName(purchaseData.firstName || userData.firstName || '') }),
+      ...((purchaseData.lastName || userData.lastName) && { last_name: normalizeName(purchaseData.lastName || userData.lastName || '') }),
+      ...(userData.city && { city: normalizeCity(userData.city) }),
+      ...(userData.state && { region: normalizeState(userData.state) }),
+      ...(userData.zip && { postal_code: normalizeZip(userData.zip) }),
+      ...(userData.fbp && { fbp: userData.fbp }),
+      ...(validatedFbc && { fbc: validatedFbc }),
       user_data: {
         user_id: userData.external_id || undefined,  // external_id do KV
         email_address: normalizeEmail(purchaseData.email),  // ✅ Normalizado
