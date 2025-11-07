@@ -3,22 +3,21 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // ✅ Enable type checking
   },
-  // 禁用 Next.js 热重载，由 nodemon 处理重编译
-  reactStrictMode: false,
+  reactStrictMode: true, // ✅ Enable strict mode to catch bugs
   webpack: (config, { dev }) => {
     if (dev) {
-      // 禁用 webpack 的热模块替换
+      // Optimize watch options for better performance
       config.watchOptions = {
-        ignored: ['**/*'], // 忽略所有文件变化
+        poll: 1000,
+        aggregateTimeout: 300,
       };
     }
     return config;
   },
   eslint: {
-    // 构建时忽略ESLint错误
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // ✅ Enable ESLint validation
   },
 };
 

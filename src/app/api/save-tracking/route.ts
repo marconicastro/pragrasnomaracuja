@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, getClientIdentifier } from '@/lib/rate-limiter';
 import { saveUserTracking } from '@/lib/userTrackingStore';
 import { 
   normalizeEmail,
@@ -18,6 +19,23 @@ import {
  */
 
 export async function POST(request: NextRequest) {
+  // ✅ Rate limiting: 20 requests por minuto
+  const clientId = getClientIdentifier(request);
+  const limitCheck = rateLimit(clientId, 20, 60000);
+  
+  if (!limitCheck.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Try again later.' },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'Retry-After': String(Math.ceil((limitCheck.resetTime! - Date.now()) / 1000))
+        }
+      }
+    );
+  }
+  
   try {
     const data = await request.json();
     
