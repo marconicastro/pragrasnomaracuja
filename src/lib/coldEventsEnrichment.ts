@@ -16,6 +16,7 @@
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
 import { logger } from './utils/logger';
+import { memoizeAsync } from './utils/memoize';
 import { 
   normalizeEmail,
   normalizeName,
@@ -246,7 +247,8 @@ export function clearProgressiveData(): void {
  * 5. Adiciona browser fingerprint
  * 6. Calcula Data Quality Score
  */
-export async function enrichColdEvent(): Promise<EnrichedEventData> {
+// Memoized version (cache de 5 minutos)
+const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
   const sources: string[] = [];
   const user_data: Record<string, any> = {};
   
@@ -455,7 +457,20 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     dataQualityScore,
     enrichmentSources: sources
   };
-}
+};
+
+// Export memoized version (cache: 5 minutos, recalcula a cada 5min)
+export const enrichColdEvent = memoizeAsync(_enrichColdEvent, {
+  ttl: 5 * 60 * 1000, // 5 minutos
+  maxSize: 10, // Apenas 10 entradas (por sessão)
+  keyGenerator: () => {
+    // Cache por sessão (mesmo usuário = mesmo cache)
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('session_id') || 'anonymous';
+    }
+    return 'server';
+  }
+});
 
 /**
  * Calcula Data Quality Score para eventos frios
