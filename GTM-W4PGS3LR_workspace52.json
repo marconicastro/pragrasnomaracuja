@@ -1,6 +1,6 @@
 {
     "exportFormatVersion": 2,
-    "exportTime": "2025-11-07 14:04:16",
+    "exportTime": "2025-11-07 19:09:22",
     "containerVersion": {
         "path": "accounts/6311132475/containers/229856759/versions/0",
         "accountId": "6311132475",
@@ -401,6 +401,21 @@
                                         "value": "{{webhook-ed - content_type}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -456,7 +471,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762461212724",
+                "fingerprint": "1762527003908",
                 "firingTriggerId": [
                     "37"
                 ],
@@ -814,6 +829,21 @@
                                         "value": "{{ed - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -869,7 +899,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762524125684",
+                "fingerprint": "1762526866438",
                 "firingTriggerId": [
                     "14"
                 ],
@@ -1227,6 +1257,21 @@
                                         "value": "{{ed - value}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -1282,7 +1327,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762524037724",
+                "fingerprint": "1762526807744",
                 "firingTriggerId": [
                     "52"
                 ],
@@ -1640,6 +1685,21 @@
                                         "value": "{{ed - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -1695,7 +1755,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762524078073",
+                "fingerprint": "1762526830977",
                 "firingTriggerId": [
                     "58"
                 ],
@@ -2053,6 +2113,21 @@
                                         "value": "{{ed - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -2108,7 +2183,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762523968421",
+                "fingerprint": "1762526736759",
                 "firingTriggerId": [
                     "40"
                 ],
@@ -2466,6 +2541,21 @@
                                         "value": "{{ed - content_type}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -2521,7 +2611,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762524003871",
+                "fingerprint": "1762526772121",
                 "firingTriggerId": [
                     "50"
                 ],
@@ -2835,6 +2925,21 @@
                                         "value": "{{webhook-ed - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -2849,7 +2954,7 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762524160900",
+                "fingerprint": "1762526914601",
                 "firingTriggerId": [
                     "70"
                 ],
@@ -3178,6 +3283,21 @@
                                         "value": "{{ed - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "items"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{ed - items}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -3192,7 +3312,7 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762461406086",
+                "fingerprint": "1762526893136",
                 "firingTriggerId": [
                     "37"
                 ],
@@ -4695,6 +4815,50 @@
                 "fingerprint": "1762523905168",
                 "parentFolderId": "8",
                 "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "114",
+                "name": "ed - items",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "[{\"item_id\":\"hacr962\",\"item_name\":\"Sistema 4 Fases - Ebook Trips\",\"price\":39.9,\"quantity\":1,\"item_category\":\"digital_product\",\"item_brand\":\"Ebook Trips\"}]"
+                    }
+                ],
+                "fingerprint": "1762526658916",
+                "parentFolderId": "8",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "115",
+                "name": "webhook-ed - items",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "0.[{\"item_id\":\"hacr962\",\"item_name\":\"Sistema 4 Fases - Ebook Trips\",\"price\":39.9,\"quantity\":1,\"item_category\":\"digital_product\",\"item_brand\":\"Ebook Trips\"}]"
+                    }
+                ],
+                "fingerprint": "1762526964500",
+                "parentFolderId": "8",
+                "formatValue": {}
             }
         ],
         "folder": [
@@ -4747,7 +4911,7 @@
                 "name": "Client Name"
             }
         ],
-        "fingerprint": "1762524255978",
+        "fingerprint": "1762542561705",
         "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6311132475/containers/229856759/versions/0?apiLink=version",
         "customTemplate": [
             {

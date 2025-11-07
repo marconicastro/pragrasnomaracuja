@@ -414,6 +414,20 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   if (enriched.fbp) converted.fbp = enriched.fbp;
   if (enriched.fbc) converted.fbc = enriched.fbc;
   
+  // ✅ FALLBACK: Garantir country sempre presente (99% dos users são BR)
+  if (!converted.country) {
+    converted.country = 'br';
+  }
+  
+  // ✅ FALLBACK: Garantir user_id sempre presente (se ainda não tiver)
+  // coldEventsEnrichment.ts já deve gerar, mas garantir aqui também
+  if (!converted.user_id && typeof window !== 'undefined') {
+    const sessionId = sessionStorage.getItem('session_id');
+    if (sessionId) {
+      converted.user_id = sessionId;
+    }
+  }
+  
   return Object.keys(converted).length > 0 ? converted : undefined;
 }
 

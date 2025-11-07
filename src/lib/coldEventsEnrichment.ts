@@ -342,6 +342,30 @@ export async function enrichColdEvent(): Promise<EnrichedEventData> {
     sources.push('progressive_zip');
   }
   
+  // ✅ CRÍTICO: Garantir external_id SEMPRE presente (session ID)
+  // Se não tiver external_id ainda, gerar usando sessionStorage ou timestamp
+  if (!user_data.external_id) {
+    // Tentar recuperar do sessionStorage (persiste durante a sessão)
+    let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('session_id') : null;
+    
+    if (!sessionId) {
+      // Gerar novo session ID único
+      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+      
+      // Salvar no sessionStorage para reusar na mesma sessão
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('session_id', sessionId);
+      }
+      
+      sources.push('generated_session_id');
+    } else {
+      sources.push('session_storage_id');
+    }
+    
+    user_data.external_id = sessionId;
+    console.log('✅ External ID gerado/recuperado:', sessionId);
+  }
+  
   // 3. Meta cookies (SEMPRE - crítico!)
   // CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações!)
   const metaCookies = getMetaCookies();
