@@ -1,6 +1,6 @@
 {
     "exportFormatVersion": 2,
-    "exportTime": "2025-11-06 18:40:51",
+    "exportTime": "2025-11-07 13:46:16",
     "containerVersion": {
         "path": "accounts/6311132475/containers/228923953/versions/0",
         "accountId": "6311132475",
@@ -324,6 +324,36 @@
                                         "value": "{{dlv - ecommerce.transaction_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -353,13 +383,12 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277088",
+                "fingerprint": "1762520170410",
                 "firingTriggerId": [
                     "202"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -653,6 +682,36 @@
                                         "value": "{{ucv - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -682,13 +741,12 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277088",
+                "fingerprint": "1762520136203",
                 "firingTriggerId": [
                     "205"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -982,6 +1040,36 @@
                                         "value": "{{ucv - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -1011,13 +1099,12 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277128",
+                "fingerprint": "1762520319189",
                 "firingTriggerId": [
                     "170"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1311,6 +1398,36 @@
                                         "value": "{{dlv - ecommerce.items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -1340,13 +1457,12 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277089",
+                "fingerprint": "1762520248642",
                 "firingTriggerId": [
                     "228"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1368,11 +1484,6 @@
                     },
                     {
                         "type": "TEMPLATE",
-                        "key": "pixelId",
-                        "value": "{{const - meta pixel id}}"
-                    },
-                    {
-                        "type": "TEMPLATE",
                         "key": "eventId",
                         "value": "{{event_id}}"
                     },
@@ -1380,21 +1491,6 @@
                         "type": "TEMPLATE",
                         "key": "standardEventName",
                         "value": "Lead"
-                    },
-                    {
-                        "type": "BOOLEAN",
-                        "key": "disableAutoConfig",
-                        "value": "false"
-                    },
-                    {
-                        "type": "BOOLEAN",
-                        "key": "enhancedEcommerce",
-                        "value": "false"
-                    },
-                    {
-                        "type": "BOOLEAN",
-                        "key": "dpoLDU",
-                        "value": "false"
                     },
                     {
                         "type": "LIST",
@@ -1538,11 +1634,6 @@
                         ]
                     },
                     {
-                        "type": "TEMPLATE",
-                        "key": "eventName",
-                        "value": "standard"
-                    },
-                    {
                         "type": "BOOLEAN",
                         "key": "objectPropertiesFromVariable",
                         "value": "false"
@@ -1553,18 +1644,78 @@
                         "value": "true"
                     },
                     {
+                        "type": "TEMPLATE",
+                        "key": "pixelId",
+                        "value": "{{const - meta pixel id}}"
+                    },
+                    {
+                        "type": "LIST",
+                        "key": "objectPropertyList",
+                        "list": [
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "disableAutoConfig",
+                        "value": "false"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enhancedEcommerce",
+                        "value": "false"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "dpoLDU",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "eventName",
+                        "value": "standard"
+                    },
+                    {
                         "type": "BOOLEAN",
                         "key": "advancedMatching",
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277089",
+                "fingerprint": "1762520206424",
                 "firingTriggerId": [
                     "222"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -1858,6 +2009,36 @@
                                         "value": "{{ucv - num_items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -1887,13 +2068,12 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762452277129",
+                "fingerprint": "1762520287350",
                 "firingTriggerId": [
                     "216"
                 ],
                 "parentFolderId": "185",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -2366,7 +2546,7 @@
                         ]
                     }
                 ],
-                "fingerprint": "1762253973203",
+                "fingerprint": "1762461960175",
                 "firingTriggerId": [
                     "216"
                 ],
@@ -2815,11 +2995,61 @@
                                         "value": "none"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762253984482",
+                "fingerprint": "1762520076566",
                 "firingTriggerId": [
                     "170"
                 ],
@@ -3293,11 +3523,61 @@
                                         "value": "none"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762253938114",
+                "fingerprint": "1762519906339",
                 "firingTriggerId": [
                     "202"
                 ],
@@ -3646,11 +3926,61 @@
                                         "value": "none"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762253949470",
+                "fingerprint": "1762519973684",
                 "firingTriggerId": [
                     "222"
                 ],
@@ -3768,11 +4098,61 @@
                                         "value": "none"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762253960221",
+                "fingerprint": "1762520010682",
                 "firingTriggerId": [
                     "228"
                 ],
@@ -4221,11 +4601,61 @@
                                         "value": "none"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "transformation",
+                                        "value": "none"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "store",
+                                        "value": "none"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762253923596",
+                "fingerprint": "1762519850653",
                 "firingTriggerId": [
                     "205"
                 ],
@@ -4302,7 +4732,7 @@
                         ]
                     }
                 ],
-                "fingerprint": "1762298783050",
+                "fingerprint": "1762461960171",
                 "firingTriggerId": [
                     "2147479573"
                 ],
@@ -4625,6 +5055,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -4639,12 +5099,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762298865944",
+                "fingerprint": "1762521022352",
                 "firingTriggerId": [
                     "205"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -4963,6 +5424,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -4977,12 +5468,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762298898744",
+                "fingerprint": "1762521022397",
                 "firingTriggerId": [
                     "202"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -5296,6 +5788,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -5310,12 +5832,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762298950279",
+                "fingerprint": "1762521022352",
                 "firingTriggerId": [
                     "222"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -5634,6 +6157,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -5648,12 +6201,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762299010805",
+                "fingerprint": "1762521022398",
                 "firingTriggerId": [
                     "216"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -5967,6 +6521,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -5981,12 +6565,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762299039677",
+                "fingerprint": "1762521022399",
                 "firingTriggerId": [
                     "170"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -6300,6 +6885,36 @@
                                         "value": "{{dlv - user_data.user_id}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbc"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbc}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "fbp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Cookie _fbp}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -6314,12 +6929,13 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762298984112",
+                "fingerprint": "1762521022397",
                 "firingTriggerId": [
                     "228"
                 ],
                 "parentFolderId": "201",
                 "tagFiringOption": "ONCE_PER_EVENT",
+                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -7198,6 +7814,48 @@
                 "fingerprint": "1762280691052",
                 "parentFolderId": "177",
                 "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "228923953",
+                "variableId": "279",
+                "name": "Cookie _fbc",
+                "type": "k",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "decodeCookie",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "name",
+                        "value": "_fbc"
+                    }
+                ],
+                "fingerprint": "1762519671843",
+                "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "228923953",
+                "variableId": "280",
+                "name": "Cookie _fbp",
+                "type": "k",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "decodeCookie",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "name",
+                        "value": "_fbp"
+                    }
+                ],
+                "fingerprint": "1762519700050",
+                "formatValue": {}
             }
         ],
         "folder": [
@@ -7300,7 +7958,7 @@
                 "name": "Environment Name"
             }
         ],
-        "fingerprint": "1762454451122",
+        "fingerprint": "1762523176324",
         "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6311132475/containers/228923953/versions/0?apiLink=version",
         "customTemplate": [
             {

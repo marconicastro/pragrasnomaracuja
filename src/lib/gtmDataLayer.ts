@@ -11,6 +11,8 @@ declare global {
   }
 }
 
+import { normalizeUserData } from './utils/metaDataNormalizer';
+
 // ===== CONFIGURAÇÃO =====
 
 const PRODUCT_CONFIG = {
@@ -109,16 +111,27 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     return undefined;
   }
 
+  const normalized = normalizeUserData({
+    email: userData.email_address,
+    firstName: userData.first_name,
+    lastName: userData.last_name,
+    phone: userData.phone_number,
+    city: userData.city,
+    state: userData.region,
+    zip: userData.postal_code,
+    country: userData.country
+  });
+
   const prepared: UserData = {
     user_id: userData.user_id,
-    email_address: userData.email_address,
-    phone_number: userData.phone_number,
-    first_name: userData.first_name,
-    last_name: userData.last_name,
-    city: userData.city,
-    region: userData.region,
-    postal_code: userData.postal_code,
-    country: userData.country || 'BR'
+    email_address: normalized.email || userData.email_address,
+    phone_number: normalized.phone || userData.phone_number,
+    first_name: normalized.firstName || userData.first_name,
+    last_name: normalized.lastName || userData.last_name,
+    city: normalized.city || userData.city,
+    region: normalized.state || userData.region,
+    postal_code: normalized.zip || userData.postal_code,
+    country: normalized.country || userData.country || 'br'
   };
 
   // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
