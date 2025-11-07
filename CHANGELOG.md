@@ -7,6 +7,27 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [1.3.0] - 2025-01-06
+
+### 🚀 Performance & Profissionalização
+- Logger profissional com níveis (debug, info, warn, error)
+- Logs apenas em desenvolvimento (produção limpa)
+- Performance Monitor para tracking de operações lentas
+- Substituído 200+ console.log por logger estruturado
+
+### ⚡ Otimizações
+- Bundle size: -10~15KB (sem logs em produção)
+- Performance: -67 linhas de código redundante
+- Segurança: Dados sensíveis não expostos
+- Debugging: Logs formatados com timestamp e contexto
+
+### 📊 Arquivos Modificados
+- 18 arquivos atualizados com logger
+- 2 novos utilitários: logger.ts, performanceMonitor.ts
+- Removido: add-ga4-to-containers.js (não usado)
+
+---
+
 ## [1.2.0] - 2025-01-06
 
 ### ✅ Adicionado
