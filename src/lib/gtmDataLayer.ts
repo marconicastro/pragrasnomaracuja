@@ -105,38 +105,38 @@ function prepareEcommerceItem(
 /**
  * Prepara user_data no formato do GTM
  * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
+ * ✅ GARANTE: country e user_id sempre presentes (mesmo quando vazios)
  */
-function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
-  if (!userData || Object.keys(userData).length === 0) {
-    return undefined;
-  }
-
+function prepareUserData(userData?: Partial<UserData>): UserData {
+  // ✅ SEMPRE retornar objeto (mesmo vazio) - necessário para Advanced Matching
   const normalized = normalizeUserData({
-    email: userData.email_address,
-    firstName: userData.first_name,
-    lastName: userData.last_name,
-    phone: userData.phone_number,
-    city: userData.city,
-    state: userData.region,
-    zip: userData.postal_code,
-    country: userData.country
+    email: userData?.email_address,
+    firstName: userData?.first_name,
+    lastName: userData?.last_name,
+    phone: userData?.phone_number,
+    city: userData?.city,
+    state: userData?.region,
+    zip: userData?.postal_code,
+    country: userData?.country
   });
 
   const prepared: UserData = {
-    user_id: userData.user_id,
-    email_address: normalized.email || userData.email_address,
-    phone_number: normalized.phone || userData.phone_number,
-    first_name: normalized.firstName || userData.first_name,
-    last_name: normalized.lastName || userData.last_name,
-    city: normalized.city || userData.city,
-    region: normalized.state || userData.region,
-    postal_code: normalized.zip || userData.postal_code,
-    country: normalized.country || userData.country || 'br'
+    // ✅ CRÍTICO: user_id deve SEMPRE ser enviado (external_id no Advanced Matching)
+    user_id: userData?.user_id,
+    email_address: normalized.email || userData?.email_address,
+    phone_number: normalized.phone || userData?.phone_number,
+    first_name: normalized.firstName || userData?.first_name,
+    last_name: normalized.lastName || userData?.last_name,
+    city: normalized.city || userData?.city,
+    region: normalized.state || userData?.region,
+    postal_code: normalized.zip || userData?.postal_code,
+    // ✅ CRÍTICO: country deve SEMPRE ser enviado (cn no Advanced Matching)
+    country: normalized.country || userData?.country || 'br'
   };
 
   // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-  if (userData.fbp) prepared.fbp = userData.fbp;
-  if (userData.fbc) prepared.fbc = userData.fbc;
+  if (userData?.fbp) prepared.fbp = userData.fbp;
+  if (userData?.fbc) prepared.fbc = userData.fbc;
 
   return prepared;
 }
@@ -220,18 +220,19 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
   pushToDataLayer({
     event: 'page_view',
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -267,18 +268,19 @@ export function pushViewItem(
     value: value,
     currency: currency,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
     user_data: preparedUserData
   }, eventId);
@@ -314,18 +316,19 @@ export function pushAddToCart(
     value: value,
     currency: currency,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -361,18 +364,19 @@ export function pushBeginCheckout(
     value: value,
     currency: currency,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
@@ -409,18 +413,19 @@ export function pushPurchase(
     value: value,
     currency: currency,
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   });
@@ -451,18 +456,19 @@ export function pushGenerateLead(
     }),
     ...contentData,
     // ✅ Campos no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData?.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData?.city && { city: preparedUserData.city }),
-    ...(preparedUserData?.region && { region: preparedUserData.region }),
-    ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
-    ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
-    ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+    ...(preparedUserData.city && { city: preparedUserData.city }),
+    ...(preparedUserData.region && { region: preparedUserData.region }),
+    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+    // ✅ CRÍTICO: country e user_id SEMPRE presentes (necessário para Advanced Matching)
+    country: preparedUserData.country,
+    user_id: preparedUserData.user_id,
+    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   }, eventId);
