@@ -15,8 +15,6 @@
 'use client';
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
-import { logger } from './utils/logger';
-import { memoizeAsync } from './utils/memoize';
 import { 
   normalizeEmail,
   normalizeName,
@@ -128,7 +126,7 @@ export async function getIPGeolocation(): Promise<IPGeolocation | null> {
       
       // SO retorna se tiver dados REAIS
       if (!data.country_code) {
-        logger.warn('IP geolocation API retornou dados invalidos');
+        console.warn('IP geolocation API retornou dados invalidos');
         return null;
       }
       
@@ -247,8 +245,7 @@ export function clearProgressiveData(): void {
  * 5. Adiciona browser fingerprint
  * 6. Calcula Data Quality Score
  */
-// Memoized version (cache de 5 minutos)
-const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
+export async function enrichColdEvent(): Promise<EnrichedEventData> {
   const sources: string[] = [];
   const user_data: Record<string, any> = {};
   
@@ -345,30 +342,6 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
     sources.push('progressive_zip');
   }
   
-  // ✅ CRÍTICO: Garantir external_id SEMPRE presente (session ID)
-  // Se não tiver external_id ainda, gerar usando sessionStorage ou timestamp
-  if (!user_data.external_id) {
-    // Tentar recuperar do sessionStorage (persiste durante a sessão)
-    let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('session_id') : null;
-    
-    if (!sessionId) {
-      // Gerar novo session ID único
-      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-      
-      // Salvar no sessionStorage para reusar na mesma sessão
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('session_id', sessionId);
-      }
-      
-      sources.push('generated_session_id');
-    } else {
-      sources.push('session_storage_id');
-    }
-    
-    user_data.external_id = sessionId;
-    logger.log('✅ External ID gerado/recuperado:', sessionId);
-  }
-  
   // 3. Meta cookies (SEMPRE - crítico!)
   // CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações!)
   const metaCookies = getMetaCookies();
@@ -417,7 +390,7 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
             country: geo.country
           }, false); // Sem consent ainda (s? geo p?blica)
           
-          logger.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
+          console.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
         }
       }
       // Se API falhar, NAO adiciona nada (ZERO dados fake!)
@@ -446,7 +419,7 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
   // 6. Calcular Data Quality Score
   const dataQualityScore = calculateColdEventQuality(user_data);
   
-  logger.log('?? Cold event enriched:', {
+  console.log('?? Cold event enriched:', {
     fields: Object.keys(user_data).length,
     dataQualityScore,
     sources
@@ -457,20 +430,7 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
     dataQualityScore,
     enrichmentSources: sources
   };
-};
-
-// Export memoized version (cache: 5 minutos, recalcula a cada 5min)
-export const enrichColdEvent = memoizeAsync(_enrichColdEvent, {
-  ttl: 5 * 60 * 1000, // 5 minutos
-  maxSize: 10, // Apenas 10 entradas (por sessão)
-  keyGenerator: () => {
-    // Cache por sessão (mesmo usuário = mesmo cache)
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('session_id') || 'anonymous';
-    }
-    return 'server';
-  }
-});
+}
 
 /**
  * Calcula Data Quality Score para eventos frios

@@ -17,7 +17,6 @@ declare global {
 }
 
 import { generateEventId } from './utils/eventId';
-import { logger } from './utils/logger';
 
 // Event ID generation is now centralized in utils/eventId.ts
 
@@ -31,7 +30,7 @@ function trackMetaEvent(
 ): { eventId: string; success: boolean } {
   
   if (typeof window === 'undefined' || !window.fbq) {
-    logger.warn('?? Meta Pixel n?o est? carregado');
+    console.warn('?? Meta Pixel n?o est? carregado');
     return { eventId: '', success: false };
   }
 
@@ -46,7 +45,7 @@ function trackMetaEvent(
       window.fbq('track', eventName, params, { eventID });
     }
 
-    logger.log(`?? ${eventName} disparado`, {
+    console.log(`?? ${eventName} disparado`, {
       eventID,
       eventType,
       via: 'Meta Pixel + Stape CAPIG Gateway'
@@ -54,7 +53,7 @@ function trackMetaEvent(
 
     return { eventId: eventID, success: true };
   } catch (error) {
-    logger.error(`? Erro ao disparar ${eventName}:`, error);
+    console.error(`? Erro ao disparar ${eventName}:`, error);
     return { eventId: eventID, success: false };
   }
 }

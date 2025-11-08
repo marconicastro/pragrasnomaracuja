@@ -5,7 +5,6 @@
  */
 
 import { getPersistedUserData } from './userDataPersistence';
-import { logger } from './utils/logger';
 
 /**
  * EXPLICAÇÃO: Fontes dos dados de localização
@@ -68,7 +67,7 @@ export async function getBrowserLocation(): Promise<{
 }> {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      logger.log('🌐 Geolocalização não suportada pelo navegador');
+      console.log('🌐 Geolocalização não suportada pelo navegador');
       resolve({ city: null, state: null, country: null, zip: null });
       return;
     }
@@ -81,15 +80,15 @@ export async function getBrowserLocation(): Promise<{
           // Geocoding reverso via API pública
           const location = await reverseGeocode(latitude, longitude);
           
-          logger.log('📍 Localização obtida via navegador:', location);
+          console.log('📍 Localização obtida via navegador:', location);
           resolve(location);
         } catch (error) {
-          logger.warn('❌ Erro no geocoding:', error);
+          console.warn('❌ Erro no geocoding:', error);
           resolve({ city: null, state: null, country: null, zip: null });
         }
       },
       (error) => {
-        logger.log('⚠️ Permissão de geolocalização negada ou erro:', error.message);
+        console.log('⚠️ Permissão de geolocalização negada ou erro:', error.message);
         resolve({ city: null, state: null, country: null, zip: null });
       },
       {
@@ -135,7 +134,7 @@ async function reverseGeocode(lat: number, lon: number): Promise<{
 
     return { city: null, state: null, country: null, zip: null };
   } catch (error) {
-    logger.warn('❌ Erro no geocoding reverso:', error);
+    console.warn('❌ Erro no geocoding reverso:', error);
     return { city: null, state: null, country: null, zip: null };
   }
 }
@@ -178,18 +177,18 @@ export async function getLocationByIP(): Promise<{
           const data = await response.json();
           const location = service.parser(data);
           
-          logger.log('🌍 Localização via IP:', location);
+          console.log('🌍 Localização via IP:', location);
           return location;
         }
       } catch (error) {
-        logger.warn(`❌ Falha no serviço ${service.url}:`, error);
+        console.warn(`❌ Falha no serviço ${service.url}:`, error);
         continue;
       }
     }
 
     return { city: null, state: null, country: null, zip: null };
   } catch (error) {
-    logger.warn('❌ Erro ao obter localização por IP:', error);
+    console.warn('❌ Erro ao obter localização por IP:', error);
     return { city: null, state: null, country: null, zip: null };
   }
 }
@@ -207,7 +206,7 @@ export async function getBestAvailableLocation(): Promise<{
   // 1. Dados persistidos (prioridade máxima)
   const persistedData = getPersistedUserData();
   if (persistedData && (persistedData.city || persistedData.state || persistedData.cep)) {
-    logger.log('💾 Usando localização dos dados persistidos');
+    console.log('💾 Usando localização dos dados persistidos');
     return {
       city: persistedData.city?.toLowerCase().trim() || null,
       state: persistedData.state?.toLowerCase().trim() || null,
@@ -221,7 +220,7 @@ export async function getBestAvailableLocation(): Promise<{
   try {
     const browserLocation = await getBrowserLocation();
     if (browserLocation.city || browserLocation.state || browserLocation.zip) {
-      logger.log('📱 Usando geolocalização do navegador');
+      console.log('📱 Usando geolocalização do navegador');
       return {
         ...browserLocation,
         country: browserLocation.country || 'br',
@@ -229,14 +228,14 @@ export async function getBestAvailableLocation(): Promise<{
       };
     }
   } catch (error) {
-    logger.warn('⚠️ Geolocalização do navegador falhou:', error);
+    console.warn('⚠️ Geolocalização do navegador falhou:', error);
   }
 
   // 3. Localização por IP
   try {
     const ipLocation = await getLocationByIP();
     if (ipLocation.city || ipLocation.state || ipLocation.zip) {
-      logger.log('🌐 Usando localização por IP');
+      console.log('🌐 Usando localização por IP');
       return {
         ...ipLocation,
         country: ipLocation.country || 'br',
@@ -244,11 +243,11 @@ export async function getBestAvailableLocation(): Promise<{
       };
     }
   } catch (error) {
-    logger.warn('⚠️ Localização por IP falhou:', error);
+    console.warn('⚠️ Localização por IP falhou:', error);
   }
 
   // 4. Padrão Brasil (sempre disponível)
-  logger.log('🇧🇷 Usando padrão Brasil (nenhuma localização específica)');
+  console.log('🇧🇷 Usando padrão Brasil (nenhuma localização específica)');
   return {
     city: null,
     state: null,

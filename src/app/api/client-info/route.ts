@@ -3,16 +3,16 @@ import { NextResponse } from "next/server";
 // Interface para dados do cliente
 interface ClientInfo {
   ip: string;
-  city?: string;
-  region?: string;
-  regionCode?: string;
+  city: string;
+  region: string;
+  regionCode: string;
   country: string;
   countryCode: string;
-  postalCode?: string;
-  timezone?: string;
-  isp?: string;
-  org?: string;
-  as?: string;
+  postalCode: string;
+  timezone: string;
+  isp: string;
+  org: string;
+  as: string;
   lat: number;
   lon: number;
 }
@@ -267,15 +267,15 @@ function getDefaultBrazilData(ip: string): Partial<ClientInfo> {
   
   return {
     ip: ip,
-    city: undefined,
-    region: undefined,
-    regionCode: undefined,
+    city: null,
+    region: null,
+    regionCode: null,
     country: 'brasil',
     countryCode: 'br',
-    postalCode: undefined,
+    postalCode: null,
     timezone: 'America/Sao_Paulo',
-    isp: undefined,
-    org: undefined,
+    isp: null,
+    org: null,
     lat: -14.235,
     lon: -51.925
   };
@@ -294,16 +294,16 @@ export async function GET(request: Request) {
     // 3. Combinar dados
     const clientInfo: ClientInfo = {
       ip: clientIP,
-      city: locationData.city,
-      region: locationData.region,
-      regionCode: locationData.regionCode,
+      city: locationData.city || null,
+      region: locationData.region || null,
+      regionCode: locationData.regionCode || null,
       country: locationData.country || 'br', // Padrão Brasil
       countryCode: locationData.countryCode || 'br',
-      postalCode: locationData.postalCode,
-      timezone: locationData.timezone,
-      isp: locationData.isp,
-      org: locationData.org,
-      as: locationData.as,
+      postalCode: locationData.postalCode || null,
+      timezone: locationData.timezone || null,
+      isp: locationData.isp || null,
+      org: locationData.org || null,
+      as: locationData.as || null,
       lat: locationData.lat || 0,
       lon: locationData.lon || 0
     };

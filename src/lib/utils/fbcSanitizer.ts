@@ -27,20 +27,20 @@ export function sanitizeFbc(fbc: string | null | undefined): string | null {
   
   // Verificar formato básico (fb.1.timestamp.fbclid)
   if (!trimmed.startsWith('fb.1.')) {
-    logger.warn('⚠️ fbc não começa com "fb.1.":', trimmed.substring(0, 20) + '...');
+    console.warn('⚠️ fbc não começa com "fb.1.":', trimmed.substring(0, 20) + '...');
     return null;
   }
   
   // Verificar se tem pelo menos 4 partes
   const parts = trimmed.split('.');
   if (parts.length < 4) {
-    logger.warn('⚠️ fbc formato inválido (menos de 4 partes):', trimmed);
+    console.warn('⚠️ fbc formato inválido (menos de 4 partes):', trimmed);
     return null;
   }
   
   // Verificar se fbclid (4ª parte) não está vazia e tem tamanho mínimo
   if (!parts[3] || parts[3].length < 10) {
-    logger.warn('⚠️ fbc fbclid muito curto ou vazio:', trimmed);
+    console.warn('⚠️ fbc fbclid muito curto ou vazio:', trimmed);
     return null;
   }
   

@@ -8,7 +8,6 @@
 
 import { getPersistedUserData, formatUserDataForMeta } from './userDataPersistence';
 import { getBestAvailableLocation } from './locationData';
-import { logger } from './utils/logger';
 
 /**
  * Interface para dados completos do usuário
@@ -45,11 +44,11 @@ export async function getCompleteUserData(): Promise<CompleteUserData> {
   
   // 1. Obter dados persistidos (formulário)
   const persistedData = getPersistedUserData();
-  logger.log('📦 Dados Persistidos:', persistedData ? '✅ Disponíveis' : '❌ Não encontrados');
+  console.log('📦 Dados Persistidos:', persistedData ? '✅ Disponíveis' : '❌ Não encontrados');
   
   // 2. Obter geolocalização automática (API)
   const locationData = await getBestAvailableLocation();
-  logger.log('🌍 Geolocalização API:', locationData);
+  console.log('🌍 Geolocalização API:', locationData);
   
   // 3. COMBINAR INTELIGENTEMENTE
   const completeData: CompleteUserData = {
@@ -70,7 +69,7 @@ export async function getCompleteUserData(): Promise<CompleteUserData> {
     source: determineSource(persistedData, locationData)
   };
   
-  logger.log('🎯 DADOS COMPLETOS GERADOS:', completeData);
+  console.log('🎯 DADOS COMPLETOS GERADOS:', completeData);
   console.groupEnd();
   
   return completeData;
@@ -130,7 +129,7 @@ export async function formatCompleteUserDataForMeta(): Promise<{
     formattedData.zp = completeData.zip.replace(/\D/g, '');
   }
   
-  logger.log('📤 Dados formatados para Meta:', formattedData);
+  console.log('📤 Dados formatados para Meta:', formattedData);
   return formattedData;
 }
 
@@ -150,7 +149,7 @@ async function hashData(data: string | null | undefined): Promise<string | null>
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
   } catch (error) {
-    logger.error('Erro no hash:', error);
+    console.error('Erro no hash:', error);
     return null;
   }
 }
@@ -190,7 +189,7 @@ export async function getHashedUserDataForMeta(): Promise<{
     client_user_agent: formattedData.client_user_agent
   };
   
-  logger.log('🔐 Dados hasheados para Meta:', hashedData);
+  console.log('🔐 Dados hasheados para Meta:', hashedData);
   return hashedData;
 }
 
@@ -210,11 +209,11 @@ export async function debugDataQuality() {
   
   // Dados antigos (apenas persistidos)
   const oldData = formatUserDataForMeta(getPersistedUserData());
-  logger.log('📦 Dados Antigos (apenas persistidos):', oldData);
+  console.log('📦 Dados Antigos (apenas persistidos):', oldData);
   
   // Dados novos (completos)
   const newData = await formatCompleteUserDataForMeta();
-  logger.log('🚀 Dados Novos (completos + API):', newData);
+  console.log('🚀 Dados Novos (completos + API):', newData);
   
   // Comparação
   const comparison = {
@@ -226,7 +225,7 @@ export async function debugDataQuality() {
     total_fields_after: Object.values(newData).filter(v => v).length
   };
   
-  logger.log('📈 MELHORIAS OBTIDAS:', comparison);
+  console.log('📈 MELHORIAS OBTIDAS:', comparison);
   console.groupEnd();
   
   return comparison;

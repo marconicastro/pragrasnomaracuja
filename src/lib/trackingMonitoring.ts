@@ -137,7 +137,7 @@ export function checkForIssues(): void {
   
   // Se houver issues, alertar
   if (issues.length > 0) {
-    logger.warn('?? TRACKING ISSUES DETECTED:', issues);
+    console.warn('?? TRACKING ISSUES DETECTED:', issues);
     
     // Aqui voc? poderia enviar para Slack, Email, etc.
     // sendSlackAlert(issues);
@@ -154,21 +154,21 @@ export function printMonitoringDashboard(): void {
   console.group('?? TRACKING MONITORING DASHBOARD');
   
   if (stats1h) {
-    logger.log('\n? ?ltima Hora:');
-    logger.log('  Total eventos:', stats1h.totalEvents);
-    logger.log('  Taxa sucesso:', `${(stats1h.successRate * 100).toFixed(1)}%`);
-    logger.log('  Data Quality:', stats1h.avgDataQuality.toFixed(1));
-    logger.log('  Por tipo:', stats1h.eventCounts);
+    console.log('\n? ?ltima Hora:');
+    console.log('  Total eventos:', stats1h.totalEvents);
+    console.log('  Taxa sucesso:', `${(stats1h.successRate * 100).toFixed(1)}%`);
+    console.log('  Data Quality:', stats1h.avgDataQuality.toFixed(1));
+    console.log('  Por tipo:', stats1h.eventCounts);
     if (stats1h.warnings.length > 0) {
-      logger.log('  ?? Warnings:', stats1h.warnings);
+      console.log('  ?? Warnings:', stats1h.warnings);
     }
   }
   
   if (stats24h) {
-    logger.log('\n?? ?ltimas 24h:');
-    logger.log('  Total eventos:', stats24h.totalEvents);
-    logger.log('  Taxa sucesso:', `${(stats24h.successRate * 100).toFixed(1)}%`);
-    logger.log('  Data Quality:', stats24h.avgDataQuality.toFixed(1));
+    console.log('\n?? ?ltimas 24h:');
+    console.log('  Total eventos:', stats24h.totalEvents);
+    console.log('  Taxa sucesso:', `${(stats24h.successRate * 100).toFixed(1)}%`);
+    console.log('  Data Quality:', stats24h.avgDataQuality.toFixed(1));
   }
   
   console.groupEnd();
@@ -202,7 +202,7 @@ export function withMonitoring<T extends (...args: any[]) => Promise<any>>(
       return result;
     } catch (error: any) {
       // Log de erro SEM eventId (n?o ? um evento real)
-      logger.error(`? ${eventName} falhou:`, error.message);
+      console.error(`? ${eventName} falhou:`, error.message);
       
       throw error;
     }

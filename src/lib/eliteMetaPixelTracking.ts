@@ -35,7 +35,6 @@ import {
 } from './coldEventsEnrichment';
 
 import { generateEventId } from './utils/eventId';
-import { logger, trackingLogger } from './utils/logger';
 
 import {
   pushPageView,
@@ -87,8 +86,7 @@ function isEventIdRecent(eventId: string): boolean {
   const lastTime = recentEventIds.get(eventId);
   
   if (lastTime && (now - lastTime) < DUPLICATION_WINDOW_MS) {
-    trackingLogger.deduplication(eventId, 'duplicado');
-    logger.warn('Event ID duplicado detectado (cache)', {
+    console.warn('⚠️ Event ID duplicado detectado (cache):', {
       eventId,
       lastTime: new Date(lastTime).toISOString(),
       now: new Date(now).toISOString(),
@@ -416,20 +414,6 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   if (enriched.fbp) converted.fbp = enriched.fbp;
   if (enriched.fbc) converted.fbc = enriched.fbc;
   
-  // ✅ FALLBACK: Garantir country sempre presente (99% dos users são BR)
-  if (!converted.country) {
-    converted.country = 'br';
-  }
-  
-  // ✅ FALLBACK: Garantir user_id sempre presente (se ainda não tiver)
-  // coldEventsEnrichment.ts já deve gerar, mas garantir aqui também
-  if (!converted.user_id && typeof window !== 'undefined') {
-    const sessionId = sessionStorage.getItem('session_id');
-    if (sessionId) {
-      converted.user_id = sessionId;
-    }
-  }
-  
   return Object.keys(converted).length > 0 ? converted : undefined;
 }
 
@@ -484,14 +468,13 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    trackingLogger.deduplication(eventID, 'duplicado');
-    logger.warn('Event ID duplicado detectado (PageView), gerando novo', { eventId: eventID });
+    console.warn('⚠️ Event ID duplicado detectado (PageView), gerando novo:', eventID);
     eventID = generateEventId('PageView');
     attempts++;
   }
   
   if (attempts >= 5) {
-    logger.error('Não foi possível gerar event_id único para PageView após 5 tentativas', undefined, { event: 'PageView' });
+    console.error('❌ Não foi possível gerar event_id único para PageView após 5 tentativas');
     return {
       success: false,
       eventId: '',
@@ -556,14 +539,13 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    trackingLogger.deduplication(eventID, 'duplicado');
-    logger.warn('Event ID duplicado detectado (ViewContent), gerando novo', { eventId: eventID });
+    console.warn('⚠️ Event ID duplicado detectado (ViewContent), gerando novo:', eventID);
     eventID = generateEventId('ViewContent');
     attempts++;
   }
   
   if (attempts >= 5) {
-    logger.error('Não foi possível gerar event_id único para ViewContent após 5 tentativas', undefined, { event: 'ViewContent' });
+    console.error('❌ Não foi possível gerar event_id único para ViewContent após 5 tentativas');
     return {
       success: false,
       eventId: '',
@@ -650,14 +632,13 @@ export async function trackAddToCartElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    trackingLogger.deduplication(eventID, 'duplicado');
-    logger.warn('Event ID duplicado detectado (AddToCart), gerando novo', { eventId: eventID });
+    console.warn('⚠️ Event ID duplicado detectado (AddToCart), gerando novo:', eventID);
     eventID = generateEventId('AddToCart');
     attempts++;
   }
   
   if (attempts >= 5) {
-    logger.error('Não foi possível gerar event_id único para AddToCart após 5 tentativas', undefined, { event: 'AddToCart' });
+    console.error('❌ Não foi possível gerar event_id único para AddToCart após 5 tentativas');
     return {
       success: false,
       eventId: '',
@@ -740,14 +721,13 @@ export async function trackLeadElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    trackingLogger.deduplication(eventID, 'duplicado');
-    logger.warn('Event ID duplicado detectado (Lead), gerando novo', { eventId: eventID });
+    console.warn('⚠️ Event ID duplicado detectado (Lead), gerando novo:', eventID);
     eventID = generateEventId('Lead');
     attempts++;
   }
   
   if (attempts >= 5) {
-    logger.error('Não foi possível gerar event_id único para Lead após 5 tentativas', undefined, { event: 'Lead' });
+    console.error('❌ Não foi possível gerar event_id único para Lead após 5 tentativas');
     return {
       success: false,
       eventId: '',
@@ -854,14 +834,13 @@ export async function trackInitiateCheckoutElite(
   // ✅ PREVENÇÃO DE DUPLICAÇÃO: Verificar se event_id foi usado recentemente
   let attempts = 0;
   while (isEventIdRecent(eventID) && attempts < 5) {
-    trackingLogger.deduplication(eventID, 'duplicado');
-    logger.warn('Event ID duplicado detectado, gerando novo', { eventId: eventID });
+    console.warn('⚠️ Event ID duplicado detectado, gerando novo:', eventID);
     eventID = generateEventId('InitiateCheckout');
     attempts++;
   }
   
   if (attempts >= 5) {
-    logger.error('Não foi possível gerar event_id único após 5 tentativas', undefined, { event: 'InitiateCheckout' });
+    console.error('❌ Não foi possível gerar event_id único após 5 tentativas');
     return {
       success: false,
       eventId: '',

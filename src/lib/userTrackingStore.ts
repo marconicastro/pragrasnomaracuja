@@ -8,7 +8,6 @@
 'use server';
 
 import { normalizePhone as normalizePhoneUtil } from './utils/metaDataNormalizer';
-import { logger } from './utils/logger';
 
 // ===== INTERFACES =====
 
@@ -88,7 +87,7 @@ export async function saveUserTracking(data: Omit<UserTrackingData, 'createdAt' 
         await kv.set(`user:phone:${phoneNormalized}`, trackingData);
       }
       
-      logger.log('? User tracking salvo no Vercel KV:', {
+      console.log('? User tracking salvo no Vercel KV:', {
         email: data.email,
         hasFbp: !!data.fbp,
         hasFbc: !!data.fbc,
@@ -104,11 +103,11 @@ export async function saveUserTracking(data: Omit<UserTrackingData, 'createdAt' 
     }
     
     // Fallback: Sem KV dispon?vel (desenvolvimento local)
-    logger.warn('?? Vercel KV n?o dispon?vel, dados n?o persistidos');
+    console.warn('?? Vercel KV n?o dispon?vel, dados n?o persistidos');
     return false;
     
   } catch (error) {
-    logger.error('? Erro ao salvar no Vercel KV:', error);
+    console.error('? Erro ao salvar no Vercel KV:', error);
     return false;
   }
 }
@@ -128,7 +127,7 @@ export async function getUserTracking(
       let userData = await kv.get<UserTrackingData>(`user:email:${email.toLowerCase()}`);
       
       if (userData) {
-        logger.log('? User data encontrado por EMAIL:', email);
+        console.log('? User data encontrado por EMAIL:', email);
         return userData;
       }
       
@@ -138,21 +137,21 @@ export async function getUserTracking(
         userData = await kv.get<UserTrackingData>(`user:phone:${phoneNormalized}`);
         
         if (userData) {
-          logger.log('? User data encontrado por TELEFONE:', phone);
-          logger.warn('?? Email diferente! Checkout:', email, '| Original:', userData.email);
+          console.log('? User data encontrado por TELEFONE:', phone);
+          console.warn('?? Email diferente! Checkout:', email, '| Original:', userData.email);
           return userData;
         }
       }
       
-      logger.warn('? User data n?o encontrado:', { email, phone });
+      console.warn('? User data n?o encontrado:', { email, phone });
       return null;
     }
     
-    logger.warn('?? Vercel KV n?o dispon?vel');
+    console.warn('?? Vercel KV n?o dispon?vel');
     return null;
     
   } catch (error) {
-    logger.error('? Erro ao buscar no Vercel KV:', error);
+    console.error('? Erro ao buscar no Vercel KV:', error);
     return null;
   }
 }

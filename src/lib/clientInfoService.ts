@@ -35,11 +35,11 @@ export async function getClientInfo(): Promise<ClientInfo> {
   try {
     // Verificar cache
     if (clientInfoCache && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
-      logger.log('📦 Usando client info do cache');
+      console.log('📦 Usando client info do cache');
       return clientInfoCache;
     }
 
-    logger.log('🌐 Obtendo client info em tempo real...');
+    console.log('🌐 Obtendo client info em tempo real...');
     
     const response = await fetch('/api/client-info', {
       method: 'GET',
@@ -64,7 +64,7 @@ export async function getClientInfo(): Promise<ClientInfo> {
     clientInfoCache = result.data;
     cacheTimestamp = Date.now();
 
-    logger.log('✅ Client info obtida com sucesso:', {
+    console.log('✅ Client info obtida com sucesso:', {
       ip: result.data.ip,
       city: result.data.city,
       state: result.data.state,
@@ -75,7 +75,7 @@ export async function getClientInfo(): Promise<ClientInfo> {
     return result.data;
 
   } catch (error) {
-    logger.error('❌ Erro ao obter client info:', error);
+    console.error('❌ Erro ao obter client info:', error);
     
     // Retornar dados básicos como fallback
     const fallbackData: ClientInfo = {
@@ -100,7 +100,7 @@ export async function getClientInfo(): Promise<ClientInfo> {
 export function clearClientInfoCache(): void {
   clientInfoCache = null;
   cacheTimestamp = 0;
-  logger.log('🗑️ Cache de client info limpo');
+  console.log('🗑️ Cache de client info limpo');
 }
 
 /**
@@ -154,7 +154,7 @@ export async function getEnrichedClientData(persistedData?: any) {
       })
     };
 
-    logger.log('🎯 Dados enriquecidos combinados:', {
+    console.log('🎯 Dados enriquecidos combinados:', {
       hasPersistedData: !!persistedData,
       hasRealIP: !!enrichedData.client_ip_address,
       city: enrichedData.ct,
@@ -167,7 +167,7 @@ export async function getEnrichedClientData(persistedData?: any) {
     return enrichedData;
 
   } catch (error) {
-    logger.error('❌ Erro ao enriquecer dados do cliente:', error);
+    console.error('❌ Erro ao enriquecer dados do cliente:', error);
     
     // Fallback básico
     return {
