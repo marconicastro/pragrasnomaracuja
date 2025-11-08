@@ -198,7 +198,7 @@ export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): vo
   
   try {
     window.dataLayer.push(eventDataWithMeta);
-    
+  
     // ✅ DEBUG COMPLETO: Sempre logar para diagnóstico (mesmo em produção)
     console.log('🔍 DEBUG GTM - DataLayer Push:', {
       event: eventDataWithMeta.event,
@@ -312,8 +312,8 @@ export function pushViewItem(
   pushToDataLayer({
     event: 'view_item',
     // ❌ REMOVIDO ecommerce.items
-    value: value,
-    currency: currency,
+      value: value,
+      currency: currency,
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,
     content_type: PRODUCT_CONFIG.content_type,
@@ -356,8 +356,8 @@ export function pushAddToCart(
   pushToDataLayer({
     event: 'add_to_cart',
     // ❌ REMOVIDO ecommerce.items
-    value: value,
-    currency: currency,
+      value: value,
+      currency: currency,
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,
     content_type: PRODUCT_CONFIG.content_type,
@@ -404,8 +404,8 @@ export function pushBeginCheckout(
     event: 'begin_checkout',
     // ❌ REMOVIDO ecommerce.items (servidor não tem)
     // Apenas value/currency no nível raiz
-    value: value,
-    currency: currency,
+      value: value,
+      currency: currency,
     // ✅ Manter content_ids, contents, num_items (servidor tem)
     ...contentData,
     content_name: PRODUCT_CONFIG.item_name,
@@ -498,8 +498,8 @@ export function pushGenerateLead(
   pushToDataLayer({
     event: 'generate_lead',
     ...(value && {
-      value: value,
-      currency: PRODUCT_CONFIG.currency
+        value: value,
+        currency: PRODUCT_CONFIG.currency
     }),
     ...contentData,
     // ✅ Campos no nível raiz

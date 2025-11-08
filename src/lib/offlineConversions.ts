@@ -1090,6 +1090,8 @@ export async function sendPurchaseToGTM(
         ...(validatedFbc && { fbc: validatedFbc })
       },
       // Metadata adicional
+      // ✅ CRÍTICO: Usar mesmo formato do navegador: ${orderId}_${timestamp}
+      // timestamp deve ser em milissegundos (Date.now()) para igualar com navegador
       event_id: `${purchaseData.orderId}_${purchaseData.timestamp || Date.now()}`,
       event_source_url: 'https://www.maracujazeropragas.com/obrigado',
       action_source: 'other', // ✅ Server-side via webhook (não 'website')
