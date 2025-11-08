@@ -267,7 +267,7 @@ export default function TestePurchasePage() {
               <li>Order ID: {orderId || 'não definido'}</li>
               <li>Email: {email || 'não definido'}</li>
               <li>localStorage: {localStorage.getItem('userTrackingData') ? '✅ tem dados' : '❌ vazio'}</li>
-              <li>Meta Pixel: {typeof window !== 'undefined' && window.fbq ? '✅ carregado' : '❌ não carregado'}</li>
+              <li>Meta Pixel: {typeof window !== 'undefined' && typeof window.fbq !== 'undefined' ? '✅ carregado' : '❌ não carregado'}</li>
             </ul>
           </div>
         )}
