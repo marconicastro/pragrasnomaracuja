@@ -1092,6 +1092,7 @@ export async function sendPurchaseToGTM(
       // Metadata adicional
       event_id: `${purchaseData.orderId}_${purchaseData.timestamp || Date.now()}`,
       event_source_url: 'https://www.maracujazeropragas.com/obrigado',
+      action_source: 'other', // ✅ Server-side via webhook (não 'website')
       ...(userData.client_ip_address && { client_ip_address: userData.client_ip_address }),
       ...(userData.client_user_agent && { client_user_agent: userData.client_user_agent })
     };
