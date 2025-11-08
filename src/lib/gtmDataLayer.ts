@@ -212,9 +212,10 @@ export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): vo
 export function pushPageView(userData?: Partial<UserData>, eventId?: string): void {
   const preparedUserData = prepareUserData(userData);
   
+  // 🔧 DEDUPLICAÇÃO: fbp/fbc apenas em user_data (não no custom_data raiz)
   pushToDataLayer({
     event: 'page_view',
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+    // ✅ Campos user_data no nível raiz (para acesso direto no GTM)
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -223,11 +224,9 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
+    // ❌ REMOVIDO fbp/fbc do custom_data raiz (servidor não envia aqui)
+    // ✅ fbp/fbc vão apenas em user_data
     user_data: preparedUserData
   }, eventId);
 }
@@ -246,22 +245,17 @@ export function pushViewItem(
   const contentData = prepareContentData();
   const preparedUserData = prepareUserData(userData);
   
+  // 🔧 DEDUPLICAÇÃO: Remover items e fbp/fbc do custom_data raiz
   pushToDataLayer({
     event: 'view_item',
-    ecommerce: {
-      value: value,
-      currency: currency,
-      items: [prepareEcommerceItem()]
-    },
+    // ❌ REMOVIDO ecommerce.items
+    value: value,
+    currency: currency,
     ...contentData,
-    // ✅ CRÍTICO: content_name e content_type devem estar no nível raiz para GTM Server-Side
     content_name: PRODUCT_CONFIG.item_name,
     content_type: PRODUCT_CONFIG.content_type,
     num_items: 1,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
-    value: value,
-    currency: currency,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+    // ✅ Campos user_data no nível raiz
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -270,11 +264,8 @@ export function pushViewItem(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
+    // ❌ REMOVIDO fbp/fbc do custom_data raiz
     user_data: preparedUserData
   }, eventId);
 }
@@ -294,21 +285,17 @@ export function pushAddToCart(
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
   
+  // 🔧 DEDUPLICAÇÃO: Remover items e fbp/fbc do custom_data raiz
   pushToDataLayer({
     event: 'add_to_cart',
-    ecommerce: {
-      value: value,
-      currency: currency,
-      items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
-    },
-    ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
-    num_items: quantity,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
+    // ❌ REMOVIDO ecommerce.items
     value: value,
     currency: currency,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+    ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,
+    content_type: PRODUCT_CONFIG.content_type,
+    num_items: quantity,
+    // ✅ Campos user_data no nível raiz
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -317,11 +304,8 @@ export function pushAddToCart(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
+    // ❌ REMOVIDO fbp/fbc do custom_data raiz
     user_data: preparedUserData
   }, eventId);
 }
@@ -341,21 +325,22 @@ export function pushBeginCheckout(
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
   
+  // 🔧 DEDUPLICAÇÃO: Remover items do ecommerce para igualar com servidor
+  // Servidor NÃO envia items dentro de ecommerce, apenas value/currency
+  // Meta usa custom_data para deduplica, então ambos devem ser idênticos
+  
   pushToDataLayer({
     event: 'begin_checkout',
-    ecommerce: {
-      value: value,
-      currency: currency,
-      items: [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)]
-    },
-    ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
-    num_items: quantity,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
+    // ❌ REMOVIDO ecommerce.items (servidor não tem)
+    // Apenas value/currency no nível raiz
     value: value,
     currency: currency,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+    // ✅ Manter content_ids, contents, num_items (servidor tem)
+    ...contentData,
+    content_name: PRODUCT_CONFIG.item_name,
+    content_type: PRODUCT_CONFIG.content_type,
+    num_items: quantity,
+    // ✅ Campos user_data no nível raiz (para acesso direto no GTM)
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -364,11 +349,10 @@ export function pushBeginCheckout(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
+    // ❌ REMOVIDO fbp/fbc do nível raiz custom_data (vão em user_data apenas)
+    // Servidor envia fbp/fbc APENAS em user_data, não em custom_data
+    // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
 }
@@ -436,16 +420,15 @@ export function pushGenerateLead(
   const contentData = prepareContentData();
   const preparedUserData = prepareUserData(userData);
   
+  // 🔧 DEDUPLICAÇÃO: fbp/fbc apenas em user_data
   pushToDataLayer({
-    event: 'generate_lead', // Nome específico para trigger 'ce - generate_lead' no GTM
+    event: 'generate_lead',
     ...(value && {
-      ecommerce: {
-        value: value,
-        currency: PRODUCT_CONFIG.currency
-      }
+      value: value,
+      currency: PRODUCT_CONFIG.currency
     }),
     ...contentData,
-    // ✅ Campos no nível raiz (para acesso direto: {{ed - email_address}})
+    // ✅ Campos no nível raiz
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -454,11 +437,8 @@ export function pushGenerateLead(
     ...(preparedUserData?.region && { region: preparedUserData.region }),
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
-    // ✅ CRÍTICO: Incluir fbp, fbc, user_id no nível raiz (igualar Server-Side)
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
+    // ❌ REMOVIDO fbp/fbc do custom_data raiz
     user_data: preparedUserData
   }, eventId);
 }
