@@ -657,7 +657,7 @@ export default function App() {
               <span className="text-green-600">COM O TRIPS!</span>
             </h1>
 
-            {/* Logo do E-book - Otimizado */}
+            {/* Logo do E-book - Otimizado para LCP */}
             <div className="mb-4 sm:mb-6">
               <OptimizedImage 
                 src="/ebook-logo.webp" 
@@ -668,6 +668,8 @@ export default function App() {
                 width={200}
                 height={200}
                 fetchPriority="high"
+                quality={90}
+                sizes="200px"
               />
             </div>
 
@@ -822,6 +824,8 @@ export default function App() {
                     width={200}
                     height={267}
                     loading="lazy"
+                    quality={75}
+                    sizes="200px"
                   />
                 </div>
                 <div>
@@ -834,6 +838,8 @@ export default function App() {
                     width={200}
                     height={267}
                     loading="lazy"
+                    quality={75}
+                    sizes="200px"
                   />
                 </div>
                 <div>
@@ -846,6 +852,8 @@ export default function App() {
                     width={200}
                     height={267}
                     loading="lazy"
+                    quality={75}
+                    sizes="200px"
                   />
                 </div>
               </div>

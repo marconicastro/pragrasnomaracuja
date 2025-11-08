@@ -13,6 +13,8 @@ interface OptimizedImageProps {
   height?: number;
   loading?: 'lazy' | 'eager';
   fetchPriority?: 'high' | 'auto' | 'low';
+  quality?: number; // 🚀 Add quality control
+  sizes?: string; // 🚀 Override default sizes
 }
 
 export default function OptimizedImage({
@@ -21,17 +23,19 @@ export default function OptimizedImage({
   className,
   style,
   priority = false,
-  width,
+  width = 200,
   height,
   loading = 'lazy',
-  fetchPriority = 'auto'
+  fetchPriority = 'auto',
+  quality = 75, // 🚀 Default quality 75 (good balance)
+  sizes
 }: OptimizedImageProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleError = () => {
     setImageError(true);
-    console.log(`Erro ao carregar imagem: ${src}`);
+    console.error(`❌ Erro ao carregar imagem: ${src}`);
   };
 
   const handleLoad = () => {
@@ -49,23 +53,36 @@ export default function OptimizedImage({
     );
   }
 
+  // 🚀 Auto-calculate height if not provided (square images)
+  const imageHeight = height || width;
+
+  // 🚀 Optimized sizes based on width
+  const defaultSizes = width <= 200 
+    ? '(max-width: 640px) 100vw, 200px' // Small images
+    : width <= 400 
+    ? '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px' // Medium images
+    : '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'; // Large images
+
   return (
-    <div className={`relative ${className}`} style={style}>
-      <Image
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        priority={priority}
-        loading={priority ? 'eager' : loading}
-        fetchPriority={fetchPriority}
-        onError={handleError}
-        onLoad={handleLoad}
-        className={`transition-opacity duration-300 ${
-          imageLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      />
-    </div>
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={imageHeight}
+      priority={priority}
+      loading={priority ? 'eager' : loading}
+      // @ts-ignore - Next.js supports fetchPriority
+      fetchPriority={priority ? 'high' : fetchPriority}
+      onError={handleError}
+      onLoad={handleLoad}
+      quality={quality}
+      className={`transition-opacity duration-300 ${
+        imageLoaded ? 'opacity-100' : 'opacity-0'
+      } ${className || ''}`}
+      style={style}
+      sizes={sizes || defaultSizes}
+      placeholder="blur"
+      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+    />
   );
 }

@@ -19,10 +19,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        {/* Google Tag Manager - Server-Side */}
+        {/* Preconnect to critical domains - Speed up 3rd party loads */}
+        <link rel="preconnect" href="https://event.maracujazeropragas.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
+        
+        {/* Google Tag Manager - Server-Side - LAZY LOAD */}
         <Script
           id="gtm-server-side"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src="https://event.maracujazeropragas.com/85wpwsohvcad.js?"+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','8m=DQVeMTwiXiAnJTNEMiM7URJcUVhZSRcZWQwCBAkMBh0FGwYEBx8BFgMAEFgLAB4%3D');
