@@ -1053,12 +1053,12 @@ export async function sendPurchaseToGTM(
     
     // Preparar dados no formato DataLayer
     const itemsArray = [{
-      item_id: 'hacr962',
-      item_name: 'Sistema 4 Fases - Ebook Trips',
-      price: purchaseData.value,
-      quantity: 1,
-      item_category: 'digital_product',
-      item_brand: 'Ebook Trips'
+          item_id: 'hacr962',
+          item_name: 'Sistema 4 Fases - Ebook Trips',
+          price: purchaseData.value,
+          quantity: 1,
+          item_category: 'digital_product',
+          item_brand: 'Ebook Trips'
     }];
     
     const eventData = {

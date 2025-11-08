@@ -31,7 +31,11 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
 
 # vercel
@@ -40,11 +44,41 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# logs (aplicação)
+*.log
+dev.log
+server.log
+production.log
+
+# arquivos temporários
 local-*
 .claude
 .z-ai-config
-dev.log
 test
 prompt
+tmp/
+temp/
 
-server.log
+# IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Database (SQLite local)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+!custom.db
+
+# Backups
+*.backup
+*.bak
+*.old

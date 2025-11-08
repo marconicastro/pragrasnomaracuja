@@ -3,22 +3,27 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    // Type checking habilitado em produção para maior segurança
+    ignoreBuildErrors: false,
   },
-  // 禁用 Next.js 热重载，由 nodemon 处理重编译
-  reactStrictMode: false,
+  // React Strict Mode ativado para detectar problemas
+  reactStrictMode: true,
   webpack: (config, { dev }) => {
     if (dev) {
-      // 禁用 webpack 的热模块替换
+      // Desabilita hot reload do webpack (nodemon gerencia o reload completo)
       config.watchOptions = {
-        ignored: ['**/*'], // 忽略所有文件变化
+        ignored: ['**/*'], // Ignora mudanças de arquivo (nodemon cuida disso)
       };
     }
     return config;
   },
   eslint: {
-    // 构建时忽略ESLint错误
-    ignoreDuringBuilds: true,
+    // ESLint habilitado em builds para garantir qualidade
+    ignoreDuringBuilds: false,
+  },
+  images: {
+    // Otimização de imagens
+    formats: ['image/avif', 'image/webp'],
   },
 };
 
