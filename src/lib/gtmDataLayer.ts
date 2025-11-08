@@ -288,7 +288,7 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
@@ -331,7 +331,7 @@ export function pushViewItem(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
@@ -375,7 +375,7 @@ export function pushAddToCart(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
@@ -424,7 +424,7 @@ export function pushBeginCheckout(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
@@ -515,7 +515,7 @@ export function pushGenerateLead(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
