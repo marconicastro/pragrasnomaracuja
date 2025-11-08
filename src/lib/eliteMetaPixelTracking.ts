@@ -400,6 +400,7 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   const converted: any = {};
   
   // Converter campos abreviados (Meta) para formato completo (GTM)
+  // ✅ CRÍTICO: user_id e country SEMPRE presentes (igualar servidor)
   if (enriched.external_id) converted.user_id = enriched.external_id;
   if (enriched.em) converted.email_address = enriched.em;
   if (enriched.ph) converted.phone_number = enriched.ph;
@@ -408,7 +409,8 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   if (enriched.ct) converted.city = enriched.ct;
   if (enriched.st) converted.region = enriched.st;
   if (enriched.zp) converted.postal_code = enriched.zp;
-  if (enriched.country) converted.country = enriched.country;
+  // ✅ CRÍTICO: country sempre presente (pelo menos 'BR' como padrão)
+  converted.country = enriched.country || 'BR';
   
   // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
   if (enriched.fbp) converted.fbp = enriched.fbp;
@@ -428,8 +430,10 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
   
   if (userData) {
     // Se tiver dados persistidos, usar diretamente
+    // ✅ CRÍTICO: Garantir user_id sempre presente (igualar servidor)
+    const { getAdvancedSessionId } = await import('./advancedDataPersistence');
     userDataForGTM = {
-      user_id: userData.external_id,
+      user_id: userData.external_id || getAdvancedSessionId(),
       email_address: userData.email,
       phone_number: userData.phone,
       first_name: userData.firstName,
@@ -437,7 +441,8 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
       city: userData.city,
       region: userData.state,
       postal_code: userData.zip,
-      country: userData.country,
+      // ✅ CRÍTICO: country sempre presente (pelo menos 'BR' como padrão)
+      country: userData.country || 'BR',
       // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
       // GTM Server-Side captura AUTOMATICAMENTE dos cookies (_fbp, _fbc)
       // Se incluirmos, GTM coloca no custom_data e causa diferença com servidor
@@ -454,10 +459,21 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
       userDataForGTM = {};
     }
     
-    // ✅ ADICIONAR: Se enriched tiver external_id mas convertEnrichedToGTMFormat não converteu
-    // Isso garante que user_id sempre esteja presente se disponível
-    if (enriched.user_data.external_id && !userDataForGTM.user_id) {
+    // ✅ CRÍTICO: Garantir user_id e country SEMPRE presentes (igualar servidor)
+    // Mesmo em cold events, precisamos ter esses campos para igualar com servidor
+    if (enriched.user_data.external_id) {
       userDataForGTM.user_id = enriched.user_data.external_id;
+    } else {
+      // ✅ CRÍTICO: Se não tiver external_id, gerar sessionId para igualar servidor
+      // O servidor sempre tem external_id, então precisamos ter também
+      const { getAdvancedSessionId } = await import('./advancedDataPersistence');
+      const sessionId = getAdvancedSessionId();
+      userDataForGTM.user_id = sessionId;
+    }
+    // ✅ CRÍTICO: country sempre presente (pelo menos 'BR' como padrão)
+    // Mesmo se convertEnrichedToGTMFormat não retornou, garantir que temos
+    if (!userDataForGTM.country) {
+      userDataForGTM.country = enriched.user_data.country || 'BR';
     }
   }
   
@@ -517,8 +533,10 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
+  // ✅ CRÍTICO: Garantir user_id sempre presente (igualar servidor)
+  const { getAdvancedSessionId } = await import('./advancedDataPersistence');
   const userDataForGTM = userData ? {
-    user_id: userData.external_id,
+    user_id: userData.external_id || getAdvancedSessionId(),
     email_address: userData.email,
     phone_number: userData.phone,
     first_name: userData.firstName,
@@ -526,7 +544,8 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     city: userData.city,
     region: userData.state,
     postal_code: userData.zip,
-    country: userData.country,
+    // ✅ CRÍTICO: country sempre presente (pelo menos 'BR' como padrão)
+    country: userData.country || 'BR',
     // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
     // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   } : undefined;
@@ -609,8 +628,10 @@ export async function trackAddToCartElite(
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
+  // ✅ CRÍTICO: Garantir user_id sempre presente (igualar servidor)
+  const { getAdvancedSessionId } = await import('./advancedDataPersistence');
   const userDataForGTM = userData ? {
-    user_id: userData.external_id,
+    user_id: userData.external_id || getAdvancedSessionId(),
     email_address: userData.email,
     phone_number: userData.phone,
     first_name: userData.firstName,
@@ -618,7 +639,8 @@ export async function trackAddToCartElite(
     city: userData.city,
     region: userData.state,
     postal_code: userData.zip,
-    country: userData.country,
+    // ✅ CRÍTICO: country sempre presente (pelo menos 'BR' como padrão)
+    country: userData.country || 'BR',
     // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
     // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   } : undefined;
@@ -697,8 +719,10 @@ export async function trackLeadElite(
   
   // Preparar user data para DataLayer
   const metaCookies = getMetaCookies();
+  // ✅ CRÍTICO: Garantir user_id sempre presente (igualar servidor)
+  const { getAdvancedSessionId } = await import('./advancedDataPersistence');
   const userDataForGTM = {
-    user_id: savedData?.external_id,
+    user_id: savedData?.external_id || getAdvancedSessionId(),
     email_address: userData.email,
     phone_number: userData.phone,
     first_name: userData.firstName,
@@ -706,6 +730,7 @@ export async function trackLeadElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
+    // ✅ CRÍTICO: country sempre presente (igualar servidor)
     country: 'BR'
     // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
     // GTM Server-Side captura AUTOMATICAMENTE dos cookies
@@ -808,8 +833,10 @@ export async function trackInitiateCheckoutElite(
   
   // Preparar user data para DataLayer
   const metaCookies = getMetaCookies();
+  // ✅ CRÍTICO: Garantir user_id sempre presente (igualar servidor)
+  const { getAdvancedSessionId } = await import('./advancedDataPersistence');
   const userDataForGTM = {
-    user_id: savedData?.external_id,
+    user_id: savedData?.external_id || getAdvancedSessionId(),
     email_address: userData.email,
     phone_number: userData.phone,
     first_name: userData.firstName,
@@ -817,6 +844,7 @@ export async function trackInitiateCheckoutElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
+    // ✅ CRÍTICO: country sempre presente (igualar servidor)
     country: 'BR'
     // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
     // GTM Server-Side captura AUTOMATICAMENTE dos cookies
