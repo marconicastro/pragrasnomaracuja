@@ -1,6 +1,6 @@
 /**
  * ?? Advanced Data Persistence - Enterprise Level
- * 
+ *
  * Sistema completo de persist?ncia para tracking CAPIG Gateway:
  * - User data (PII)
  * - Attribution journey (multi-touch)
@@ -10,6 +10,9 @@
  */
 
 'use client';
+
+import { getSessionId } from './session';
+import { logger } from './utils/logger';
 
 // ===== INTERFACES =====
 
@@ -33,29 +36,29 @@ export interface UserDataComplete {
   firstName?: string;
   lastName?: string;
   fullName?: string;
-  
+
   // Location
   city?: string;
   state?: string;
   zip?: string;
   country?: string;
-  
+
   // Meta Identifiers
-  fbp?: string;      // Facebook Browser ID
-  fbc?: string;      // Facebook Click ID
+  fbp?: string; // Facebook Browser ID
+  fbc?: string; // Facebook Click ID
   external_id?: string;
-  
+
   // Session
   sessionId: string;
-  
+
   // Timestamps
   firstSeen: number;
   lastSeen: number;
-  
+
   // Consent
   consent: boolean;
   consentDate?: number;
-  
+
   // Data Quality
   dataQualityScore?: number;
 }
@@ -83,7 +86,7 @@ const KEYS = {
   EVENT_HISTORY: 'zc_event_history',
   SESSION: 'zc_session_id',
   CONSENT: 'zc_consent',
-  META_COOKIES: 'zc_meta_cookies'
+  META_COOKIES: 'zc_meta_cookies',
 };
 
 // ===== UTILITY FUNCTIONS =====
@@ -97,62 +100,61 @@ function safeJSONParse<T>(json: string | null, fallback: T): T {
   }
 }
 
-function generateSessionId(): string {
-  return `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
 // ===== META COOKIES =====
 
 /**
  * Extrai fbp e fbc dos cookies
- * 
+ *
  * CRÍTICO: fbc deve ser preservado EXATAMENTE como vem do cookie.
  * Qualquer modificação causa erro no Meta CAPI.
- * 
+ *
  * IMPORTANTE: decodeURIComponent preserva caracteres especiais do fbc.
  * Apenas trim externo é aplicado - NENHUMA outra modificação!
  */
 export function getMetaCookies(): { fbp?: string; fbc?: string } {
   if (typeof document === 'undefined') return {};
-  
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    // CRÍTICO: decodeURIComponent preserva caracteres especiais do fbc
-    // Se não fizer decode, pode perder caracteres codificados
-    // TRY/CATCH para proteger contra cookies mal formatados
-    try {
-      acc[key] = value ? decodeURIComponent(value) : value;
-    } catch (error) {
-      // Se falhar decode, usar valor raw (melhor que perder cookie)
-      logger.warn('⚠️ Erro ao decodificar cookie:', key, error);
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as Record<string, string>);
-  
+
+  const cookies = document.cookie.split(';').reduce(
+    (acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      // CRÍTICO: decodeURIComponent preserva caracteres especiais do fbc
+      // Se não fizer decode, pode perder caracteres codificados
+      // TRY/CATCH para proteger contra cookies mal formatados
+      try {
+        acc[key] = value ? decodeURIComponent(value) : value;
+      } catch (error) {
+        // Se falhar decode, usar valor raw (melhor que perder cookie)
+        logger.warn('⚠️ Erro ao decodificar cookie:', key, error);
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
   // CRÍTICO: fbc deve ser preservado EXATAMENTE
   // Apenas remover espaços externos (trim) - NADA MAIS!
   const rawFbc = cookies['_fbc'];
   const sanitizedFbc = rawFbc ? rawFbc.trim() : undefined;
-  
+
   // Validação básica (sem modificar!)
   if (sanitizedFbc && !sanitizedFbc.startsWith('fb.1.')) {
     logger.warn('⚠️ fbc formato inválido (não começa com "fb.1."):', sanitizedFbc.substring(0, 30));
     return {
       fbp: cookies['_fbp'],
-      fbc: undefined // Não enviar fbc inválido
+      fbc: undefined, // Não enviar fbc inválido
     };
   }
-  
+
   return {
     fbp: cookies['_fbp'],
-    fbc: sanitizedFbc
+    fbc: sanitizedFbc,
   };
 }
 
 /**
  * Salva fbp/fbc no localStorage para usar em offline conversions
- * 
+ *
  * CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações)
  */
 export function persistMetaCookies(): void {
@@ -163,7 +165,7 @@ export function persistMetaCookies(): void {
     logger.log('✅ Meta cookies persistidos (fbc preservado exatamente):', {
       hasFbp: !!cookies.fbp,
       hasFbc: !!cookies.fbc,
-      fbcPreview: cookies.fbc ? cookies.fbc.substring(0, 30) + '...' : 'none'
+      fbcPreview: cookies.fbc ? cookies.fbc.substring(0, 30) + '...' : 'none',
     });
   }
 }
@@ -188,18 +190,18 @@ export function captureAttribution(): AttributionTouchpoint {
       source: 'direct',
       medium: 'none',
       eventType: 'page_visit', // Server-side = page visit inicial
-      url: ''
+      url: '',
     };
   }
-  
+
   const url = new URL(window.location.href);
   const params = url.searchParams;
-  
+
   // Capturar referrer
   const referrer = document.referrer;
   let source = params.get('utm_source') || 'direct';
   let medium = params.get('utm_medium') || 'none';
-  
+
   // Se n?o tem UTM, tentar detectar pelo referrer
   if (source === 'direct' && referrer) {
     if (referrer.includes('facebook.com') || referrer.includes('fb.com')) {
@@ -213,7 +215,7 @@ export function captureAttribution(): AttributionTouchpoint {
       medium = 'referral';
     }
   }
-  
+
   return {
     timestamp: Date.now(),
     source,
@@ -224,7 +226,7 @@ export function captureAttribution(): AttributionTouchpoint {
     fbclid: params.get('fbclid') || undefined,
     gclid: params.get('gclid') || undefined,
     eventType: 'page_visit',
-    url: window.location.href
+    url: window.location.href,
   };
 }
 
@@ -234,12 +236,12 @@ export function captureAttribution(): AttributionTouchpoint {
 export function addAttributionTouchpoint(touchpoint: AttributionTouchpoint): void {
   const journey = getAttributionJourney();
   journey.push(touchpoint);
-  
+
   // Limitar a 50 touchpoints
   if (journey.length > 50) {
     journey.shift();
   }
-  
+
   localStorage.setItem(KEYS.ATTRIBUTION, JSON.stringify(journey));
   logger.log('?? Touchpoint adicionado:', touchpoint);
 }
@@ -257,18 +259,18 @@ export function getAttributionJourney(): AttributionTouchpoint[] {
  */
 export function getAttributionInsights() {
   const journey = getAttributionJourney();
-  
+
   if (journey.length === 0) {
     return null;
   }
-  
+
   return {
     firstTouch: journey[0],
     lastTouch: journey[journey.length - 1],
     touchpointCount: journey.length,
     timeToConvert: journey[journey.length - 1].timestamp - journey[0].timestamp,
     channels: [...new Set(journey.map(t => t.source))],
-    hasPaidClick: journey.some(t => t.fbclid || t.gclid)
+    hasPaidClick: journey.some(t => t.fbclid || t.gclid),
   };
 }
 
@@ -279,34 +281,34 @@ export function getAttributionInsights() {
  */
 export function calculateDataQualityScore(userData: Partial<UserDataComplete>): number {
   let score = 0;
-  
+
   // Campos cr?ticos (10 pontos cada)
   if (userData.email) score += 10;
   if (userData.phone) score += 10;
-  
+
   // Nome completo (10 pontos)
   if (userData.firstName && userData.lastName) {
     score += 10;
   } else if (userData.fullName) {
     score += 5;
   }
-  
+
   // Localiza??o (5 pontos cada)
   if (userData.city) score += 5;
   if (userData.state) score += 5;
   if (userData.zip) score += 5;
   if (userData.country) score += 5;
-  
+
   // Meta identifiers (10 pontos cada)
   if (userData.fbp) score += 10;
   if (userData.fbc) score += 10;
-  
+
   // Session (5 pontos)
   if (userData.sessionId) score += 5;
-  
+
   // Consent (15 pontos)
   if (userData.consent) score += 15;
-  
+
   return Math.min(score, 100);
 }
 
@@ -317,55 +319,71 @@ export function saveAdvancedUserData(
   userData: Partial<UserDataComplete>,
   consent: boolean = true
 ): UserDataComplete {
-  
   const existingData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
-  
+
   // Session (manter existente ou criar novo)
-  const sessionId = existingData?.sessionId || generateSessionId();
-  
+  const sessionId = existingData?.sessionId || getSessionId();
+
   // Merge de dados (novos sobrescrevem antigos)
   const mergedData: UserDataComplete = {
     ...existingData,
     ...userData,
-    
+
     // Meta cookies (sempre atualizar)
     fbp: metaCookies.fbp || existingData?.fbp,
     fbc: metaCookies.fbc || existingData?.fbc,
-    
+
     // Session (manter existente ou criar novo)
     sessionId: sessionId,
-    
+
     // External ID (usar sessionId como external_id - Meta requer)
     // CRÍTICO: external_id deve ser único por sessão/usuário
     external_id: userData.external_id || existingData?.external_id || sessionId,
-    
+
     // Timestamps
     firstSeen: existingData?.firstSeen || Date.now(),
     lastSeen: Date.now(),
-    
+
     // Consent
     consent,
     consentDate: consent ? Date.now() : existingData?.consentDate,
-    
+
     // Pa?s default
-    country: userData.country || existingData?.country || 'br'
+    country: userData.country || existingData?.country || 'br',
   };
-  
+
+  if (!consent) {
+    const piiFields: (keyof UserDataComplete)[] = [
+      'email',
+      'phone',
+      'firstName',
+      'lastName',
+      'fullName',
+      'city',
+      'state',
+      'zip',
+    ];
+
+    for (const field of piiFields) {
+      mergedData[field] = undefined;
+    }
+  }
+
   // Calcular score de qualidade
   mergedData.dataQualityScore = calculateDataQualityScore(mergedData);
-  
+
   // Salvar
   localStorage.setItem(KEYS.USER_DATA, JSON.stringify(mergedData));
-  
+
   // Persistir meta cookies tamb?m
   persistMetaCookies();
-  
+
   logger.log('?? User data salvo (Advanced):', {
     dataQualityScore: mergedData.dataQualityScore,
-    fields: Object.keys(mergedData).filter(k => mergedData[k as keyof UserDataComplete])
+    fields: Object.keys(mergedData).filter(k => mergedData[k as keyof UserDataComplete]),
   });
-  
+
   return mergedData;
 }
 
@@ -389,20 +407,20 @@ export function addEventToHistory(
   source: 'browser' | 'server' = 'browser'
 ): void {
   const history = getEventHistory();
-  
+
   history.push({
     eventId,
     eventName,
     timestamp: Date.now(),
     data,
-    source
+    source,
   });
-  
+
   // Limitar a 100 eventos
   if (history.length > 100) {
     history.shift();
   }
-  
+
   localStorage.setItem(KEYS.EVENT_HISTORY, JSON.stringify(history));
 }
 
@@ -419,20 +437,23 @@ export function getEventHistory(): EventHistory[] {
  */
 export function getEventStats() {
   const history = getEventHistory();
-  
+
   if (history.length === 0) return null;
-  
-  const eventCounts = history.reduce((acc, event) => {
-    acc[event.eventName] = (acc[event.eventName] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
+
+  const eventCounts = history.reduce(
+    (acc, event) => {
+      acc[event.eventName] = (acc[event.eventName] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   return {
     totalEvents: history.length,
     eventCounts,
     firstEvent: history[0],
     lastEvent: history[history.length - 1],
-    timespan: history[history.length - 1].timestamp - history[0].timestamp
+    timespan: history[history.length - 1].timestamp - history[0].timestamp,
   };
 }
 
@@ -443,14 +464,14 @@ export function getEventStats() {
  */
 export function getCompleteUserJourney(): UserJourney | null {
   const userData = getAdvancedUserData();
-  
+
   if (!userData) return null;
-  
+
   return {
     userData,
     attributionJourney: getAttributionJourney(),
     eventHistory: getEventHistory(),
-    dataQualityScore: userData.dataQualityScore || 0
+    dataQualityScore: userData.dataQualityScore || 0,
   };
 }
 
@@ -469,11 +490,11 @@ export function saveConsent(analytics: boolean, marketing: boolean): void {
   const consent: ConsentState = {
     analytics,
     marketing,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
-  
+
   localStorage.setItem(KEYS.CONSENT, JSON.stringify(consent));
-  
+
   // Atualizar user data tamb?m
   const userData = getAdvancedUserData();
   if (userData) {
@@ -487,9 +508,9 @@ export function saveConsent(analytics: boolean, marketing: boolean): void {
 export function hasConsent(type: 'analytics' | 'marketing'): boolean {
   const stored = localStorage.getItem(KEYS.CONSENT);
   const consent = safeJSONParse<ConsentState | null>(stored, null);
-  
+
   if (!consent) return false;
-  
+
   return consent[type];
 }
 
@@ -500,9 +521,9 @@ export function clearAllUserData(): void {
   Object.values(KEYS).forEach(key => {
     localStorage.removeItem(key);
   });
-  
+
   sessionStorage.clear();
-  
+
   logger.log('??? Todos os dados do usu?rio foram removidos (LGPD compliance)');
 }
 
@@ -515,20 +536,20 @@ export function initializeAdvancedPersistence(): UserJourney | null {
   // Capturar atribui??o da p?gina atual
   const touchpoint = captureAttribution();
   addAttributionTouchpoint(touchpoint);
-  
+
   // Persistir meta cookies
   persistMetaCookies();
-  
+
   // Retornar jornada completa
   const journey = getCompleteUserJourney();
-  
+
   if (journey) {
     logger.log('?? Sistema Avan?ado de Persist?ncia Inicializado:', {
       dataQualityScore: journey.dataQualityScore,
       touchpoints: journey.attributionJourney.length,
-      events: journey.eventHistory.length
+      events: journey.eventHistory.length,
     });
   }
-  
+
   return journey;
 }

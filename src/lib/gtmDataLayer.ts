@@ -1,9 +1,11 @@
 /**
  * 🎯 GTM DataLayer Helper
- * 
+ *
  * Gerencia o envio de eventos para o DataLayer do GTM
  * Compatível com GA4 Enhanced Ecommerce e formato padrão do GTM
  */
+
+'use client';
 
 declare global {
   interface Window {
@@ -11,6 +13,7 @@ declare global {
   }
 }
 
+import { generateSessionId, getSessionId, setSessionId } from './session';
 import { normalizeUserData } from './utils/metaDataNormalizer';
 import { logger } from './utils/logger';
 
@@ -22,7 +25,7 @@ const PRODUCT_CONFIG = {
   price: 39.9,
   currency: 'BRL',
   category: 'digital_product',
-  content_type: 'product'
+  content_type: 'product',
 };
 
 // ===== TIPOS =====
@@ -46,8 +49,8 @@ interface UserData {
   region?: string;
   postal_code?: string;
   country?: string;
-  fbp?: string;  // ✅ Facebook Browser ID (crítico para deduplicação)
-  fbc?: string;   // ✅ Facebook Click ID (crítico para atribuição)
+  fbp?: string; // ✅ Facebook Browser ID (crítico para deduplicação)
+  fbc?: string; // ✅ Facebook Click ID (crítico para atribuição)
 }
 
 interface DataLayerEvent {
@@ -78,7 +81,7 @@ interface DataLayerEvent {
  */
 function ensureDataLayer(): void {
   if (typeof window === 'undefined') return;
-  
+
   if (!window.dataLayer) {
     window.dataLayer = [];
   }
@@ -99,7 +102,7 @@ function prepareEcommerceItem(
     price: price,
     quantity: quantity,
     item_category: PRODUCT_CONFIG.category,
-    item_brand: 'Ebook Trips'
+    item_brand: 'Ebook Trips',
   };
 }
 
@@ -108,6 +111,23 @@ function prepareEcommerceItem(
  * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
  * ✅ GARANTE: country e user_id sempre presentes (mesmo quando vazios)
  */
+function resolveSessionId(explicit?: string): string {
+  if (explicit) return explicit;
+
+  if (typeof window === 'undefined') {
+    return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+  }
+
+  try {
+    return getSessionId();
+  } catch (error) {
+    logger.warn('Falha ao obter sessão unificada, gerando fallback', { error });
+    const fallback = generateSessionId();
+    setSessionId(fallback);
+    return fallback;
+  }
+}
+
 function prepareUserData(userData?: Partial<UserData>): UserData {
   // ✅ SEMPRE retornar objeto (mesmo vazio) - necessário para Advanced Matching
   const normalized = normalizeUserData({
@@ -118,18 +138,10 @@ function prepareUserData(userData?: Partial<UserData>): UserData {
     city: userData?.city,
     state: userData?.region,
     zip: userData?.postal_code,
-    country: userData?.country
+    country: userData?.country,
   });
 
-  // ✅ GARANTIR session_id sempre disponível (para external_id)
-  let sessionId = userData?.user_id;
-  if (!sessionId && typeof window !== 'undefined') {
-    sessionId = sessionStorage.getItem('session_id') || undefined;
-    if (!sessionId) {
-      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-      sessionStorage.setItem('session_id', sessionId);
-    }
-  }
+  const sessionId = resolveSessionId(userData?.user_id);
 
   const prepared: UserData = {
     // ✅ CRÍTICO: user_id SEMPRE presente (external_id no Advanced Matching)
@@ -142,7 +154,7 @@ function prepareUserData(userData?: Partial<UserData>): UserData {
     region: normalized.state || userData?.region,
     postal_code: normalized.zip || userData?.postal_code,
     // ✅ CRÍTICO: country SEMPRE 'br' no mínimo (99% dos usuários são BR)
-    country: normalized.country || userData?.country || 'br'
+    country: normalized.country || userData?.country || 'br',
   };
 
   // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
@@ -155,17 +167,14 @@ function prepareUserData(userData?: Partial<UserData>): UserData {
 /**
  * Prepara content_ids e contents no formato Meta/GTM
  */
-function prepareContentData(
-  contentIds: string[] = [PRODUCT_CONFIG.item_id],
-  quantity: number = 1
-) {
+function prepareContentData(contentIds: string[] = [PRODUCT_CONFIG.item_id], quantity: number = 1) {
   return {
     content_ids: contentIds,
     contents: contentIds.map(id => ({
       id: id,
       quantity: quantity,
-      item_price: PRODUCT_CONFIG.price
-    }))
+      item_price: PRODUCT_CONFIG.price,
+    })),
   };
 }
 
@@ -173,7 +182,7 @@ function prepareContentData(
 
 /**
  * Envia evento para o DataLayer do GTM
- * 
+ *
  * IMPORTANTE: Se event_id não for fornecido, será gerado automaticamente
  */
 /**
@@ -184,9 +193,9 @@ const BROWSER_DELAY_MS = 200; // 200ms delay para garantir que servidor chegue p
 
 export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): Promise<void> {
   if (typeof window === 'undefined') return;
-  
+
   ensureDataLayer();
-  
+
   // Gerar event_id se não fornecido (usar formato simples se for client-side)
   let finalEventId = eventId;
   if (!finalEventId && eventData.event && typeof window !== 'undefined') {
@@ -195,28 +204,30 @@ export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: strin
     const random = Math.random().toString(36).substring(2, 12);
     finalEventId = `${eventData.event}_${timestamp}_${random}`;
   }
-  
+
   // Adicionar event_id ao evento se gerado
-  const eventDataWithId = finalEventId ? {
-    ...eventData,
-    event_id: finalEventId
-  } : eventData;
-  
+  const eventDataWithId = finalEventId
+    ? {
+        ...eventData,
+        event_id: finalEventId,
+      }
+    : eventData;
+
   // ✅ DELAY NO BROWSER: Aguardar para garantir que servidor chegue primeiro
   // Servidor envia imediatamente (mais rico), browser envia depois (backup)
   // Meta processa servidor (primeiro), desduplica browser (segundo)
   await new Promise(resolve => setTimeout(resolve, BROWSER_DELAY_MS));
-  
+
   try {
     window.dataLayer.push(eventDataWithId);
     logger.debug('📊 DataLayer push (com delay para servidor chegar primeiro)', {
       event: eventDataWithId.event,
-      event_id: finalEventId
+      event_id: finalEventId,
     });
   } catch (error) {
     logger.error('Erro ao enviar para DataLayer', error, {
       component: 'gtmDataLayer',
-      event: eventData.event
+      event: eventData.event,
     });
   }
 }
@@ -225,36 +236,39 @@ export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: strin
 
 /**
  * 📄 page_view
- * 
+ *
  * IMPORTANTE: Campos também no nível raiz para facilitar acesso no GTM Server-Side
  */
 export function pushPageView(userData?: Partial<UserData>, eventId?: string): void {
   const preparedUserData = prepareUserData(userData);
-  
-  pushToDataLayer({
-    event: 'page_view',
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData.city && { city: preparedUserData.city }),
-    ...(preparedUserData.region && { region: preparedUserData.region }),
-    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
-    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
-    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
-    user_data: preparedUserData
-  }, eventId);
+
+  pushToDataLayer(
+    {
+      event: 'page_view',
+      // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+      ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+      ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+      ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+      ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+      ...(preparedUserData.city && { city: preparedUserData.city }),
+      ...(preparedUserData.region && { region: preparedUserData.region }),
+      ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+      // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
+      country: preparedUserData.country,
+      user_id: preparedUserData.user_id,
+      // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+      ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+      ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
+      // ✅ Campos também dentro de user_data (para compatibilidade)
+      user_data: preparedUserData,
+    },
+    eventId
+  );
 }
 
 /**
  * 👁️ view_item (view_content)
- * 
+ *
  * IMPORTANTE: Campos também no nível raiz para facilitar acesso no GTM Server-Side
  */
 export function pushViewItem(
@@ -266,46 +280,49 @@ export function pushViewItem(
   const contentData = prepareContentData();
   const preparedUserData = prepareUserData(userData);
   const itemsArray = [prepareEcommerceItem()];
-  
-  pushToDataLayer({
-    event: 'view_item',
-    ecommerce: {
+
+  pushToDataLayer(
+    {
+      event: 'view_item',
+      ecommerce: {
+        value: value,
+        currency: currency,
+        items: itemsArray,
+      },
+      ...contentData,
+      // ✅ CRÍTICO: content_name e content_type devem estar no nível raiz para GTM Server-Side
+      content_name: PRODUCT_CONFIG.item_name,
+      content_type: PRODUCT_CONFIG.content_type,
+      num_items: 1,
+      // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
       value: value,
       currency: currency,
-      items: itemsArray
+      // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+      items: itemsArray,
+      // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+      ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+      ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+      ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+      ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+      ...(preparedUserData.city && { city: preparedUserData.city }),
+      ...(preparedUserData.region && { region: preparedUserData.region }),
+      ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+      // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
+      country: preparedUserData.country,
+      user_id: preparedUserData.user_id,
+      // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+      ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+      ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
+      // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
+      user_data: preparedUserData,
     },
-    ...contentData,
-    // ✅ CRÍTICO: content_name e content_type devem estar no nível raiz para GTM Server-Side
-    content_name: PRODUCT_CONFIG.item_name,
-    content_type: PRODUCT_CONFIG.content_type,
-    num_items: 1,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
-    value: value,
-    currency: currency,
-    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
-    items: itemsArray,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData.city && { city: preparedUserData.city }),
-    ...(preparedUserData.region && { region: preparedUserData.region }),
-    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
-    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
-    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (Stape.io vai transformar para user_data.address.*)
-    user_data: preparedUserData
-  }, eventId);
+    eventId
+  );
 }
 
 /**
  * 🛒 add_to_cart
- * 
+ *
  * IMPORTANTE: Campos também no nível raiz para facilitar acesso no GTM Server-Side
  */
 export function pushAddToCart(
@@ -317,46 +334,51 @@ export function pushAddToCart(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
-  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
-  
-  pushToDataLayer({
-    event: 'add_to_cart',
-    ecommerce: {
+  const itemsArray = [
+    prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity),
+  ];
+
+  pushToDataLayer(
+    {
+      event: 'add_to_cart',
+      ecommerce: {
+        value: value,
+        currency: currency,
+        items: itemsArray,
+      },
+      ...contentData,
+      content_name: PRODUCT_CONFIG.item_name, // ✅ Adicionar para Meta custom_data
+      content_type: PRODUCT_CONFIG.content_type, // ✅ Adicionar para Meta custom_data
+      num_items: quantity,
+      // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
       value: value,
       currency: currency,
-      items: itemsArray
+      // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+      items: itemsArray,
+      // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+      ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+      ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+      ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+      ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+      ...(preparedUserData.city && { city: preparedUserData.city }),
+      ...(preparedUserData.region && { region: preparedUserData.region }),
+      ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+      // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
+      country: preparedUserData.country,
+      user_id: preparedUserData.user_id,
+      // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+      ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+      ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
+      // ✅ Campos também dentro de user_data (para compatibilidade)
+      user_data: preparedUserData,
     },
-    ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
-    num_items: quantity,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
-    value: value,
-    currency: currency,
-    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
-    items: itemsArray,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData.city && { city: preparedUserData.city }),
-    ...(preparedUserData.region && { region: preparedUserData.region }),
-    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
-    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
-    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
-    user_data: preparedUserData
-  }, eventId);
+    eventId
+  );
 }
 
 /**
  * 🛍️ begin_checkout
- * 
+ *
  * IMPORTANTE: Campos também no nível raiz para facilitar acesso no GTM Server-Side
  */
 export function pushBeginCheckout(
@@ -368,46 +390,51 @@ export function pushBeginCheckout(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
-  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
-  
-  pushToDataLayer({
-    event: 'begin_checkout',
-    ecommerce: {
+  const itemsArray = [
+    prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity),
+  ];
+
+  pushToDataLayer(
+    {
+      event: 'begin_checkout',
+      ecommerce: {
+        value: value,
+        currency: currency,
+        items: itemsArray,
+      },
+      ...contentData,
+      content_name: PRODUCT_CONFIG.item_name, // ✅ Adicionar para Meta custom_data
+      content_type: PRODUCT_CONFIG.content_type, // ✅ Adicionar para Meta custom_data
+      num_items: quantity,
+      // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
       value: value,
       currency: currency,
-      items: itemsArray
+      // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
+      items: itemsArray,
+      // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
+      ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+      ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+      ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+      ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+      ...(preparedUserData.city && { city: preparedUserData.city }),
+      ...(preparedUserData.region && { region: preparedUserData.region }),
+      ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+      // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
+      country: preparedUserData.country,
+      user_id: preparedUserData.user_id,
+      // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+      ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+      ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
+      // ✅ Campos também dentro de user_data (para compatibilidade)
+      user_data: preparedUserData,
     },
-    ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
-    num_items: quantity,
-    // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
-    value: value,
-    currency: currency,
-    // ✅ CRÍTICO: items no nível raiz (para GTM Server-Side: {{ed - items}})
-    items: itemsArray,
-    // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData.city && { city: preparedUserData.city }),
-    ...(preparedUserData.region && { region: preparedUserData.region }),
-    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
-    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
-    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
-    user_data: preparedUserData
-  }, eventId);
+    eventId
+  );
 }
 
 /**
  * 💰 purchase
- * 
+ *
  * Evento: 'purchase' (nome específico para trigger do GTM)
  */
 export function pushPurchase(
@@ -419,19 +446,21 @@ export function pushPurchase(
 ): void {
   const contentData = prepareContentData([PRODUCT_CONFIG.item_id], quantity);
   const preparedUserData = prepareUserData(userData);
-  const itemsArray = [prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity)];
-  
+  const itemsArray = [
+    prepareEcommerceItem(PRODUCT_CONFIG.item_id, PRODUCT_CONFIG.item_name, value, quantity),
+  ];
+
   pushToDataLayer({
     event: 'purchase', // Nome específico para trigger 'ce - purchase' no GTM
     ecommerce: {
       transaction_id: transactionId,
       value: value,
       currency: currency,
-      items: itemsArray
+      items: itemsArray,
     },
     ...contentData,
-    content_name: PRODUCT_CONFIG.item_name,  // ✅ Adicionar para Meta custom_data
-    content_type: PRODUCT_CONFIG.content_type,  // ✅ Adicionar para Meta custom_data
+    content_name: PRODUCT_CONFIG.item_name, // ✅ Adicionar para Meta custom_data
+    content_type: PRODUCT_CONFIG.content_type, // ✅ Adicionar para Meta custom_data
     num_items: quantity,
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
@@ -453,15 +482,15 @@ export function pushPurchase(
     ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
-    user_data: preparedUserData
+    user_data: preparedUserData,
   });
 }
 
 /**
  * 📝 generate_lead
- * 
+ *
  * Evento: 'generate_lead' (nome específico para trigger do GTM)
- * 
+ *
  * IMPORTANTE: Campos também no nível raiz para facilitar acesso no GTM Server-Side
  */
 export function pushGenerateLead(
@@ -471,33 +500,36 @@ export function pushGenerateLead(
 ): void {
   const contentData = prepareContentData();
   const preparedUserData = prepareUserData(userData);
-  
-  pushToDataLayer({
-    event: 'generate_lead', // Nome específico para trigger 'ce - generate_lead' no GTM
-    ...(value && {
-      ecommerce: {
-        value: value,
-        currency: PRODUCT_CONFIG.currency
-      }
-    }),
-    ...contentData,
-    // ✅ Campos no nível raiz (para acesso direto: {{ed - email_address}})
-    ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
-    ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
-    ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
-    ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
-    ...(preparedUserData.city && { city: preparedUserData.city }),
-    ...(preparedUserData.region && { region: preparedUserData.region }),
-    ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
-    // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
-    country: preparedUserData.country,
-    user_id: preparedUserData.user_id,
-    // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
-    ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
-    ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ Campos também dentro de user_data (para compatibilidade)
-    user_data: preparedUserData
-  }, eventId);
+
+  pushToDataLayer(
+    {
+      event: 'generate_lead', // Nome específico para trigger 'ce - generate_lead' no GTM
+      ...(value && {
+        ecommerce: {
+          value: value,
+          currency: PRODUCT_CONFIG.currency,
+        },
+      }),
+      ...contentData,
+      // ✅ Campos no nível raiz (para acesso direto: {{ed - email_address}})
+      ...(preparedUserData.email_address && { email_address: preparedUserData.email_address }),
+      ...(preparedUserData.phone_number && { phone_number: preparedUserData.phone_number }),
+      ...(preparedUserData.first_name && { first_name: preparedUserData.first_name }),
+      ...(preparedUserData.last_name && { last_name: preparedUserData.last_name }),
+      ...(preparedUserData.city && { city: preparedUserData.city }),
+      ...(preparedUserData.region && { region: preparedUserData.region }),
+      ...(preparedUserData.postal_code && { postal_code: preparedUserData.postal_code }),
+      // ✅ CRÍTICO: country e user_id SEMPRE presentes (garantidos pela função prepareUserData)
+      country: preparedUserData.country,
+      user_id: preparedUserData.user_id,
+      // ✅ CRÍTICO: Incluir fbp, fbc no nível raiz (igualar Server-Side)
+      ...(preparedUserData.fbp && { fbp: preparedUserData.fbp }),
+      ...(preparedUserData.fbc && { fbc: preparedUserData.fbc }),
+      // ✅ Campos também dentro de user_data (para compatibilidade)
+      user_data: preparedUserData,
+    },
+    eventId
+  );
 }
 
 // ===== FUNÇÃO GENÉRICA PARA EVENTOS PERSONALIZADOS =====
@@ -513,7 +545,6 @@ export function pushCustomEvent(
   pushToDataLayer({
     event: eventName,
     ...params,
-    user_data: prepareUserData(userData)
+    user_data: prepareUserData(userData),
   });
 }
-

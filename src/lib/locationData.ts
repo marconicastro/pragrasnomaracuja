@@ -1,60 +1,61 @@
 /**
  * Preenchimento de Dados de Localização (ct, st, country, zip)
- * 
+ *
  * EXPLICAÇÃO COMPLETA: Como estes parâmetros são preenchidos
  */
 
 import { getPersistedUserData } from './userDataPersistence';
+import { fetchWithTimeout } from './utils/fetchWithTimeout';
 import { logger } from './utils/logger';
 
 /**
  * EXPLICAÇÃO: Fontes dos dados de localização
  */
 export const LOCATION_DATA_SOURCES = {
-  title: "COMO PARÂMETROS DE LOCALIZAÇÃO SÃO PREENCHIDOS:",
-  
+  title: 'COMO PARÂMETROS DE LOCALIZAÇÃO SÃO PREENCHIDOS:',
+
   sources: [
     {
-      parameter: "ct (city)",
+      parameter: 'ct (city)',
       priority: [
-        "1. Dados do formulário preenchido pelo usuário",
-        "2. Dados persistidos de cadastro anterior",
-        "3. Geolocalização do navegador (com permissão)",
-        "4. API de geolocalização via IP (backend)",
-        "5. Padrão: null (se não disponível)"
-      ]
+        '1. Dados do formulário preenchido pelo usuário',
+        '2. Dados persistidos de cadastro anterior',
+        '3. Geolocalização do navegador (com permissão)',
+        '4. API de geolocalização via IP (backend)',
+        '5. Padrão: null (se não disponível)',
+      ],
     },
     {
-      parameter: "st (state)",
+      parameter: 'st (state)',
       priority: [
-        "1. Dados do formulário (UF/estado)",
-        "2. Dados persistidos de cadastro",
-        "3. Geolocalização do navegador",
-        "4. API via IP (backend)",
-        "5. Padrão: null"
-      ]
+        '1. Dados do formulário (UF/estado)',
+        '2. Dados persistidos de cadastro',
+        '3. Geolocalização do navegador',
+        '4. API via IP (backend)',
+        '5. Padrão: null',
+      ],
     },
     {
-      parameter: "country",
+      parameter: 'country',
       priority: [
-        "1. Dados do formulário",
+        '1. Dados do formulário',
         "2. Padrão fixo: 'br' (Brasil)",
-        "3. Geolocalização do navegador",
-        "4. Detecção automática via IP",
-        "5. Locale do navegador"
-      ]
+        '3. Geolocalização do navegador',
+        '4. Detecção automática via IP',
+        '5. Locale do navegador',
+      ],
     },
     {
-      parameter: "zip (postal code)",
+      parameter: 'zip (postal code)',
       priority: [
-        "1. CEP do formulário brasileiro",
-        "2. Dados persistidos de cadastro",
-        "3. Geolocalização reversa (coordenadas → CEP)",
-        "4. API via IP (limitado)",
-        "5. Padrão: null"
-      ]
-    }
-  ]
+        '1. CEP do formulário brasileiro',
+        '2. Dados persistidos de cadastro',
+        '3. Geolocalização reversa (coordenadas → CEP)',
+        '4. API via IP (limitado)',
+        '5. Padrão: null',
+      ],
+    },
+  ],
 };
 
 /**
@@ -66,7 +67,7 @@ export async function getBrowserLocation(): Promise<{
   country: string | null;
   zip: string | null;
 }> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (!navigator.geolocation) {
       logger.log('🌐 Geolocalização não suportada pelo navegador');
       resolve({ city: null, state: null, country: null, zip: null });
@@ -74,13 +75,13 @@ export async function getBrowserLocation(): Promise<{
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      async position => {
         try {
           const { latitude, longitude } = position.coords;
-          
+
           // Geocoding reverso via API pública
           const location = await reverseGeocode(latitude, longitude);
-          
+
           logger.log('📍 Localização obtida via navegador:', location);
           resolve(location);
         } catch (error) {
@@ -88,14 +89,14 @@ export async function getBrowserLocation(): Promise<{
           resolve({ city: null, state: null, country: null, zip: null });
         }
       },
-      (error) => {
+      error => {
         logger.log('⚠️ Permissão de geolocalização negada ou erro:', error.message);
         resolve({ city: null, state: null, country: null, zip: null });
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000 // 5 minutos
+        maximumAge: 300000, // 5 minutos
       }
     );
   });
@@ -104,7 +105,10 @@ export async function getBrowserLocation(): Promise<{
 /**
  * Geocoding reverso via API pública
  */
-async function reverseGeocode(lat: number, lon: number): Promise<{
+async function reverseGeocode(
+  lat: number,
+  lon: number
+): Promise<{
   city: string | null;
   state: string | null;
   country: string | null;
@@ -112,24 +116,25 @@ async function reverseGeocode(lat: number, lon: number): Promise<{
 }> {
   try {
     // OpenStreetMap Nominatim (gratuito)
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
       {
         headers: {
-          'User-Agent': 'MetaPixelTracker/1.0'
-        }
+          'User-Agent': 'MetaPixelTracker/1.0',
+        },
+        timeout: 4000,
       }
     );
 
     if (response.ok) {
       const data = await response.json();
       const address = data.address;
-      
+
       return {
         city: address?.city || address?.town || address?.village || null,
         state: address?.state || null,
         country: data.address?.country_code?.toLowerCase() || null,
-        zip: address?.postcode || null
+        zip: address?.postcode || null,
       };
     }
 
@@ -157,8 +162,8 @@ export async function getLocationByIP(): Promise<{
           city: data.city,
           state: data.region,
           country: data.country_code?.toLowerCase(),
-          zip: data.postal
-        })
+          zip: data.postal,
+        }),
       },
       {
         url: 'https://ip-api.com/json/',
@@ -166,18 +171,18 @@ export async function getLocationByIP(): Promise<{
           city: data.city,
           state: data.regionName,
           country: data.countryCode?.toLowerCase(),
-          zip: data.zip
-        })
-      }
+          zip: data.zip,
+        }),
+      },
     ];
 
     for (const service of ipServices) {
       try {
-        const response = await fetch(service.url);
+        const response = await fetchWithTimeout(service.url, { timeout: 2500 });
         if (response.ok) {
           const data = await response.json();
           const location = service.parser(data);
-          
+
           logger.log('🌍 Localização via IP:', location);
           return location;
         }
@@ -213,7 +218,7 @@ export async function getBestAvailableLocation(): Promise<{
       state: persistedData.state?.toLowerCase().trim() || null,
       country: 'br', // Sempre Brasil para usuários brasileiros
       zip: persistedData.cep?.replace(/\D/g, '') || null,
-      source: 'persisted_data'
+      source: 'persisted_data',
     };
   }
 
@@ -225,7 +230,7 @@ export async function getBestAvailableLocation(): Promise<{
       return {
         ...browserLocation,
         country: browserLocation.country || 'br',
-        source: 'browser_geolocation'
+        source: 'browser_geolocation',
       };
     }
   } catch (error) {
@@ -240,7 +245,7 @@ export async function getBestAvailableLocation(): Promise<{
       return {
         ...ipLocation,
         country: ipLocation.country || 'br',
-        source: 'ip_geolocation'
+        source: 'ip_geolocation',
       };
     }
   } catch (error) {
@@ -254,7 +259,7 @@ export async function getBestAvailableLocation(): Promise<{
     state: null,
     country: 'br',
     zip: null,
-    source: 'default_brazil'
+    source: 'default_brazil',
   };
 }
 
@@ -262,38 +267,38 @@ export async function getBestAvailableLocation(): Promise<{
  * Explicação detalhada para debugging
  */
 export const DEBUG_LOCATION_FLOW = {
-  title: "FLUXO COMPLETO DE DETECÇÃO DE LOCALIZAÇÃO:",
-  
+  title: 'FLUXO COMPLETO DE DETECÇÃO DE LOCALIZAÇÃO:',
+
   steps: [
     {
       step: 1,
-      action: "Verificar dados persistidos",
-      description: "Usuário já preencheu formulário anteriormente",
-      example: "city: 'sao paulo', state: 'sp', zip: '01310-100'"
+      action: 'Verificar dados persistidos',
+      description: 'Usuário já preencheu formulário anteriormente',
+      example: "city: 'sao paulo', state: 'sp', zip: '01310-100'",
     },
     {
       step: 2,
-      action: "Solicitar permissão de geolocalização",
-      description: "Browser pede permissão ao usuário",
-      example: "📍 Latitude: -23.5505, Longitude: -46.6333"
+      action: 'Solicitar permissão de geolocalização',
+      description: 'Browser pede permissão ao usuário',
+      example: '📍 Latitude: -23.5505, Longitude: -46.6333',
     },
     {
       step: 3,
-      action: "Geocoding reverso",
-      description: "Converte coordenadas em endereço",
-      example: "→ city: 'são paulo', state: 'são paulo'"
+      action: 'Geocoding reverso',
+      description: 'Converte coordenadas em endereço',
+      example: "→ city: 'são paulo', state: 'são paulo'",
     },
     {
       step: 4,
-      action: "Fallback para API de IP",
-      description: "Usa IP como última alternativa",
-      example: "→ city: 'sao paulo', state: 'sp'"
+      action: 'Fallback para API de IP',
+      description: 'Usa IP como última alternativa',
+      example: "→ city: 'sao paulo', state: 'sp'",
     },
     {
       step: 5,
-      action: "Padrão Brasil",
+      action: 'Padrão Brasil',
       description: "Sempre temos country: 'br'",
-      example: "→ country: 'br', city: null, state: null"
-    }
-  ]
+      example: "→ country: 'br', city: null, state: null",
+    },
+  ],
 };

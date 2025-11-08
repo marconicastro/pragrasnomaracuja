@@ -1,9 +1,9 @@
 /**
  * ?? Cold Events Enrichment - Maximizar EQM ANTES do Lead
- * 
+ *
  * Estrat?gias para enriquecer eventos "frios" (PageView, ViewContent, ScrollDepth, CTAClick)
  * que acontecem ANTES do usu?rio preencher o formul?rio:
- * 
+ *
  * 1. ? Dados persistidos (usu?rio retornando)
  * 2. ? IP-based geolocation (cidade/estado por IP)
  * 3. ? Browser fingerprint ?tico (device/OS)
@@ -15,9 +15,10 @@
 'use client';
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
+import { getSessionId } from './session';
 import { logger } from './utils/logger';
 import { memoizeAsync } from './utils/memoize';
-import { 
+import {
   normalizeEmail,
   normalizeName,
   normalizePhone,
@@ -25,8 +26,9 @@ import {
   normalizeState,
   normalizeZip,
   normalizeCountry,
-  splitNormalizedName
+  splitNormalizedName,
 } from './utils/metaDataNormalizer';
+import { fetchWithTimeout } from './utils/fetchWithTimeout';
 
 // ===== INTERFACES =====
 
@@ -60,7 +62,7 @@ export interface IPGeolocation {
 
 /**
  * Captura fingerprint etico do browser (sem tracking invasivo)
- * 
+ *
  * IMPORTANTE: Sao dados REAIS de contexto do browser, nao PII
  * - Meta usa para detectar bots e segmentar
  * - NAO identifica usuario entre sites
@@ -70,9 +72,9 @@ export function getBrowserFingerprint(): BrowserFingerprint | null {
     // Server-side: NAO retorna fingerprint (ZERO fake!)
     return null;
   }
-  
+
   const ua = navigator.userAgent;
-  
+
   // Detectar device type (REAL do user-agent)
   let device_type: 'mobile' | 'tablet' | 'desktop' = 'desktop';
   if (/Mobile|Android|iPhone/i.test(ua)) {
@@ -80,14 +82,14 @@ export function getBrowserFingerprint(): BrowserFingerprint | null {
   } else if (/iPad|Tablet/i.test(ua)) {
     device_type = 'tablet';
   }
-  
+
   // Detectar browser (REAL do user-agent)
   let browser = 'other'; // Melhor que "unknown"
   if (ua.includes('Chrome') && !ua.includes('Edge')) browser = 'chrome';
   else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'safari';
   else if (ua.includes('Firefox')) browser = 'firefox';
   else if (ua.includes('Edge')) browser = 'edge';
-  
+
   // Detectar OS (REAL do user-agent)
   let os = 'other'; // Melhor que "unknown"
   if (ua.includes('Windows')) os = 'windows';
@@ -95,14 +97,14 @@ export function getBrowserFingerprint(): BrowserFingerprint | null {
   else if (ua.includes('Linux') && !ua.includes('Android')) os = 'linux';
   else if (ua.includes('Android')) os = 'android';
   else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'ios';
-  
+
   return {
     device_type,
     browser,
     os,
     screen_resolution: `${window.screen.width}x${window.screen.height}`,
     language: navigator.language || 'pt-BR',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
   };
 }
 
@@ -110,8 +112,8 @@ export function getBrowserFingerprint(): BrowserFingerprint | null {
 
 /**
  * Tenta obter geolocalizacao via APIs publicas ou client hint
- * 
- * IMPORTANTE: 
+ *
+ * IMPORTANTE:
  * - Stape.io ja adiciona IP automaticamente no server-side
  * - So retorna dados REAIS da API
  * - Se falhar, retorna vazio (ZERO dados fake!)
@@ -119,30 +121,30 @@ export function getBrowserFingerprint(): BrowserFingerprint | null {
 export async function getIPGeolocation(): Promise<IPGeolocation | null> {
   try {
     // Tentar usar API publica (ipapi.co tem 1000 req/dia gratis)
-    const response = await fetch('https://ipapi.co/json/', {
-      signal: AbortSignal.timeout(2000) // timeout 2s
+    const response = await fetchWithTimeout('https://ipapi.co/json/', {
+      timeout: 2000,
     });
-    
+
     if (response.ok) {
       const data = await response.json();
-      
+
       // SO retorna se tiver dados REAIS
       if (!data.country_code) {
         logger.warn('IP geolocation API retornou dados invalidos');
         return null;
       }
-      
+
       return {
         city: data.city ? data.city.toLowerCase() : undefined,
         state: data.region_code ? data.region_code.toLowerCase() : undefined,
         country: data.country_code.toLowerCase(),
-        zip: data.postal || undefined
+        zip: data.postal || undefined,
       };
     }
   } catch (error) {
-    console.debug('IP geolocation nao disponivel');
+    logger.debug('IP geolocation nao disponivel', { error });
   }
-  
+
   // Se falhar, retorna NULL (ZERO dados fake!)
   return null;
 }
@@ -153,14 +155,14 @@ let geoPromise: Promise<IPGeolocation | null> | null = null;
 
 export async function getCachedIPGeolocation(): Promise<IPGeolocation | null> {
   if (geoCache !== null) return geoCache;
-  
+
   if (!geoPromise) {
     geoPromise = getIPGeolocation().then(geo => {
       geoCache = geo;
       return geo;
     });
   }
-  
+
   return geoPromise;
 }
 
@@ -168,7 +170,7 @@ export async function getCachedIPGeolocation(): Promise<IPGeolocation | null> {
 
 /**
  * Monitora campos do formul?rio sendo preenchidos (progressive profiling)
- * 
+ *
  * ?TICA: S? captura quando usu?rio digita, n?o envia at? ele submeter.
  * Usado apenas para ENRIQUECER eventos subsequentes enquanto ele navega.
  */
@@ -184,7 +186,7 @@ const progressiveData: {
 
 export function captureProgressiveData(field: string, value: string): void {
   if (!value || value.length < 3) return;
-  
+
   // Valida??es b?sicas antes de capturar
   switch (field) {
     case 'email':
@@ -220,7 +222,7 @@ export function captureProgressiveData(field: string, value: string): void {
       }
       break;
   }
-  
+
   console.debug('?? Progressive data captured:', field);
 }
 
@@ -238,7 +240,7 @@ export function clearProgressiveData(): void {
 
 /**
  * ?? FUN??O PRINCIPAL: Enriquece eventos "frios" com dados dispon?veis
- * 
+ *
  * Estrat?gia inteligente:
  * 1. Prioriza dados persistidos (usu?rio retornando)
  * 2. Adiciona progressive data (se dispon?vel)
@@ -251,49 +253,49 @@ export function clearProgressiveData(): void {
 const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
   const sources: string[] = [];
   const user_data: Record<string, any> = {};
-  
+
   // 1. PRIORIDADE: Dados persistidos (usuário já preencheu antes - segunda visita!)
   // ⚠️ NORMALIZAÇÃO CRÍTICA: Usar funções centralizadas para garantir padrão Facebook
   const persistedData = getAdvancedUserData();
   if (persistedData) {
     if (persistedData.email) {
       const normalizedEmail = normalizeEmail(persistedData.email);
-      user_data.em = normalizedEmail;  // ✅ Normalizado (lowercase + trim)
+      user_data.em = normalizedEmail; // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_email');
     }
     if (persistedData.phone) {
       const normalizedPhone = normalizePhone(persistedData.phone);
-      user_data.ph = normalizedPhone;  // ✅ Normalizado (dígitos + 55)
+      user_data.ph = normalizedPhone; // ✅ Normalizado (dígitos + 55)
       sources.push('persisted_phone');
     }
     if (persistedData.firstName) {
       const normalizedFirstName = normalizeName(persistedData.firstName);
-      user_data.fn = normalizedFirstName;  // ✅ Normalizado (title case)
+      user_data.fn = normalizedFirstName; // ✅ Normalizado (title case)
       sources.push('persisted_first_name');
     }
     if (persistedData.lastName) {
       const normalizedLastName = normalizeName(persistedData.lastName);
-      user_data.ln = normalizedLastName;  // ✅ Normalizado (title case)
+      user_data.ln = normalizedLastName; // ✅ Normalizado (title case)
       sources.push('persisted_last_name');
     }
     if (persistedData.city) {
       const normalizedCity = normalizeCity(persistedData.city);
-      user_data.ct = normalizedCity;  // ✅ Normalizado (lowercase + trim)
+      user_data.ct = normalizedCity; // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_city');
     }
     if (persistedData.state) {
       const normalizedState = normalizeState(persistedData.state);
-      user_data.st = normalizedState;  // ✅ Normalizado (lowercase + trim)
+      user_data.st = normalizedState; // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_state');
     }
     if (persistedData.zip) {
       const normalizedZip = normalizeZip(persistedData.zip);
-      user_data.zp = normalizedZip;  // ✅ Normalizado (apenas dígitos)
+      user_data.zp = normalizedZip; // ✅ Normalizado (apenas dígitos)
       sources.push('persisted_zip');
     }
     if (persistedData.country) {
       const normalizedCountry = normalizeCountry(persistedData.country);
-      user_data.country = normalizedCountry;  // ✅ Normalizado (lowercase + trim)
+      user_data.country = normalizedCountry; // ✅ Normalizado (lowercase + trim)
       sources.push('persisted_country');
     }
     if (persistedData.external_id) {
@@ -301,28 +303,28 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
       sources.push('persisted_session');
     }
   }
-  
+
   // 2. Progressive data (usuário começou a preencher MAS ainda não submeteu)
   // ⚠️ NORMALIZAÇÃO CRÍTICA: Usar funções centralizadas
   const progressive = getProgressiveData();
   if (progressive.email && !user_data.em) {
     const normalizedEmail = normalizeEmail(progressive.email);
-    user_data.em = normalizedEmail;  // ✅ Normalizado
+    user_data.em = normalizedEmail; // ✅ Normalizado
     sources.push('progressive_email');
   }
   if (progressive.phone && !user_data.ph) {
     const normalizedPhone = normalizePhone(progressive.phone);
-    user_data.ph = normalizedPhone;  // ✅ Normalizado
+    user_data.ph = normalizedPhone; // ✅ Normalizado
     sources.push('progressive_phone');
   }
   if (progressive.name && !user_data.fn) {
     const { firstName, lastName } = splitNormalizedName(progressive.name);
     if (firstName) {
-      user_data.fn = normalizeName(firstName);  // ✅ Normalizado
+      user_data.fn = normalizeName(firstName); // ✅ Normalizado
       sources.push('progressive_first_name');
     }
     if (lastName) {
-      user_data.ln = normalizeName(lastName);  // ✅ Normalizado
+      user_data.ln = normalizeName(lastName); // ✅ Normalizado
       sources.push('progressive_last_name');
     }
     if (firstName || lastName) {
@@ -331,44 +333,33 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
   }
   if (progressive.city && !user_data.ct) {
     const normalizedCity = normalizeCity(progressive.city);
-    user_data.ct = normalizedCity;  // ✅ Normalizado
+    user_data.ct = normalizedCity; // ✅ Normalizado
     sources.push('progressive_city');
   }
   if (progressive.state && !user_data.st) {
     const normalizedState = normalizeState(progressive.state);
-    user_data.st = normalizedState;  // ✅ Normalizado
+    user_data.st = normalizedState; // ✅ Normalizado
     sources.push('progressive_state');
   }
   if (progressive.zip && !user_data.zp) {
     const normalizedZip = normalizeZip(progressive.zip);
-    user_data.zp = normalizedZip;  // ✅ Normalizado
+    user_data.zp = normalizedZip; // ✅ Normalizado
     sources.push('progressive_zip');
   }
-  
+
   // ✅ CRÍTICO: Garantir external_id SEMPRE presente (session ID)
-  // Se não tiver external_id ainda, gerar usando sessionStorage ou timestamp
+  // Se não tiver external_id ainda, gerar usando storage unificado ou timestamp
   if (!user_data.external_id) {
-    // Tentar recuperar do sessionStorage (persiste durante a sessão)
-    let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('session_id') : null;
-    
-    if (!sessionId) {
-      // Gerar novo session ID único
-      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-      
-      // Salvar no sessionStorage para reusar na mesma sessão
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('session_id', sessionId);
-      }
-      
-      sources.push('generated_session_id');
-    } else {
-      sources.push('session_storage_id');
-    }
-    
+    const sessionId =
+      typeof window !== 'undefined'
+        ? getSessionId()
+        : `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+
     user_data.external_id = sessionId;
+    sources.push('unified_session_id');
     logger.log('✅ External ID gerado/recuperado:', sessionId);
   }
-  
+
   // 3. Meta cookies (SEMPRE - crítico!)
   // CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações!)
   const metaCookies = getMetaCookies();
@@ -381,12 +372,12 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
     user_data.fbc = metaCookies.fbc;
     sources.push('meta_fbc');
   }
-  
+
   // 4. IP Geolocation (SOMENTE se API retornar dados REAIS)
   if (!user_data.ct || !user_data.st || !user_data.country) {
     try {
       const geo = await getCachedIPGeolocation();
-      
+
       // SOMENTE adiciona se tiver dados REAIS da API
       if (geo) {
         if (geo.city && !user_data.ct) {
@@ -405,18 +396,21 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
           user_data.country = geo.country;
           sources.push('ip_country');
         }
-        
+
         // IMPORTANTE: Salvar no localStorage para uso futuro (Lead/Purchase)!
         // Isso garante que city/state/zip estar?o dispon?veis quando fizer Lead
         if (geo.city || geo.state || geo.zip) {
           const { saveAdvancedUserData } = await import('./advancedDataPersistence');
-          saveAdvancedUserData({
-            city: geo.city,
-            state: geo.state,
-            zip: geo.zip,
-            country: geo.country
-          }, false); // Sem consent ainda (s? geo p?blica)
-          
+          saveAdvancedUserData(
+            {
+              city: geo.city,
+              state: geo.state,
+              zip: geo.zip,
+              country: geo.country,
+            },
+            false
+          ); // Sem consent ainda (s? geo p?blica)
+
           logger.log('?? Geolocaliza??o salva no localStorage para uso futuro!');
         }
       }
@@ -426,13 +420,13 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
       // NAO adiciona dados fake!
     }
   }
-  
+
   // SEMPRE adicionar country BR como fallback (99% dos users s?o BR)
   if (!user_data.country) {
     user_data.country = 'br';
     sources.push('default_country_br');
   }
-  
+
   // 5. Browser fingerprint (SOMENTE se disponivel - client-side only!)
   const fingerprint = getBrowserFingerprint();
   if (fingerprint) {
@@ -442,20 +436,20 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
     user_data.fb_language = fingerprint.language;
     sources.push('browser_fingerprint');
   }
-  
+
   // 6. Calcular Data Quality Score
   const dataQualityScore = calculateColdEventQuality(user_data);
-  
+
   logger.log('?? Cold event enriched:', {
     fields: Object.keys(user_data).length,
     dataQualityScore,
-    sources
+    sources,
   });
-  
+
   return {
     user_data,
     dataQualityScore,
-    enrichmentSources: sources
+    enrichmentSources: sources,
   };
 };
 
@@ -464,12 +458,15 @@ export const enrichColdEvent = memoizeAsync(_enrichColdEvent, {
   ttl: 5 * 60 * 1000, // 5 minutos
   maxSize: 10, // Apenas 10 entradas (por sessão)
   keyGenerator: () => {
-    // Cache por sessão (mesmo usuário = mesmo cache)
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('session_id') || 'anonymous';
+    if (typeof window === 'undefined') {
+      return 'server';
     }
-    return 'server';
-  }
+    try {
+      return getSessionId() || 'anonymous';
+    } catch {
+      return 'anonymous';
+    }
+  },
 });
 
 /**
@@ -477,31 +474,31 @@ export const enrichColdEvent = memoizeAsync(_enrichColdEvent, {
  */
 function calculateColdEventQuality(user_data: Record<string, any>): number {
   let score = 0;
-  
+
   // PII (vale mais)
-  if (user_data.em) score += 15;        // Email
-  if (user_data.ph) score += 15;        // Phone
-  if (user_data.fn) score += 10;        // First name
-  if (user_data.ln) score += 10;        // Last name
-  
+  if (user_data.em) score += 15; // Email
+  if (user_data.ph) score += 15; // Phone
+  if (user_data.fn) score += 10; // First name
+  if (user_data.ln) score += 10; // Last name
+
   // Localiza??o
-  if (user_data.ct) score += 8;         // City
-  if (user_data.st) score += 8;         // State
-  if (user_data.zp) score += 5;         // ZIP
-  if (user_data.country) score += 4;    // Country
-  
+  if (user_data.ct) score += 8; // City
+  if (user_data.st) score += 8; // State
+  if (user_data.zp) score += 5; // ZIP
+  if (user_data.country) score += 4; // Country
+
   // Meta identifiers (cr?ticos!)
-  if (user_data.fbp) score += 15;       // Facebook Browser ID
-  if (user_data.fbc) score += 10;       // Facebook Click ID
-  
+  if (user_data.fbp) score += 15; // Facebook Browser ID
+  if (user_data.fbc) score += 10; // Facebook Click ID
+
   // Session/External ID
   if (user_data.external_id) score += 5;
-  
+
   // Fingerprint (menor valor mas ajuda)
   if (user_data.fb_device_type) score += 2;
   if (user_data.fb_browser) score += 2;
   if (user_data.fb_os) score += 1;
-  
+
   return Math.min(score, 100);
 }
 
@@ -517,18 +514,18 @@ export async function getEventQualityComparison(): Promise<{
 }> {
   const cold = await enrichColdEvent();
   const warm = getAdvancedUserData();
-  
+
   return {
     coldEvent: {
       fields: Object.keys(cold.user_data).length,
-      score: cold.dataQualityScore
+      score: cold.dataQualityScore,
     },
     warmEvent: {
       fields: warm ? Object.keys(warm).filter(k => warm[k as keyof typeof warm]).length : 0,
-      score: warm?.dataQualityScore || 0
+      score: warm?.dataQualityScore || 0,
     },
-    improvement: warm 
+    improvement: warm
       ? `+${warm.dataQualityScore - cold.dataQualityScore} points after Lead`
-      : 'No warm data yet'
+      : 'No warm data yet',
   };
 }
