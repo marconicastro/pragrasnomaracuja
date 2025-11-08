@@ -134,9 +134,14 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     country: normalized.country || userData.country || 'br'
   };
 
-  // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-  if (userData.fbp) prepared.fbp = userData.fbp;
-  if (userData.fbc) prepared.fbc = userData.fbc;
+  // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc no user_data do DataLayer
+  // GTM Server-Side captura fbp/fbc AUTOMATICAMENTE dos cookies do navegador
+  // Se incluirmos aqui, GTM coloca no custom_data e causa diferença com servidor
+  // Deixar GTM capturar direto dos cookies (_fbp, _fbc)
+  
+  // ❌ REMOVIDO:
+  // if (userData.fbp) prepared.fbp = userData.fbp;
+  // if (userData.fbc) prepared.fbc = userData.fbc;
 
   return prepared;
 }

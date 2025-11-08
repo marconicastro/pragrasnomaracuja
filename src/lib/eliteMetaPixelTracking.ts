@@ -438,9 +438,9 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
       region: userData.state,
       postal_code: userData.zip,
       country: userData.country,
-      // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-      ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-      ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+      // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+      // GTM Server-Side captura AUTOMATICAMENTE dos cookies (_fbp, _fbc)
+      // Se incluirmos, GTM coloca no custom_data e causa diferença com servidor
     };
   } else {
     // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
@@ -527,9 +527,8 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
     region: userData.state,
     postal_code: userData.zip,
     country: userData.country,
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+    // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+    // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   } : undefined;
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -620,9 +619,8 @@ export async function trackAddToCartElite(
     region: userData.state,
     postal_code: userData.zip,
     country: userData.country,
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+    // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+    // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   } : undefined;
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -708,10 +706,9 @@ export async function trackLeadElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
-    country: 'BR',
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+    country: 'BR'
+    // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+    // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -820,10 +817,9 @@ export async function trackInitiateCheckoutElite(
     city: userData.city || existingData?.city,
     region: userData.state || existingData?.state,
     postal_code: userData.zip || existingData?.zip,
-    country: 'BR',
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+    country: 'BR'
+    // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+    // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -907,10 +903,9 @@ export async function trackPurchaseElite(
     city: savedData.city,
     region: savedData.state,
     postal_code: savedData.zip,
-    country: savedData.country || 'BR',
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
-    ...(metaCookies.fbp && { fbp: metaCookies.fbp }),
-    ...(metaCookies.fbc && { fbc: metaCookies.fbc })
+    country: savedData.country || 'BR'
+    // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc aqui
+    // GTM Server-Side captura AUTOMATICAMENTE dos cookies
   } : undefined;
   
   // Extrair valores dinâmicos do customParams (ou usar defaults)
