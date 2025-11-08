@@ -51,29 +51,41 @@ Produto C: R$ 149.90  ✅ CORRETO
 
 ## ✅ NOSSO CASO (Correto)
 
-### **Produto Único com Preço Fixo:**
+### **Produto Base + Order Bumps no Checkout:**
 
 ```javascript
 // NOSSO SISTEMA:
-Ebook Sistema 4 Fases: R$ 39.90  ✅ CORRETO
-Ebook Sistema 4 Fases: R$ 39.90  ✅ CORRETO
-Ebook Sistema 4 Fases: R$ 39.90  ✅ CORRETO
 
-// É o MESMO produto, então preço É realmente fixo!
+// NO SITE (ViewContent):
+Ebook Sistema 4 Fases: R$ 39.90  ✅ CORRETO
+// Cliente VÊ apenas o produto base
+
+// NO CAKTO (Checkout):
+Base: R$ 39.90
+Order Bump 1: + R$ XX (opcional)
+Order Bump 2: + R$ XX (opcional)
+Order Bump 3: + R$ XX (opcional)
+// Cliente ESCOLHE o que quer
+
+// NO PURCHASE (Webhook):
+Cliente A: R$ 39.90 (só base)      ✅ VARIÁVEL
+Cliente B: R$ 59.90 (base + bump1) ✅ VARIÁVEL
+Cliente C: R$ 89.90 (base + todos) ✅ VARIÁVEL
 ```
 
 **Por que não é problema?**
-1. ✅ Temos apenas 1 produto
-2. ✅ Preço É realmente R$ 39,90
-3. ✅ ViewContent envia valor correto
-4. ✅ Não há variação para otimizar
+1. ✅ ViewContent envia o que cliente VÊ no site (R$ 39,90)
+2. ✅ Order bumps estão no CHECKOUT (Cakto), não no site
+3. ✅ Purchase envia valor REAL (variável) ✅
+4. ✅ Sistema implementado CORRETAMENTE
 
 ### **Meta não sabe que:**
-- Você tem produto único
-- Preço é realmente fixo
+- Order bumps estão NO CHECKOUT (Cakto)
+- ViewContent mostra apenas produto base
+- Variação acontece no Purchase (correto!)
 - Sistema está implementado corretamente
 
-**Então:** Envia alerta genérico (para e-commerces)
+**Então:** Envia alerta genérico (pensando que ViewContent deveria variar)
 
 ---
 
@@ -109,15 +121,17 @@ Ebook Sistema 4 Fases: R$ 39.90  ✅ CORRETO
 ### **Nosso caso real: 0%**
 
 **Justificativa:**
-- ✅ Produto único (não há o que otimizar por preço)
-- ✅ Preço realmente fixo (R$ 39,90)
+- ✅ ViewContent = O que cliente vê NO SITE (R$ 39,90)
+- ✅ Bumps aparecem no CHECKOUT (Cakto), não no site
+- ✅ Purchase = Valor REAL (variável) ✅ CORRETO
 - ✅ Meta vai entender com dados históricos
 - ✅ Campanhas otimizam por outros sinais:
   - Engajamento
   - Tempo no site
   - Scroll depth
   - Lead quality
-  - Taxa de conversão
+  - Taxa de conversão Purchase
+  - Valor médio do Purchase (variável!)
 
 ---
 
