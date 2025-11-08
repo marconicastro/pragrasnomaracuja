@@ -1,9 +1,9 @@
 /**
  * 🔄 Compatibilidade: userDataPersistence.ts
- * 
+ *
  * Este arquivo mantém compatibilidade com código legado que ainda usa
  * userDataPersistence.ts. Internamente redireciona para advancedDataPersistence.ts
- * 
+ *
  * NOTA: Este é um wrapper de compatibilidade. Novos códigos devem usar
  * advancedDataPersistence.ts diretamente.
  */
@@ -11,15 +11,9 @@
 import {
   saveAdvancedUserData,
   getAdvancedUserData,
-  clearAllUserData
+  clearAllUserData,
 } from '../advancedDataPersistence';
-
-/**
- * Gera Session ID compatível
- */
-function generateSessionIdCompat(): string {
-  return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
+import { getSessionId, peekSessionId } from '../session';
 
 /**
  * Obtém Session ID do advancedDataPersistence ou gera novo
@@ -29,18 +23,12 @@ function getAdvancedSessionId(): string {
   if (data?.sessionId) {
     return data.sessionId;
   }
-  
-  // Se não tiver, tentar do localStorage diretamente
-  if (typeof window !== 'undefined') {
-    const stored = sessionStorage.getItem('zc_session_id');
-    if (stored) return stored;
-    
-    const persistentSession = localStorage.getItem('zc_persistent_session');
-    if (persistentSession) return persistentSession;
-  }
-  
+
+  const stored = peekSessionId();
+  if (stored) return stored;
+
   // Gerar novo se não encontrar
-  return generateSessionIdCompat();
+  return getSessionId();
 }
 
 // Tipagem compatível
@@ -73,18 +61,21 @@ export const saveUserData = (
 ): void => {
   // Converter para formato advancedDataPersistence
   const nameParts = userData.fullName?.split(' ') || [];
-  
-  saveAdvancedUserData({
-    email: userData.email,
-    phone: userData.phone,
-    firstName: nameParts[0],
-    lastName: nameParts.slice(1).join(' '),
-    fullName: userData.fullName,
-    city: userData.city,
-    state: userData.state,
-    zip: userData.cep?.replace(/\D/g, ''),
-    country: 'br'
-  }, consent);
+
+  saveAdvancedUserData(
+    {
+      email: userData.email,
+      phone: userData.phone,
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(' '),
+      fullName: userData.fullName,
+      city: userData.city,
+      state: userData.state,
+      zip: userData.cep?.replace(/\D/g, ''),
+      country: 'br',
+    },
+    consent
+  );
 };
 
 /**
@@ -92,23 +83,24 @@ export const saveUserData = (
  */
 export const getPersistedUserData = (): PersistedUserData | null => {
   const advancedData = getAdvancedUserData();
-  
+
   if (!advancedData) return null;
-  
+
   // Converter para formato compatível
   return {
     email: advancedData.email,
     phone: advancedData.phone,
-    fullName: advancedData.fullName || 
-      (advancedData.firstName && advancedData.lastName 
-        ? `${advancedData.firstName} ${advancedData.lastName}` 
+    fullName:
+      advancedData.fullName ||
+      (advancedData.firstName && advancedData.lastName
+        ? `${advancedData.firstName} ${advancedData.lastName}`
         : undefined),
     city: advancedData.city,
     state: advancedData.state,
     cep: advancedData.zip,
     timestamp: advancedData.lastSeen || Date.now(),
     sessionId: advancedData.sessionId,
-    consent: advancedData.consent || false
+    consent: advancedData.consent || false,
   };
 };
 
@@ -139,10 +131,13 @@ export const hasPersistedData = (): boolean => {
 export const updatePersistedData = (updates: Partial<PersistedUserData>): void => {
   const existing = getPersistedUserData();
   if (existing) {
-    saveUserData({
-      ...existing,
-      ...updates
-    }, existing.consent);
+    saveUserData(
+      {
+        ...existing,
+        ...updates,
+      },
+      existing.consent
+    );
   } else {
     saveUserData(updates, true);
   }
@@ -153,14 +148,14 @@ export const updatePersistedData = (updates: Partial<PersistedUserData>): void =
  */
 export const formatUserDataForMeta = (userData: PersistedUserData | null) => {
   if (!userData) return {};
-  
+
   const phoneClean = userData.phone?.replace(/\D/g, '') || '';
   const phoneWithCountry = phoneClean.startsWith('55') ? phoneClean : `55${phoneClean}`;
-  
+
   const nameParts = userData.fullName?.toLowerCase().trim().split(' ') || [];
   const firstName = nameParts[0] || '';
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-  
+
   return {
     em: userData.email?.toLowerCase().trim(),
     ph: phoneWithCountry,
@@ -172,7 +167,7 @@ export const formatUserDataForMeta = (userData: PersistedUserData | null) => {
     country: 'br',
     external_id: userData.sessionId,
     client_ip_address: null,
-    client_user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null
+    client_user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
   };
 };
 
@@ -182,4 +177,3 @@ export const formatUserDataForMeta = (userData: PersistedUserData | null) => {
 export const initializePersistence = (): PersistedUserData | null => {
   return getPersistedUserData();
 };
-

@@ -1,6 +1,6 @@
 /**
  * 🚨 Sentry Error Monitoring
- * 
+ *
  * Integração com Sentry para monitoramento de erros em produção
  * - Configuração otimizada para Next.js
  * - Breadcrumbs personalizados
@@ -12,7 +12,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { logger } from '../utils/logger';
-import { getSessionId } from '../userDataPersistence';
+import { getSessionId } from '../session';
 
 // Variável global para controle de inicialização
 let sentryInitialized = false;
@@ -33,28 +33,25 @@ export function initSentry() {
   try {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      
+
       // Performance Monitoring
       tracesSampleRate: 0.1, // 10% das transações (produção)
-      
+
       // Session Replay
       replaysSessionSampleRate: 0.01, // 1% das sessões
       replaysOnErrorSampleRate: 1.0, // 100% em caso de erro
-      
+
       // Environment
       environment: process.env.NEXT_PUBLIC_VERCEL_ENV || 'production',
-      
+
       // Release tracking
       release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
-      
+
       // Integrations
       integrations: [
         new Sentry.BrowserTracing({
           // Não trackar certas URLs
-          tracePropagationTargets: [
-            'localhost',
-            /^https:\/\/www\.maracujazeropragas\.com/
-          ],
+          tracePropagationTargets: ['localhost', /^https:\/\/www\.maracujazeropragas\.com/],
         }),
         new Sentry.Replay({
           // Mask all text content
@@ -62,7 +59,7 @@ export function initSentry() {
           blockAllMedia: true,
         }),
       ],
-      
+
       // Filtros
       ignoreErrors: [
         // Browser extensions
@@ -77,33 +74,32 @@ export function initSentry() {
         /Failed to fetch/i,
         /NetworkError/i,
         /Load failed/i,
-        ],
-        
-        // Before send hook (enriquecimento)
-        beforeSend(event, hint) {
-          // Adicionar contexto customizado
-          if (typeof window !== 'undefined') {
-            event.contexts = event.contexts || {};
-            event.contexts.user_session = {
-              session_id: (() => {
-                try {
-                  return getSessionId();
-                } catch {
-                  return null;
-                }
-              })(),
-              fbp: getCookie('_fbp'),
-              fbc: getCookie('_fbc'),
-            };
-          }
-          
-          return event;
-        },
+      ],
+
+      // Before send hook (enriquecimento)
+      beforeSend(event, hint) {
+        // Adicionar contexto customizado
+        if (typeof window !== 'undefined') {
+          event.contexts = event.contexts || {};
+          event.contexts.user_session = {
+            session_id: (() => {
+              try {
+                return getSessionId();
+              } catch {
+                return null;
+              }
+            })(),
+            fbp: getCookie('_fbp'),
+            fbc: getCookie('_fbc'),
+          };
+        }
+
+        return event;
+      },
     });
 
     sentryInitialized = true;
     logger.log('✅ Sentry initialized');
-    
   } catch (error) {
     logger.error('Failed to initialize Sentry', { error });
   }
@@ -112,10 +108,7 @@ export function initSentry() {
 /**
  * Captura erro customizado
  */
-export function captureError(
-  error: Error | string,
-  context?: Record<string, any>
-) {
+export function captureError(error: Error | string, context?: Record<string, any>) {
   if (!sentryInitialized) {
     logger.error('Sentry error (not initialized)', { error, context });
     return;
@@ -148,26 +141,18 @@ export function captureMessage(
 /**
  * Set user context
  */
-export function setSentryUser(user: {
-  id?: string;
-  email?: string;
-  username?: string;
-}) {
+export function setSentryUser(user: { id?: string; email?: string; username?: string }) {
   if (!sentryInitialized) return;
-  
+
   Sentry.setUser(user);
 }
 
 /**
  * Add breadcrumb (rastro de ações)
  */
-export function addBreadcrumb(
-  category: string,
-  message: string,
-  data?: Record<string, any>
-) {
+export function addBreadcrumb(category: string, message: string, data?: Record<string, any>) {
   if (!sentryInitialized) return;
-  
+
   Sentry.addBreadcrumb({
     category,
     message,
@@ -181,7 +166,7 @@ export function addBreadcrumb(
  */
 export function startTransaction(name: string, op: string) {
   if (!sentryInitialized) return null;
-  
+
   return Sentry.startTransaction({
     name,
     op,
@@ -191,15 +176,13 @@ export function startTransaction(name: string, op: string) {
 // Helper: Get cookie value
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
-  
+
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  
+
   if (parts.length === 2) {
     return parts.pop()?.split(';').shift() || null;
   }
-  
+
   return null;
 }
-
-
