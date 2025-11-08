@@ -47,6 +47,8 @@ interface UserData {
   country?: string;
   fbp?: string;  // ✅ Facebook Browser ID (crítico para deduplicação)
   fbc?: string;   // ✅ Facebook Click ID (crítico para atribuição)
+  client_user_agent?: string; // ✅ User Agent (necessário para correspondência avançada)
+  // Nota: client_ip_address será capturado automaticamente pelo GTM Server-Side do request HTTP
 }
 
 interface DataLayerEvent {
@@ -104,7 +106,7 @@ function prepareEcommerceItem(
 
 /**
  * Prepara user_data no formato do GTM
- * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
+ * ✅ INCLUI: fbp, fbc, country, external_id (user_id), client_user_agent para igualar Server-Side
  */
 function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
   if (!userData || Object.keys(userData).length === 0) {
@@ -122,6 +124,11 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     country: userData.country
   });
 
+  // ✅ Capturar User Agent do navegador (se disponível)
+  const clientUserAgent = typeof navigator !== 'undefined' && navigator.userAgent 
+    ? navigator.userAgent 
+    : userData.client_user_agent;
+
   const prepared: UserData = {
     // ✅ CRÍTICO: Incluir TODOS os campos, mesmo que vazios (GTM precisa de todos)
     user_id: userData.user_id,
@@ -135,7 +142,9 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     country: normalized.country || userData.country || 'br',
     // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
     fbp: userData.fbp,
-    fbc: userData.fbc
+    fbc: userData.fbc,
+    // ✅ CRÍTICO: Incluir client_user_agent (necessário para correspondência avançada - 13 campos)
+    client_user_agent: clientUserAgent
   };
 
   return prepared;
@@ -190,13 +199,64 @@ export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): vo
   try {
     window.dataLayer.push(eventDataWithMeta);
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📊 DataLayer push:', {
-        event: eventDataWithMeta.event,
-        event_id: finalEventId,
-        action_source: 'website'
-      });
+    // ✅ DEBUG COMPLETO: Sempre logar para diagnóstico (mesmo em produção)
+    console.log('🔍 DEBUG GTM - DataLayer Push:', {
+      event: eventDataWithMeta.event,
+      event_id: finalEventId,
+      action_source: eventDataWithMeta.action_source,
+      has_user_data: !!eventDataWithMeta.user_data,
+      user_data_keys: eventDataWithMeta.user_data ? Object.keys(eventDataWithMeta.user_data) : [],
+      user_data_summary: eventDataWithMeta.user_data ? {
+        has_email: !!eventDataWithMeta.user_data.email_address,
+        has_phone: !!eventDataWithMeta.user_data.phone_number,
+        has_user_id: !!eventDataWithMeta.user_data.user_id,
+        has_fbp: !!eventDataWithMeta.user_data.fbp,
+        has_fbc: !!eventDataWithMeta.user_data.fbc,
+        has_city: !!eventDataWithMeta.user_data.city,
+        has_state: !!eventDataWithMeta.user_data.region,
+        has_zip: !!eventDataWithMeta.user_data.postal_code,
+        has_country: !!eventDataWithMeta.user_data.country,
+        has_client_user_agent: !!eventDataWithMeta.user_data.client_user_agent
+      } : null,
+      custom_data: {
+        value: eventDataWithMeta.value,
+        currency: eventDataWithMeta.currency,
+        content_ids: eventDataWithMeta.content_ids,
+        num_items: eventDataWithMeta.num_items
+      },
+      timestamp: new Date().toISOString(),
+      dataLayer_index: window.dataLayer.length - 1
+    });
+    
+    // ✅ Salvar no localStorage para comparação posterior (útil para debug)
+    if (typeof Storage !== 'undefined') {
+      try {
+        const debugKey = `gtm_debug_${eventDataWithMeta.event}_${Date.now()}`;
+        const debugData = {
+          event: eventDataWithMeta.event,
+          event_id: finalEventId,
+          action_source: eventDataWithMeta.action_source,
+          user_data: eventDataWithMeta.user_data,
+          custom_data: {
+            value: eventDataWithMeta.value,
+            currency: eventDataWithMeta.currency,
+            content_ids: eventDataWithMeta.content_ids,
+            num_items: eventDataWithMeta.num_items
+          },
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(debugKey, JSON.stringify(debugData));
+        
+        // Manter apenas últimos 10 eventos (limpar antigos)
+        const debugKeys = Object.keys(localStorage).filter(k => k.startsWith('gtm_debug_'));
+        if (debugKeys.length > 10) {
+          debugKeys.sort().slice(0, debugKeys.length - 10).forEach(k => localStorage.removeItem(k));
+        }
+      } catch (e) {
+        // Ignorar erros de localStorage (pode estar cheio ou bloqueado)
+      }
     }
+    
   } catch (error) {
     console.error('❌ Erro ao enviar para DataLayer:', error);
   }
@@ -228,7 +288,8 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ user_data contém tudo (incluindo fbp/fbc)
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
 }
@@ -270,7 +331,8 @@ export function pushViewItem(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ user_data contém tudo (incluindo fbp/fbc)
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
 }
@@ -313,7 +375,8 @@ export function pushAddToCart(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ user_data contém tudo (incluindo fbp/fbc)
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
 }
@@ -361,7 +424,8 @@ export function pushBeginCheckout(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ user_data contém tudo (incluindo fbp/fbc)
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
 }
@@ -409,6 +473,7 @@ export function pushPurchase(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   });
@@ -450,7 +515,8 @@ export function pushGenerateLead(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    // ✅ user_data contém tudo (incluindo fbp/fbc)
+    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc, client_user_agent)
     user_data: preparedUserData
   }, eventId);
 }
