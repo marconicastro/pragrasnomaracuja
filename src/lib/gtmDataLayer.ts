@@ -473,7 +473,7 @@ export function pushPurchase(
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
     ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
     ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
-    ...(preparedUserData?.client_user_agent && { client_user_agent: preparedUserData.client_user_agent }),
+    // ✅ client_user_agent apenas em user_data (GTM Server-Side captura automaticamente do request HTTP)
     // ✅ Campos também dentro de user_data (para compatibilidade)
     user_data: preparedUserData
   });
