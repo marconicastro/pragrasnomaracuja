@@ -123,6 +123,7 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
   });
 
   const prepared: UserData = {
+    // ✅ CRÍTICO: Incluir TODOS os campos, mesmo que vazios (GTM precisa de todos)
     user_id: userData.user_id,
     email_address: normalized.email || userData.email_address,
     phone_number: normalized.phone || userData.phone_number,
@@ -131,17 +132,11 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     city: normalized.city || userData.city,
     region: normalized.state || userData.region,
     postal_code: normalized.zip || userData.postal_code,
-    country: normalized.country || userData.country || 'br'
+    country: normalized.country || userData.country || 'br',
+    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
+    fbp: userData.fbp,
+    fbc: userData.fbc
   };
-
-  // 🔧 DEDUPLICAÇÃO: NÃO incluir fbp/fbc no user_data do DataLayer
-  // GTM Server-Side captura fbp/fbc AUTOMATICAMENTE dos cookies do navegador
-  // Se incluirmos aqui, GTM coloca no custom_data e causa diferença com servidor
-  // Deixar GTM capturar direto dos cookies (_fbp, _fbc)
-  
-  // ❌ REMOVIDO:
-  // if (userData.fbp) prepared.fbp = userData.fbp;
-  // if (userData.fbc) prepared.fbc = userData.fbc;
 
   return prepared;
 }
@@ -221,6 +216,7 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
   pushToDataLayer({
     event: 'page_view',
     // ✅ Campos user_data no nível raiz (para acesso direto no GTM)
+    // ✅ CRÍTICO: Incluir TODOS os campos para garantir captura completa pelo GTM
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -230,8 +226,9 @@ export function pushPageView(userData?: Partial<UserData>, eventId?: string): vo
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    // ❌ REMOVIDO fbp/fbc do custom_data raiz (servidor não envia aqui)
-    // ✅ fbp/fbc vão apenas em user_data
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
 }
@@ -261,6 +258,7 @@ export function pushViewItem(
     content_type: PRODUCT_CONFIG.content_type,
     num_items: 1,
     // ✅ Campos user_data no nível raiz
+    // ✅ CRÍTICO: Incluir TODOS os campos para garantir captura completa pelo GTM
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -270,7 +268,9 @@ export function pushViewItem(
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    // ❌ REMOVIDO fbp/fbc do custom_data raiz
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
 }
@@ -301,6 +301,7 @@ export function pushAddToCart(
     content_type: PRODUCT_CONFIG.content_type,
     num_items: quantity,
     // ✅ Campos user_data no nível raiz
+    // ✅ CRÍTICO: Incluir TODOS os campos para garantir captura completa pelo GTM
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -310,7 +311,9 @@ export function pushAddToCart(
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    // ❌ REMOVIDO fbp/fbc do custom_data raiz
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
 }
@@ -346,6 +349,7 @@ export function pushBeginCheckout(
     content_type: PRODUCT_CONFIG.content_type,
     num_items: quantity,
     // ✅ Campos user_data no nível raiz (para acesso direto no GTM)
+    // ✅ CRÍTICO: Incluir TODOS os campos para garantir captura completa pelo GTM
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -355,8 +359,8 @@ export function pushBeginCheckout(
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    // ❌ REMOVIDO fbp/fbc do nível raiz custom_data (vão em user_data apenas)
-    // Servidor envia fbp/fbc APENAS em user_data, não em custom_data
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
     // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
@@ -434,6 +438,7 @@ export function pushGenerateLead(
     }),
     ...contentData,
     // ✅ Campos no nível raiz
+    // ✅ CRÍTICO: Incluir TODOS os campos para garantir captura completa pelo GTM
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
     ...(preparedUserData?.first_name && { first_name: preparedUserData.first_name }),
@@ -443,7 +448,9 @@ export function pushGenerateLead(
     ...(preparedUserData?.postal_code && { postal_code: preparedUserData.postal_code }),
     ...(preparedUserData?.country && { country: preparedUserData.country }),
     ...(preparedUserData?.user_id && { user_id: preparedUserData.user_id }),
-    // ❌ REMOVIDO fbp/fbc do custom_data raiz
+    ...(preparedUserData?.fbp && { fbp: preparedUserData.fbp }),
+    ...(preparedUserData?.fbc && { fbc: preparedUserData.fbc }),
+    // ✅ user_data contém tudo (incluindo fbp/fbc)
     user_data: preparedUserData
   }, eventId);
 }
