@@ -13,6 +13,8 @@
  * Todos os eventos são enviados para o DataLayer do GTM
  */
 
+'use client';
+
 import {
   saveAdvancedUserData,
   getAdvancedUserData,

@@ -79,13 +79,37 @@ export async function getCompleteUserData(): Promise<CompleteUserData> {
 /**
  * Determina a fonte dos dados para debugging
  */
-function determineSource(persisted: any, location: any): string {
-  if (persisted && (persisted.city || persistedData?.state || persistedData?.cep)) {
+function determineSource(
+  persisted: { city?: string; state?: string; cep?: string; zip?: string } | null,
+  location: { source?: string; city?: string | null; state?: string | null; zip?: string | null } | null
+): string {
+  const hasPersistedLocation = Boolean(
+    persisted &&
+      (persisted.city ||
+        persisted.state ||
+        persisted.cep ||
+        persisted.zip)
+  );
+
+  if (hasPersistedLocation) {
     return 'persisted_enriched';
   }
-  if (location.source !== 'default_brazil') {
+
+  const hasLocationData = Boolean(
+    location &&
+      (location.city ||
+        location.state ||
+        location.zip)
+  );
+
+  if (hasLocationData && location?.source && location.source !== 'default_brazil') {
+    return `${location.source}_enriched`;
+  }
+
+  if (hasLocationData) {
     return 'api_enriched';
   }
+
   return 'minimal';
 }
 

@@ -6,6 +6,8 @@
 
 'use client';
 
+import { logger } from './utils/logger';
+
 interface EventLog {
   eventId: string;
   eventName: string;

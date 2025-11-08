@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from './utils/logger';
+
 // Tipagem para dados do usuário persistidos
 interface PersistedUserData {
   email?: string;

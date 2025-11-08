@@ -11,6 +11,8 @@
 
 'use client';
 
+import { logger } from './utils/logger';
+
 // ===== INTERFACES =====
 
 export interface AttributionTouchpoint {
