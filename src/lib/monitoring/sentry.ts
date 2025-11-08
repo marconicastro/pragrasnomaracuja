@@ -8,8 +8,11 @@
  * - Performance monitoring
  */
 
+'use client';
+
 import * as Sentry from '@sentry/nextjs';
 import { logger } from '../utils/logger';
+import { getSessionId } from '../userDataPersistence';
 
 // Variável global para controle de inicialização
 let sentryInitialized = false;
@@ -74,22 +77,28 @@ export function initSentry() {
         /Failed to fetch/i,
         /NetworkError/i,
         /Load failed/i,
-      ],
-      
-      // Before send hook (enriquecimento)
-      beforeSend(event, hint) {
-        // Adicionar contexto customizado
-        if (typeof window !== 'undefined') {
-          event.contexts = event.contexts || {};
-          event.contexts.user_session = {
-            session_id: sessionStorage.getItem('session_id'),
-            fbp: getCookie('_fbp'),
-            fbc: getCookie('_fbc'),
-          };
-        }
+        ],
         
-        return event;
-      },
+        // Before send hook (enriquecimento)
+        beforeSend(event, hint) {
+          // Adicionar contexto customizado
+          if (typeof window !== 'undefined') {
+            event.contexts = event.contexts || {};
+            event.contexts.user_session = {
+              session_id: (() => {
+                try {
+                  return getSessionId();
+                } catch {
+                  return null;
+                }
+              })(),
+              fbp: getCookie('_fbp'),
+              fbc: getCookie('_fbc'),
+            };
+          }
+          
+          return event;
+        },
     });
 
     sentryInitialized = true;

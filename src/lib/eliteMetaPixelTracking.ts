@@ -25,6 +25,7 @@ import {
   persistMetaCookies,
   getMetaCookies
 } from './advancedDataPersistence';
+import { getSessionId } from './userDataPersistence';
 
 import {
   formatUTMsForMeta,
@@ -425,8 +426,18 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   
   // ✅ FALLBACK: Garantir user_id sempre presente (se ainda não tiver)
   // coldEventsEnrichment.ts já deve gerar, mas garantir aqui também
-  if (!converted.user_id && typeof window !== 'undefined') {
-    const sessionId = sessionStorage.getItem('session_id');
+  if (!converted.user_id) {
+    const sessionId =
+      typeof window !== 'undefined'
+        ? (() => {
+            try {
+              return getSessionId();
+            } catch {
+              return null;
+            }
+          })()
+        : null;
+
     if (sessionId) {
       converted.user_id = sessionId;
     }

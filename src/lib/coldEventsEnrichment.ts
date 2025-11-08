@@ -15,6 +15,7 @@
 'use client';
 
 import { getAdvancedUserData, getMetaCookies } from './advancedDataPersistence';
+import { getSessionId } from './userDataPersistence';
 import { logger } from './utils/logger';
 import { memoizeAsync } from './utils/memoize';
 import { 
@@ -344,31 +345,20 @@ const _enrichColdEvent = async (): Promise<EnrichedEventData> => {
     user_data.zp = normalizedZip;  // ✅ Normalizado
     sources.push('progressive_zip');
   }
-  
+
   // ✅ CRÍTICO: Garantir external_id SEMPRE presente (session ID)
-  // Se não tiver external_id ainda, gerar usando sessionStorage ou timestamp
+  // Se não tiver external_id ainda, gerar usando storage unificado ou timestamp
   if (!user_data.external_id) {
-    // Tentar recuperar do sessionStorage (persiste durante a sessão)
-    let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('session_id') : null;
-    
-    if (!sessionId) {
-      // Gerar novo session ID único
-      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-      
-      // Salvar no sessionStorage para reusar na mesma sessão
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('session_id', sessionId);
-      }
-      
-      sources.push('generated_session_id');
-    } else {
-      sources.push('session_storage_id');
-    }
-    
+    const sessionId =
+      typeof window !== 'undefined'
+        ? getSessionId()
+        : `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+
     user_data.external_id = sessionId;
+    sources.push('unified_session_id');
     logger.log('✅ External ID gerado/recuperado:', sessionId);
   }
-  
+
   // 3. Meta cookies (SEMPRE - crítico!)
   // CRÍTICO: fbc deve ser preservado EXATAMENTE (sem modificações!)
   const metaCookies = getMetaCookies();
@@ -464,11 +454,14 @@ export const enrichColdEvent = memoizeAsync(_enrichColdEvent, {
   ttl: 5 * 60 * 1000, // 5 minutos
   maxSize: 10, // Apenas 10 entradas (por sessão)
   keyGenerator: () => {
-    // Cache por sessão (mesmo usuário = mesmo cache)
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('session_id') || 'anonymous';
+    if (typeof window === 'undefined') {
+      return 'server';
     }
-    return 'server';
+    try {
+      return getSessionId() || 'anonymous';
+    } catch {
+      return 'anonymous';
+    }
   }
 });
 

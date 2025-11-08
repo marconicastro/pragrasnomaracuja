@@ -5,12 +5,15 @@
  * Compatível com GA4 Enhanced Ecommerce e formato padrão do GTM
  */
 
+'use client';
+
 declare global {
   interface Window {
     dataLayer: any[];
   }
 }
 
+import { getSessionId } from './userDataPersistence';
 import { normalizeUserData } from './utils/metaDataNormalizer';
 import { logger } from './utils/logger';
 
@@ -108,6 +111,28 @@ function prepareEcommerceItem(
  * ✅ INCLUI: fbp, fbc, country, external_id (user_id) para igualar Server-Side
  * ✅ GARANTE: country e user_id sempre presentes (mesmo quando vazios)
  */
+function resolveSessionId(explicit?: string): string {
+  if (explicit) return explicit;
+
+  if (typeof window === 'undefined') {
+    return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+  }
+
+  try {
+    return getSessionId();
+  } catch (error) {
+    logger.warn('Falha ao obter sessão unificada, gerando fallback', { error });
+    const fallback = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+    try {
+      window.sessionStorage.setItem('zc_session_id', fallback);
+      window.localStorage.setItem('zc_persistent_session', fallback);
+    } catch {
+      // ignore storage failures
+    }
+    return fallback;
+  }
+}
+
 function prepareUserData(userData?: Partial<UserData>): UserData {
   // ✅ SEMPRE retornar objeto (mesmo vazio) - necessário para Advanced Matching
   const normalized = normalizeUserData({
@@ -121,15 +146,7 @@ function prepareUserData(userData?: Partial<UserData>): UserData {
     country: userData?.country
   });
 
-  // ✅ GARANTIR session_id sempre disponível (para external_id)
-  let sessionId = userData?.user_id;
-  if (!sessionId && typeof window !== 'undefined') {
-    sessionId = sessionStorage.getItem('session_id') || undefined;
-    if (!sessionId) {
-      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-      sessionStorage.setItem('session_id', sessionId);
-    }
-  }
+  const sessionId = resolveSessionId(userData?.user_id);
 
   const prepared: UserData = {
     // ✅ CRÍTICO: user_id SEMPRE presente (external_id no Advanced Matching)
