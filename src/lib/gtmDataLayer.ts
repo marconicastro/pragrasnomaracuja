@@ -165,42 +165,37 @@ function prepareContentData(
  * 
  * IMPORTANTE: Se event_id não for fornecido, será gerado automaticamente
  */
-/**
- * Delay para garantir que servidor chegue primeiro no Facebook
- * Servidor envia imediatamente, browser aguarda para ser backup
- */
-const BROWSER_DELAY_MS = 200; // 200ms delay para garantir que servidor chegue primeiro
-
-export async function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): Promise<void> {
+export function pushToDataLayer(eventData: DataLayerEvent, eventId?: string): void {
   if (typeof window === 'undefined') return;
   
   ensureDataLayer();
   
-  // Gerar event_id se não fornecido (usar formato simples se for client-side)
+  // Gerar event_id se não fornecido
   let finalEventId = eventId;
-  if (!finalEventId && eventData.event && typeof window !== 'undefined') {
-    // Client-side: gerar event_id simples
+  if (!finalEventId && eventData.event) {
+    // Client-side: gerar event_id único
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 12);
     finalEventId = `${eventData.event}_${timestamp}_${random}`;
   }
   
-  // Adicionar event_id ao evento se gerado
-  const eventDataWithId = finalEventId ? {
+  // ✅ CRÍTICO: Adicionar event_id e action_source
+  const eventDataWithMeta = {
     ...eventData,
-    event_id: finalEventId
-  } : eventData;
-  
-  // ✅ DELAY NO BROWSER: Aguardar para garantir que servidor chegue primeiro
-  // Servidor envia imediatamente (mais rico), browser envia depois (backup)
-  // Meta processa servidor (primeiro), desduplica browser (segundo)
-  await new Promise(resolve => setTimeout(resolve, BROWSER_DELAY_MS));
+    ...(finalEventId && { event_id: finalEventId }),
+    // ✅ action_source: Indica origem do evento para o Meta
+    action_source: 'website' // Browser events sempre são 'website'
+  };
   
   try {
-    window.dataLayer.push(eventDataWithId);
+    window.dataLayer.push(eventDataWithMeta);
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 DataLayer push (com delay para servidor chegar primeiro):', eventDataWithId);
+      console.log('📊 DataLayer push:', {
+        event: eventDataWithMeta.event,
+        event_id: finalEventId,
+        action_source: 'website'
+      });
     }
   } catch (error) {
     console.error('❌ Erro ao enviar para DataLayer:', error);

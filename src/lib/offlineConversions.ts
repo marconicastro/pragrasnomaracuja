@@ -797,7 +797,7 @@ export async function sendOfflinePurchase(
         event_time: eventTime,
         event_id: eventID,
         event_source_url: eventSourceUrl, // URL com UTMs (CRÍTICO para EQM 9.3!)
-        action_source: 'website',
+        action_source: 'other', // ✅ Server-side via webhook (não 'website')
         user_data,
         custom_data: customData
       }]
@@ -829,7 +829,7 @@ export async function sendOfflinePurchase(
         event_time: eventTime,
         event_id: eventID,
         event_source_url: eventSourceUrl,
-        action_source: 'website',
+        action_source: 'other', // ✅ Server-side via webhook (não 'website')
         user_data,
         custom_data: customData
       }]
