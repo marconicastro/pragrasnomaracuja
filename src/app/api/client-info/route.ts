@@ -267,15 +267,15 @@ function getDefaultBrazilData(ip: string): Partial<ClientInfo> {
   
   return {
     ip: ip,
-    city: null,
-    region: null,
-    regionCode: null,
+    city: undefined,
+    region: undefined,
+    regionCode: undefined,
     country: 'brasil',
     countryCode: 'br',
-    postalCode: null,
+    postalCode: undefined,
     timezone: 'America/Sao_Paulo',
-    isp: null,
-    org: null,
+    isp: undefined,
+    org: undefined,
     lat: -14.235,
     lon: -51.925
   };
