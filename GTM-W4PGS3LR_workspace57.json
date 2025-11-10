@@ -1,6 +1,6 @@
 {
     "exportFormatVersion": 2,
-    "exportTime": "2025-11-07 20:20:50",
+    "exportTime": "2025-11-10 19:34:22",
     "containerVersion": {
         "path": "accounts/6311132475/containers/229856759/versions/0",
         "accountId": "6311132475",
@@ -416,6 +416,21 @@
                                         "value": "{{webhook-ed - items}}"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "name",
+                                        "value": "predicted_ltv"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{webhook-ed - predicted_ltv}}"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -471,7 +486,7 @@
                         "value": "true"
                     }
                 ],
-                "fingerprint": "1762542916161",
+                "fingerprint": "1762803196261",
                 "firingTriggerId": [
                     "37"
                 ],
@@ -2954,12 +2969,11 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762526914601",
+                "fingerprint": "1762629402629",
                 "firingTriggerId": [
                     "70"
                 ],
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -3312,13 +3326,12 @@
                         "value": "{{const - ga4 id da métrica}}"
                     }
                 ],
-                "fingerprint": "1762526893136",
+                "fingerprint": "1762629402628",
                 "firingTriggerId": [
                     "37"
                 ],
                 "parentFolderId": "16",
                 "tagFiringOption": "ONCE_PER_EVENT",
-                "paused": true,
                 "monitoringMetadata": {
                     "type": "MAP"
                 },
@@ -3919,14 +3932,14 @@
                                     {
                                         "type": "TEMPLATE",
                                         "key": "value",
-                                        "value": "TEST64198"
+                                        "value": "TEST55824"
                                     }
                                 ]
                             }
                         ]
                     }
                 ],
-                "fingerprint": "1762542956257",
+                "fingerprint": "1762629836334",
                 "parentFolderId": "20",
                 "formatValue": {}
             },
@@ -4859,6 +4872,28 @@
                 "fingerprint": "1762545862610",
                 "parentFolderId": "8",
                 "formatValue": {}
+            },
+            {
+                "accountId": "6311132475",
+                "containerId": "229856759",
+                "variableId": "116",
+                "name": "webhook-ed - predicted_ltv",
+                "type": "ed",
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setDefaultValue",
+                        "value": "false"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "keyPath",
+                        "value": "0.predicted_ltv"
+                    }
+                ],
+                "fingerprint": "1762803158053",
+                "parentFolderId": "8",
+                "formatValue": {}
             }
         ],
         "folder": [
@@ -4911,7 +4946,7 @@
                 "name": "Client Name"
             }
         ],
-        "fingerprint": "1762546849566",
+        "fingerprint": "1762803262148",
         "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6311132475/containers/229856759/versions/0?apiLink=version",
         "customTemplate": [
             {

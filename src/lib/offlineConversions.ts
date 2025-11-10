@@ -634,6 +634,9 @@ export async function sendOfflinePurchase(
       content_category: 'digital_product',
       num_items: 1,
       order_id: purchaseData.orderId,
+      // ✅ PREDICTED LTV: Valor esperado do cliente ao longo do tempo (para ML da Meta)
+      // Baseado na estrutura real: Produto R$39,90 + 3 Order Bumps R$17,90 cada = R$93,60 máximo
+      predicted_ltv: 90.0,  // R$ 90,00 (valor esperado considerando produto + order bumps)
       // Metadata Elite
       fb_data_quality_score: dataQualityScore,
       fb_tracking_version: '2.0_elite',
@@ -1075,6 +1078,9 @@ export async function sendPurchaseToGTM(
       content_name: 'Sistema 4 Fases - Ebook Trips',
       content_type: 'product',
       num_items: 1,
+      // ✅ PREDICTED LTV: Valor esperado do cliente ao longo do tempo (para ML da Meta)
+      // Baseado na estrutura real: Produto R$39,90 + 3 Order Bumps R$17,90 cada = R$93,60 máximo
+      predicted_ltv: 90.0,  // R$ 90,00 (valor esperado considerando produto + order bumps)
       user_data: {
         user_id: userData.external_id || undefined,  // external_id do KV
         email_address: normalizeEmail(purchaseData.email),  // ✅ Normalizado

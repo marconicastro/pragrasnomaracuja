@@ -460,6 +460,9 @@ export function pushPurchase(
     // ✅ Campos ecommerce no nível raiz (para acesso direto: {{ed - value}}, {{ed - currency}})
     value: value,
     currency: currency,
+    // ✅ PREDICTED LTV: Valor esperado do cliente ao longo do tempo (para ML da Meta)
+    // Baseado na estrutura real: Produto R$39,90 + 3 Order Bumps R$17,90 cada = R$93,60 máximo
+    predicted_ltv: 90.0,  // R$ 90,00 (valor esperado considerando produto + order bumps)
     // ✅ Campos user_data no nível raiz (para acesso direto: {{ed - email_address}})
     ...(preparedUserData?.email_address && { email_address: preparedUserData.email_address }),
     ...(preparedUserData?.phone_number && { phone_number: preparedUserData.phone_number }),
