@@ -345,7 +345,7 @@ export default function App() {
         body: JSON.stringify({
           email: formData.email,
           fbp: metaCookies.fbp,
-          fbc: metaCookies.fbc,
+          fbc: metaCookies.fbc || undefined, // ✅ Garantir que undefined não vire string 'undefined'
           firstName: trackingUserData.firstName,
           lastName: trackingUserData.lastName,
           phone: trackingUserData.phone,

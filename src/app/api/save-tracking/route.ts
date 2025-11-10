@@ -69,12 +69,17 @@ export async function POST(request: NextRequest) {
     const normalizedZip = zip ? normalizeZip(zip) : undefined;
     const normalizedCountry = normalizeCountry(undefined); // BR por padrão
     
+    // ✅ CORREÇÃO: Não salvar fbc se for undefined ou string 'undefined'
+    const fbcToSave = (fbc && fbc !== 'undefined' && fbc !== 'null') ? fbc : undefined;
+    
     // 🔍 DEBUG: Log do que será salvo
     console.log('🔍 DEBUG dados recebidos para salvar no KV:', {
       email: normalizedEmail,
       hasFbp: !!fbp,
       hasFbc: !!fbc,
-      fbcValue: fbc || 'null',
+      fbcOriginal: fbc || 'null',
+      fbcToSave: fbcToSave || 'null',
+      fbcWasFiltered: fbc && fbc !== fbcToSave,
       hasFirstName: !!normalizedFirstName,
       hasPhone: !!normalizedPhone,
       hasCity: !!normalizedCity
@@ -83,7 +88,7 @@ export async function POST(request: NextRequest) {
     const success = await saveUserTracking({
       email: normalizedEmail,  // ✅ Normalizado
       fbp,
-      fbc,
+      fbc: fbcToSave,
       firstName: normalizedFirstName,  // ✅ Normalizado
       lastName: normalizedLastName,     // ✅ Normalizado
       phone: normalizedPhone,         // ✅ Normalizado
