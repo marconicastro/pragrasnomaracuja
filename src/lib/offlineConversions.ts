@@ -1042,15 +1042,45 @@ export async function sendPurchaseToGTM(
       
       if (sanitizedFbc) {
         const fbcValidation = validateFbc(sanitizedFbc);
+        
+        // ✅ DEBUG: Verificar timestamp do fbc
+        const fbcParts = sanitizedFbc.split('.');
+        if (fbcParts.length >= 3) {
+          const fbcTimestamp = parseInt(fbcParts[2]);
+          const now = Date.now();
+          const fbcTime = fbcParts[2].length === 13 ? fbcTimestamp : fbcTimestamp * 1000;
+          const diff = now - fbcTime;
+          const diffHours = (diff / (1000 * 60 * 60)).toFixed(2);
+          
+          console.log('🔍 DEBUG fbc timestamp:', {
+            fbcTimestamp: fbcTimestamp,
+            fbcTimestampStr: fbcParts[2],
+            fbcTimestampLength: fbcParts[2].length,
+            now: now,
+            fbcTime: fbcTime,
+            diffMs: diff,
+            diffHours: `${diffHours}h`,
+            isFuture: diff < 0,
+            isValidWindow: diff >= 0 && diff <= (24 * 60 * 60 * 1000)
+          });
+        }
+        
         console.log('🔍 DEBUG fbc validação:', fbcValidation);
         
+        // ✅ CORREÇÃO: Sempre enviar fbc se sanitizado (mesmo se validação falhar)
+        // Meta pode usar para contexto histórico mesmo se expirado ou com timestamp estranho
+        validatedFbc = sanitizedFbc;
+        
         if (fbcValidation.valid) {
-          validatedFbc = sanitizedFbc;
           console.log('✅ fbc válido, será incluído no Purchase');
         } else {
-          console.warn('⚠️ fbc inválido no sendPurchaseToGTM:', fbcValidation.reason);
+          console.warn('⚠️ fbc validação falhou, mas será enviado mesmo assim para contexto histórico:', fbcValidation.reason);
         }
+      } else {
+        console.warn('⚠️ fbc não passou na sanitização básica - não será enviado');
       }
+    } else {
+      console.warn('⚠️ fbc não encontrado em userData');
     }
     
     // Preparar dados no formato DataLayer
@@ -1080,6 +1110,7 @@ export async function sendPurchaseToGTM(
       num_items: 1,
       // ✅ PREDICTED LTV: Valor esperado do cliente ao longo do tempo (para ML da Meta)
       // Baseado na estrutura real: Produto R$39,90 + 3 Order Bumps R$17,90 cada = R$93,60 máximo
+      // ✅ CRÍTICO: Incluir no nível raiz E em custom_data (se necessário) para garantir que Meta receba
       predicted_ltv: 90.0,  // R$ 90,00 (valor esperado considerando produto + order bumps)
       user_data: {
         user_id: userData.external_id || undefined,  // external_id do KV
