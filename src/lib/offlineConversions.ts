@@ -1022,63 +1022,15 @@ export async function sendPurchaseToGTM(
     console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
     console.log('🔧 Client Name:', clientName);
     
-    // ✅ Validar e preparar fbc antes de criar user_data
-    let validatedFbc: string | undefined = undefined;
-    if (userData.fbc) {
-      console.log('🔍 DEBUG fbc antes de validar:', {
-        fbc: userData.fbc.substring(0, 40) + '...',
-        fbcLength: userData.fbc.length,
-        hasFbc: !!userData.fbc
+    // ✅ Usar fbc diretamente do KV (apenas trim se necessário)
+    // Não fazer sanitização ou validação - usar exatamente como foi salvo
+    const fbcToUse = userData.fbc ? userData.fbc.trim() : undefined;
+    
+    if (fbcToUse) {
+      console.log('✅ fbc encontrado no KV, será incluído no Purchase:', {
+        fbcLength: fbcToUse.length,
+        fbcPreview: fbcToUse.substring(0, 50) + '...'
       });
-      
-      const { sanitizeFbc } = await import('./utils/fbcSanitizer');
-      const { validateFbc } = await import('./utils/fbcValidator');
-      const sanitizedFbc = sanitizeFbc(userData.fbc);
-      
-      console.log('🔍 DEBUG fbc após sanitizar:', {
-        sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
-        isValid: !!sanitizedFbc
-      });
-      
-      if (sanitizedFbc) {
-        const fbcValidation = validateFbc(sanitizedFbc);
-        
-        // ✅ DEBUG: Verificar timestamp do fbc
-        const fbcParts = sanitizedFbc.split('.');
-        if (fbcParts.length >= 3) {
-          const fbcTimestamp = parseInt(fbcParts[2]);
-          const now = Date.now();
-          const fbcTime = fbcParts[2].length === 13 ? fbcTimestamp : fbcTimestamp * 1000;
-          const diff = now - fbcTime;
-          const diffHours = (diff / (1000 * 60 * 60)).toFixed(2);
-          
-          console.log('🔍 DEBUG fbc timestamp:', {
-            fbcTimestamp: fbcTimestamp,
-            fbcTimestampStr: fbcParts[2],
-            fbcTimestampLength: fbcParts[2].length,
-            now: now,
-            fbcTime: fbcTime,
-            diffMs: diff,
-            diffHours: `${diffHours}h`,
-            isFuture: diff < 0,
-            isValidWindow: diff >= 0 && diff <= (24 * 60 * 60 * 1000)
-          });
-        }
-        
-        console.log('🔍 DEBUG fbc validação:', fbcValidation);
-        
-        // ✅ CORREÇÃO: Sempre enviar fbc se sanitizado (mesmo se validação falhar)
-        // Meta pode usar para contexto histórico mesmo se expirado ou com timestamp estranho
-        validatedFbc = sanitizedFbc;
-        
-        if (fbcValidation.valid) {
-          console.log('✅ fbc válido, será incluído no Purchase');
-        } else {
-          console.warn('⚠️ fbc validação falhou, mas será enviado mesmo assim para contexto histórico:', fbcValidation.reason);
-        }
-      } else {
-        console.warn('⚠️ fbc não passou na sanitização básica - não será enviado');
-      }
     } else {
       console.warn('⚠️ fbc não encontrado em userData');
     }
@@ -1124,7 +1076,7 @@ export async function sendPurchaseToGTM(
         country: normalizeCountry(userData.country),  // ✅ Normalizado
         // ✅ Adicionar fbp e fbc (CRÍTICO para atribuição!)
         ...(userData.fbp && { fbp: userData.fbp }),
-        ...(validatedFbc && { fbc: validatedFbc })
+        ...(fbcToUse && { fbc: fbcToUse })
       },
       // Metadata adicional
       // ✅ CRÍTICO: Usar mesmo formato do navegador: ${orderId}_${timestamp}

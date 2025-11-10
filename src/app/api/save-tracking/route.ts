@@ -69,72 +69,12 @@ export async function POST(request: NextRequest) {
     const normalizedZip = zip ? normalizeZip(zip) : undefined;
     const normalizedCountry = normalizeCountry(undefined); // BR por padrão
     
-    // ✅ CORREÇÃO: Validar fbc antes de salvar (não salvar se expirado > 24h)
-    // Se o cookie _fbc está antigo, não salvar no Lead novo
-    let fbcToSave: string | undefined = fbc;
-    
-    // 🔍 DEBUG: Log detalhado do fbc recebido
-    console.log('🔍 DEBUG fbc recebido no save-tracking:', {
-      hasFbc: !!fbc,
-      fbcLength: fbc?.length || 0,
-      fbcPreview: fbc ? fbc.substring(0, 50) + '...' : 'null',
-      email: normalizedEmail
-    });
-    
-    if (fbc) {
-      try {
-        const { validateFbc, isValidFbcFormat, isValidFbcTimestamp } = await import('@/lib/utils/fbcValidator');
-        const fbcValidation = validateFbc(fbc);
-        const formatValid = isValidFbcFormat(fbc);
-        const timestampValid = isValidFbcTimestamp(fbc);
-        
-        // 🔍 DEBUG: Log detalhado da validação
-        console.log('🔍 DEBUG validação fbc:', {
-          formatValid,
-          timestampValid,
-          validationValid: fbcValidation.valid,
-          reason: fbcValidation.reason
-        });
-        
-        if (fbcValidation.valid) {
-          // fbc válido (< 24h) → Salvar
-          fbcToSave = fbc;
-          console.log('✅ fbc válido, será salvo no Lead');
-        } else if (formatValid) {
-          // ✅ CORREÇÃO: Se formato está válido mas timestamp expirado, aceitar mesmo assim
-          // Pode ser problema de sincronização do cookie (cookie não foi atualizado)
-          // Meta pode usar para contexto histórico mesmo se expirado
-          fbcToSave = fbc;
-          console.warn('⚠️ fbc formato válido mas timestamp expirado - será salvo mesmo assim para contexto histórico:', {
-            reason: fbcValidation.reason,
-            formatValid,
-            timestampValid,
-            fbcPreview: fbc.substring(0, 50) + '...'
-          });
-        } else {
-          // Formato inválido → NÃO salvar (pode ser fbc fake)
-          fbcToSave = undefined;
-          console.warn('⚠️ fbc formato inválido, NÃO será salvo no Lead novo:', {
-            reason: fbcValidation.reason,
-            formatValid,
-            timestampValid,
-            fbcPreview: fbc.substring(0, 50) + '...'
-          });
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao validar fbc, não salvando:', error);
-        fbcToSave = undefined;
-      }
-    } else {
-      console.warn('⚠️ fbc não foi enviado no request do Lead');
-    }
-    
-    // 🔍 DEBUG: Log do que será salvo no KV
-    console.log('🔍 DEBUG dados que serão salvos no KV:', {
+    // 🔍 DEBUG: Log do que será salvo
+    console.log('🔍 DEBUG dados recebidos para salvar no KV:', {
       email: normalizedEmail,
       hasFbp: !!fbp,
-      hasFbc: !!fbcToSave,
-      fbcToSave: fbcToSave ? fbcToSave.substring(0, 50) + '...' : 'null',
+      hasFbc: !!fbc,
+      fbcValue: fbc || 'null',
       hasFirstName: !!normalizedFirstName,
       hasPhone: !!normalizedPhone,
       hasCity: !!normalizedCity
@@ -143,7 +83,7 @@ export async function POST(request: NextRequest) {
     const success = await saveUserTracking({
       email: normalizedEmail,  // ✅ Normalizado
       fbp,
-      fbc: fbcToSave,  // ✅ Só salva se válido (< 24h)
+      fbc,
       firstName: normalizedFirstName,  // ✅ Normalizado
       lastName: normalizedLastName,     // ✅ Normalizado
       phone: normalizedPhone,         // ✅ Normalizado
