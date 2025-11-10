@@ -100,10 +100,21 @@ export async function POST(request: NextRequest) {
           // fbc válido (< 24h) → Salvar
           fbcToSave = fbc;
           console.log('✅ fbc válido, será salvo no Lead');
+        } else if (formatValid) {
+          // ✅ CORREÇÃO: Se formato está válido mas timestamp expirado, aceitar mesmo assim
+          // Pode ser problema de sincronização do cookie (cookie não foi atualizado)
+          // Meta pode usar para contexto histórico mesmo se expirado
+          fbcToSave = fbc;
+          console.warn('⚠️ fbc formato válido mas timestamp expirado - será salvo mesmo assim para contexto histórico:', {
+            reason: fbcValidation.reason,
+            formatValid,
+            timestampValid,
+            fbcPreview: fbc.substring(0, 50) + '...'
+          });
         } else {
-          // fbc expirado (> 24h) → NÃO salvar (evita salvar fbc antigo em Lead novo)
+          // Formato inválido → NÃO salvar (pode ser fbc fake)
           fbcToSave = undefined;
-          console.warn('⚠️ fbc expirado (> 24h), NÃO será salvo no Lead novo:', {
+          console.warn('⚠️ fbc formato inválido, NÃO será salvo no Lead novo:', {
             reason: fbcValidation.reason,
             formatValid,
             timestampValid,
