@@ -69,10 +69,33 @@ export async function POST(request: NextRequest) {
     const normalizedZip = zip ? normalizeZip(zip) : undefined;
     const normalizedCountry = normalizeCountry(undefined); // BR por padrão
     
+    // ✅ CORREÇÃO: Validar fbc antes de salvar (não salvar se expirado > 24h)
+    // Se o cookie _fbc está antigo, não salvar no Lead novo
+    let fbcToSave: string | undefined = fbc;
+    if (fbc) {
+      try {
+        const { validateFbc } = await import('@/lib/utils/fbcValidator');
+        const fbcValidation = validateFbc(fbc);
+        
+        if (fbcValidation.valid) {
+          // fbc válido (< 24h) → Salvar
+          fbcToSave = fbc;
+          console.log('✅ fbc válido, será salvo no Lead');
+        } else {
+          // fbc expirado (> 24h) → NÃO salvar (evita salvar fbc antigo em Lead novo)
+          fbcToSave = undefined;
+          console.warn('⚠️ fbc expirado (> 24h), NÃO será salvo no Lead novo:', fbcValidation.reason);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao validar fbc, não salvando:', error);
+        fbcToSave = undefined;
+      }
+    }
+    
     const success = await saveUserTracking({
       email: normalizedEmail,  // ✅ Normalizado
       fbp,
-      fbc,
+      fbc: fbcToSave,  // ✅ Só salva se válido (< 24h)
       firstName: normalizedFirstName,  // ✅ Normalizado
       lastName: normalizedLastName,     // ✅ Normalizado
       phone: normalizedPhone,         // ✅ Normalizado

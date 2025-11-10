@@ -519,20 +519,44 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
-  const userDataForGTM = userData ? {
-    user_id: userData.external_id,
-    email_address: userData.email,
-    phone_number: userData.phone,
-    first_name: userData.firstName,
-    last_name: userData.lastName,
-    city: userData.city,
-    region: userData.state,
-    postal_code: userData.zip,
-    country: userData.country,
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
-    fbp: metaCookies.fbp,
-    fbc: metaCookies.fbc
-  } : undefined;
+  let userDataForGTM: any = undefined;
+  
+  if (userData) {
+    // Se tiver dados persistidos, usar diretamente
+    userDataForGTM = {
+      user_id: userData.external_id,
+      email_address: userData.email,
+      phone_number: userData.phone,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      city: userData.city,
+      region: userData.state,
+      postal_code: userData.zip,
+      country: userData.country,
+      // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
+      fbp: metaCookies.fbp,
+      fbc: metaCookies.fbc
+    };
+  } else {
+    // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
+    const { enrichColdEvent } = await import('./coldEventsEnrichment');
+    const enriched = await enrichColdEvent();
+    userDataForGTM = convertEnrichedToGTMFormat(enriched.user_data);
+    
+    // ✅ CRÍTICO: Garantir que sempre temos um objeto (mesmo que vazio)
+    // O convertEnrichedToGTMFormat pode retornar undefined se não houver dados suficientes
+    if (!userDataForGTM) {
+      userDataForGTM = {};
+    }
+    
+    // ✅ CRÍTICO: Garantir fbp e fbc sempre presentes (necessários para captura completa)
+    if (!userDataForGTM.fbp && metaCookies.fbp) {
+      userDataForGTM.fbp = metaCookies.fbp;
+    }
+    if (!userDataForGTM.fbc && metaCookies.fbc) {
+      userDataForGTM.fbc = metaCookies.fbc;
+    }
+  }
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
@@ -612,20 +636,44 @@ export async function trackAddToCartElite(
   // Obter user data para DataLayer
   const userData = getAdvancedUserData();
   const metaCookies = getMetaCookies();
-  const userDataForGTM = userData ? {
-    user_id: userData.external_id,
-    email_address: userData.email,
-    phone_number: userData.phone,
-    first_name: userData.firstName,
-    last_name: userData.lastName,
-    city: userData.city,
-    region: userData.state,
-    postal_code: userData.zip,
-    country: userData.country,
-    // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
-    fbp: metaCookies.fbp,
-    fbc: metaCookies.fbc
-  } : undefined;
+  let userDataForGTM: any = undefined;
+  
+  if (userData) {
+    // Se tiver dados persistidos, usar diretamente
+    userDataForGTM = {
+      user_id: userData.external_id,
+      email_address: userData.email,
+      phone_number: userData.phone,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      city: userData.city,
+      region: userData.state,
+      postal_code: userData.zip,
+      country: userData.country,
+      // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
+      fbp: metaCookies.fbp,
+      fbc: metaCookies.fbc
+    };
+  } else {
+    // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
+    const { enrichColdEvent } = await import('./coldEventsEnrichment');
+    const enriched = await enrichColdEvent();
+    userDataForGTM = convertEnrichedToGTMFormat(enriched.user_data);
+    
+    // ✅ CRÍTICO: Garantir que sempre temos um objeto (mesmo que vazio)
+    // O convertEnrichedToGTMFormat pode retornar undefined se não houver dados suficientes
+    if (!userDataForGTM) {
+      userDataForGTM = {};
+    }
+    
+    // ✅ CRÍTICO: Garantir fbp e fbc sempre presentes (necessários para captura completa)
+    if (!userDataForGTM.fbp && metaCookies.fbp) {
+      userDataForGTM.fbp = metaCookies.fbp;
+    }
+    if (!userDataForGTM.fbc && metaCookies.fbc) {
+      userDataForGTM.fbc = metaCookies.fbc;
+    }
+  }
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
   const { generateEventId } = await import('./utils/eventId');
