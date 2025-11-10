@@ -72,10 +72,29 @@ export async function POST(request: NextRequest) {
     // ✅ CORREÇÃO: Validar fbc antes de salvar (não salvar se expirado > 24h)
     // Se o cookie _fbc está antigo, não salvar no Lead novo
     let fbcToSave: string | undefined = fbc;
+    
+    // 🔍 DEBUG: Log detalhado do fbc recebido
+    console.log('🔍 DEBUG fbc recebido no save-tracking:', {
+      hasFbc: !!fbc,
+      fbcLength: fbc?.length || 0,
+      fbcPreview: fbc ? fbc.substring(0, 50) + '...' : 'null',
+      email: normalizedEmail
+    });
+    
     if (fbc) {
       try {
-        const { validateFbc } = await import('@/lib/utils/fbcValidator');
+        const { validateFbc, isValidFbcFormat, isValidFbcTimestamp } = await import('@/lib/utils/fbcValidator');
         const fbcValidation = validateFbc(fbc);
+        const formatValid = isValidFbcFormat(fbc);
+        const timestampValid = isValidFbcTimestamp(fbc);
+        
+        // 🔍 DEBUG: Log detalhado da validação
+        console.log('🔍 DEBUG validação fbc:', {
+          formatValid,
+          timestampValid,
+          validationValid: fbcValidation.valid,
+          reason: fbcValidation.reason
+        });
         
         if (fbcValidation.valid) {
           // fbc válido (< 24h) → Salvar
@@ -84,13 +103,31 @@ export async function POST(request: NextRequest) {
         } else {
           // fbc expirado (> 24h) → NÃO salvar (evita salvar fbc antigo em Lead novo)
           fbcToSave = undefined;
-          console.warn('⚠️ fbc expirado (> 24h), NÃO será salvo no Lead novo:', fbcValidation.reason);
+          console.warn('⚠️ fbc expirado (> 24h), NÃO será salvo no Lead novo:', {
+            reason: fbcValidation.reason,
+            formatValid,
+            timestampValid,
+            fbcPreview: fbc.substring(0, 50) + '...'
+          });
         }
       } catch (error) {
         console.warn('⚠️ Erro ao validar fbc, não salvando:', error);
         fbcToSave = undefined;
       }
+    } else {
+      console.warn('⚠️ fbc não foi enviado no request do Lead');
     }
+    
+    // 🔍 DEBUG: Log do que será salvo no KV
+    console.log('🔍 DEBUG dados que serão salvos no KV:', {
+      email: normalizedEmail,
+      hasFbp: !!fbp,
+      hasFbc: !!fbcToSave,
+      fbcToSave: fbcToSave ? fbcToSave.substring(0, 50) + '...' : 'null',
+      hasFirstName: !!normalizedFirstName,
+      hasPhone: !!normalizedPhone,
+      hasCity: !!normalizedCity
+    });
     
     const success = await saveUserTracking({
       email: normalizedEmail,  // ✅ Normalizado

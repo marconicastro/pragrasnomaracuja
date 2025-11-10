@@ -331,6 +331,14 @@ export default function App() {
       console.log('📍 Geolocalização FINAL que será salva no KV:', geoData);
       console.log('⚠️ CRÍTICO: Se ainda estiver undefined, DQS será 92 (ao invés de 98)!');
       
+      // 🔍 DEBUG: Log do fbc antes de enviar
+      console.log('🔍 DEBUG fbc antes de enviar para save-tracking:', {
+        hasFbc: !!metaCookies.fbc,
+        fbcLength: metaCookies.fbc?.length || 0,
+        fbcPreview: metaCookies.fbc ? metaCookies.fbc.substring(0, 50) + '...' : 'null',
+        email: formData.email
+      });
+      
       await fetch('/api/save-tracking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
