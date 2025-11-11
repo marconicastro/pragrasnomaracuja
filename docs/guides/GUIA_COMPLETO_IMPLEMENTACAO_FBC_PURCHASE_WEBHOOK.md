@@ -165,6 +165,20 @@ const handlePreCheckoutSubmit = async (formData) => {
   // 1. Capturar cookies do Meta
   const metaCookies = getMetaCookies();
   
+  // ✅ CRÍTICO: Verificar se há fbclid na URL (clique recente)
+  // Se houver, criar novo fbc baseado no fbclid atual (ao invés de usar cookie antigo)
+  let fbcToUse = metaCookies.fbc;
+  const urlParams = new URLSearchParams(window.location.search);
+  const fbclidFromUrl = urlParams.get('fbclid');
+  
+  if (fbclidFromUrl && fbclidFromUrl.length >= 20) {
+    // ✅ Criar novo fbc baseado no fbclid da URL (clique atual)
+    // Formato: fb.1.{timestamp}.{fbclid}
+    const timestamp = Math.floor(Date.now() / 1000); // Timestamp em segundos
+    fbcToUse = `fb.1.${timestamp}.${fbclidFromUrl}`;
+    console.log('✅ Novo fbc criado a partir do fbclid da URL (clique atual)');
+  }
+  
   // 2. Enviar para API que salva no KV
   try {
     await fetch('/api/save-tracking', {
@@ -173,7 +187,7 @@ const handlePreCheckoutSubmit = async (formData) => {
       body: JSON.stringify({
         email: formData.email,
         fbp: metaCookies.fbp,  // ✅ Facebook Browser ID
-        fbc: metaCookies.fbc,  // ✅ Facebook Click ID (CRÍTICO!)
+        fbc: fbcToUse || undefined,  // ✅ Facebook Click ID (criado ou do cookie)
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
@@ -191,6 +205,8 @@ const handlePreCheckoutSubmit = async (formData) => {
 ```
 
 **⚠️ IMPORTANTE:**
+- **Prioridade 1:** Se houver `fbclid` na URL → criar novo `fbc` com timestamp atual (garante validade de 24h)
+- **Prioridade 2:** Se não houver `fbclid` na URL → usar `fbc` do cookie (pode ser antigo, mas é melhor que nada)
 - Capturar fbc **ANTES** de redirecionar para checkout externo
 - fbc só existe se usuário clicou em anúncio do Facebook
 - Se não tiver fbc, não é erro (usuário pode ter vindo de outra fonte)

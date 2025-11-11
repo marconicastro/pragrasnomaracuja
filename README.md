@@ -20,18 +20,12 @@ docs/
 ├── guides/              # Guias principais de implementação
 │   ├── GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md
 │   ├── GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md
-│   ├── GUIA_VALUE_OPTIMIZATION_E_PREDICTED_LTV_2025.md
-│   ├── GUIA_DIAGNOSTICO_GTM_SERVER_SIDE.md
 │   └── GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md
 ├── troubleshooting/     # Problemas e soluções
-│   ├── TROUBLESHOOTING.md
-│   ├── PROBLEMA_FBC_ANTIGO_LEAD_NOVO.md
-│   ├── ANALISE_FBC_REAL_OU_FAKE.md
-│   └── ...
+│   └── TROUBLESHOOTING.md
 └── reference/           # Referências rápidas
     ├── VARIAVEIS_AMBIENTE.md
-    ├── CHECKLIST_IMPLEMENTACAO_RAPIDA.md
-    └── ...
+    └── CHECKLIST_IMPLEMENTACAO_RAPIDA.md
 ```
 
 ### **📖 Guias Essenciais:**
@@ -40,20 +34,26 @@ docs/
    - Guia completo do DataLayer e GTM Server-Side
    - Estrutura de eventos
    - Configuração passo a passo
-   - Validação de fbc no Purchase
+   - Captura e validação de fbc no Purchase
 
-2. **[`docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
+2. **[`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md`](./docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md)**
+   - Guia completo de implementação de fbc
+   - Captura a partir de fbclid da URL (prioridade)
+   - Validação de formato e timestamp
+   - Integração com Purchase via webhook
+
+3. **[`docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
    - Guia completo de implementação (800+ linhas)
    - Arquitetura e fluxo detalhados
    - Instalação passo a passo
    - ⏱️ Tempo de leitura: 30-40 minutos
 
-3. **[`docs/troubleshooting/TROUBLESHOOTING.md`](./docs/troubleshooting/TROUBLESHOOTING.md)**
+4. **[`docs/troubleshooting/TROUBLESHOOTING.md`](./docs/troubleshooting/TROUBLESHOOTING.md)**
    - Problemas comuns e soluções
    - FAQ completo
    - Debug de Vercel KV, Meta Pixel, Webhook
 
-4. **[`docs/reference/VARIAVEIS_AMBIENTE.md`](./docs/reference/VARIAVEIS_AMBIENTE.md)**
+5. **[`docs/reference/VARIAVEIS_AMBIENTE.md`](./docs/reference/VARIAVEIS_AMBIENTE.md)**
    - Configuração de variáveis de ambiente
    - Pixel IDs e Access Tokens
    - Checklist de configuração

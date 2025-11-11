@@ -560,12 +560,15 @@ await sendPurchaseToGTM(purchaseData, userData || {});
 **IMPORTANTE:** 
 - Purchase via webhook é o método recomendado (mais confiável)
 - Browser Purchase pode não disparar se usuário fechar a página antes
+- **Captura de fbc:** Quando o Lead é gerado, o sistema verifica se há `fbclid` na URL:
+  - Se houver `fbclid` na URL → cria novo `fbc` com timestamp atual: `fb.1.{timestamp}.{fbclid}` (garante validade de 24h)
+  - Se não houver `fbclid` na URL → usa `fbc` do cookie `_fbc` (pode ser antigo, mas é melhor que nada)
 - **Validação de fbc:** O `fbc` é automaticamente validado antes de ser incluído no Purchase:
   - Sanitização: Remove apenas espaços externos (preserva conteúdo interno)
   - Validação de formato: Verifica se segue padrão `fb.1.{timestamp}.{fbclid}`
   - Validação de timestamp: Verifica se está dentro da janela de 24 horas
   - Se inválido, o `fbc` não é incluído (evita erros no Meta CAPI)
-- Para mais detalhes sobre validação de fbc, consulte: [`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md`](../guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md)
+- Para mais detalhes sobre captura e validação de fbc, consulte: [`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md`](../guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md)
 
 ---
 
