@@ -1022,15 +1022,37 @@ export async function sendPurchaseToGTM(
     console.log('📍 GTM Server-Side Endpoint:', gtmEndpoint);
     console.log('🔧 Client Name:', clientName);
     
-    // ✅ Usar fbc diretamente do KV (apenas trim se necessário)
-    // Não fazer sanitização ou validação - usar exatamente como foi salvo
-    const fbcToUse = userData.fbc ? userData.fbc.trim() : undefined;
-    
-    if (fbcToUse) {
-      console.log('✅ fbc encontrado no KV, será incluído no Purchase:', {
-        fbcLength: fbcToUse.length,
-        fbcPreview: fbcToUse.substring(0, 50) + '...'
+    // ✅ Validar e preparar fbc antes de criar user_data
+    // Seguindo GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md
+    let validatedFbc: string | undefined = undefined;
+    if (userData.fbc) {
+      console.log('🔍 DEBUG fbc antes de validar:', {
+        fbc: userData.fbc.substring(0, 40) + '...',
+        fbcLength: userData.fbc.length,
+        hasFbc: !!userData.fbc
       });
+      
+      // 1. Sanitizar (remove apenas espaços externos)
+      const { sanitizeFbc } = await import('./utils/fbcSanitizer');
+      const sanitizedFbc = sanitizeFbc(userData.fbc);
+      
+      console.log('🔍 DEBUG fbc após sanitizar:', {
+        sanitized: sanitizedFbc ? sanitizedFbc.substring(0, 40) + '...' : 'null',
+        isValid: !!sanitizedFbc
+      });
+      
+      if (sanitizedFbc) {
+        // 2. Validar (formato + timestamp dentro de 24h)
+        const fbcValidation = validateFbc(sanitizedFbc);
+        console.log('🔍 DEBUG fbc validação:', fbcValidation);
+        
+        if (fbcValidation.valid) {
+          validatedFbc = sanitizedFbc;
+          console.log('✅ fbc válido, será incluído no Purchase');
+        } else {
+          console.warn('⚠️ fbc inválido no sendPurchaseToGTM:', fbcValidation.reason);
+        }
+      }
     } else {
       console.warn('⚠️ fbc não encontrado em userData');
     }
@@ -1076,7 +1098,7 @@ export async function sendPurchaseToGTM(
         country: normalizeCountry(userData.country),  // ✅ Normalizado
         // ✅ Adicionar fbp e fbc (CRÍTICO para atribuição!)
         ...(userData.fbp && { fbp: userData.fbp }),
-        ...(fbcToUse && { fbc: fbcToUse })
+        ...(validatedFbc && { fbc: validatedFbc })  // ✅ fbc validado incluído aqui
       },
       // Metadata adicional
       // ✅ CRÍTICO: Usar mesmo formato do navegador: ${orderId}_${timestamp}
