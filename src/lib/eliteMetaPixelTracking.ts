@@ -396,6 +396,8 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   country: string;
   fbp: string;
   fbc: string;
+  client_ip_address: string | null;
+  client_user_agent: string;
 }> {
   const converted: any = {};
   
@@ -413,6 +415,14 @@ function convertEnrichedToGTMFormat(enriched: Record<string, any>): Partial<{
   // ✅ CRÍTICO: Incluir fbp e fbc (necessários para deduplicação correta)
   if (enriched.fbp) converted.fbp = enriched.fbp;
   if (enriched.fbc) converted.fbc = enriched.fbc;
+  
+  // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+  // IP será null no frontend (GTM Server-Side captura automaticamente do request HTTP)
+  converted.client_ip_address = null; // Correto: null no frontend
+  // User Agent deve ser capturado do navegador
+  if (typeof navigator !== 'undefined' && navigator.userAgent) {
+    converted.client_user_agent = navigator.userAgent;
+  }
   
   return Object.keys(converted).length > 0 ? converted : undefined;
 }
@@ -440,7 +450,10 @@ export async function trackPageViewElite(customParams: Record<string, any> = {})
       country: userData.country,
       // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
       fbp: metaCookies.fbp,
-      fbc: metaCookies.fbc
+      fbc: metaCookies.fbc,
+      // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+      client_ip_address: null, // Correto: null no frontend (GTM Server-Side captura do request HTTP)
+      client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
     };
   } else {
     // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
@@ -535,7 +548,10 @@ export async function trackViewContentElite(customParams: Record<string, any> = 
       country: userData.country,
       // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
       fbp: metaCookies.fbp,
-      fbc: metaCookies.fbc
+      fbc: metaCookies.fbc,
+      // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+      client_ip_address: null, // Correto: null no frontend (GTM Server-Side captura do request HTTP)
+      client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
     };
   } else {
     // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
@@ -652,7 +668,10 @@ export async function trackAddToCartElite(
       country: userData.country,
       // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
       fbp: metaCookies.fbp,
-      fbc: metaCookies.fbc
+      fbc: metaCookies.fbc,
+      // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+      client_ip_address: null, // Correto: null no frontend (GTM Server-Side captura do request HTTP)
+      client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
     };
   } else {
     // Se não tiver dados persistidos, usar enrichment (IP geolocation, fbp/fbc, etc.)
@@ -761,7 +780,10 @@ export async function trackLeadElite(
     country: 'BR',
     // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
     fbp: metaCookies.fbp,
-    fbc: metaCookies.fbc
+    fbc: metaCookies.fbc,
+    // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+    client_ip_address: null, // Correto: null no frontend (GTM Server-Side captura do request HTTP)
+    client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)
@@ -873,7 +895,10 @@ export async function trackInitiateCheckoutElite(
     country: 'BR',
     // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
     fbp: metaCookies.fbp,
-    fbc: metaCookies.fbc
+    fbc: metaCookies.fbc,
+    // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+    client_ip_address: null, // Correto: null no frontend (GTM Server-Side captura do request HTTP)
+    client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
   };
   
   // ✅ CRÍTICO: Gerar eventID UMA VEZ e usar em ambos (DataLayer e trackEliteEvent)

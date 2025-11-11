@@ -47,8 +47,8 @@ interface UserData {
   country?: string;
   fbp?: string;  // ✅ Facebook Browser ID (crítico para deduplicação)
   fbc?: string;   // ✅ Facebook Click ID (crítico para atribuição)
+  client_ip_address?: string | null; // ✅ IP (null no frontend, GTM Server-Side captura do request HTTP)
   client_user_agent?: string; // ✅ User Agent (necessário para correspondência avançada)
-  // Nota: client_ip_address será capturado automaticamente pelo GTM Server-Side do request HTTP
 }
 
 interface DataLayerEvent {
@@ -143,7 +143,9 @@ function prepareUserData(userData?: Partial<UserData>): UserData | undefined {
     // ✅ CRÍTICO: Incluir fbp e fbc (necessários para captura completa pelo GTM)
     fbp: userData.fbp,
     fbc: userData.fbc,
-    // ✅ CRÍTICO: Incluir client_user_agent (necessário para correspondência avançada - 13 campos)
+    // ✅ CRÍTICO: Incluir client_ip_address e client_user_agent para correspondência avançada
+    // IP será null no frontend (GTM Server-Side captura automaticamente do request HTTP)
+    client_ip_address: userData.client_ip_address !== undefined ? userData.client_ip_address : null,
     client_user_agent: clientUserAgent
   };
 
