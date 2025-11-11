@@ -69,7 +69,9 @@ export async function POST(request: NextRequest) {
     const normalizedZip = zip ? normalizeZip(zip) : undefined;
     const normalizedCountry = normalizeCountry(undefined); // BR por padrão
     
-    // ✅ CORREÇÃO: Não salvar fbc se for undefined ou string 'undefined'
+    // ✅ CORREÇÃO: Preservar fbc EXATAMENTE como vem (seguindo GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md)
+    // NÃO normalizar, NÃO validar timestamp aqui - apenas filtrar undefined/null
+    // Validação acontece apenas no Passo 5 (envio ao GTM)
     const fbcToSave = (fbc && fbc !== 'undefined' && fbc !== 'null') ? fbc : undefined;
     
     // 🔍 DEBUG: Log do que será salvo

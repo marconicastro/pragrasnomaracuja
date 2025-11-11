@@ -565,7 +565,7 @@ await sendPurchaseToGTM(purchaseData, userData || {});
   - Validação de formato: Verifica se segue padrão `fb.1.{timestamp}.{fbclid}`
   - Validação de timestamp: Verifica se está dentro da janela de 24 horas
   - Se inválido, o `fbc` não é incluído (evita erros no Meta CAPI)
-- Para mais detalhes sobre validação de fbc, consulte: `docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md`
+- Para mais detalhes sobre validação de fbc, consulte: [`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md`](../guides/GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md)
 
 ---
 

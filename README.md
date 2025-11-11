@@ -11,37 +11,51 @@
 
 ## 📚 DOCUMENTAÇÃO COMPLETA
 
-### **📖 Documentação Consolidada (4 arquivos essenciais):**
+### **📁 Estrutura Organizada:**
 
-1. **[`README.md`](./README.md)** (este arquivo)
-   - Overview do projeto
-   - Features principais
-   - Quick start
-   - Comparação vs mercado
+A documentação está organizada em `docs/` seguindo padrão dev:
 
-2. **[`GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
+```
+docs/
+├── guides/              # Guias principais de implementação
+│   ├── GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md
+│   ├── GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md
+│   ├── GUIA_VALUE_OPTIMIZATION_E_PREDICTED_LTV_2025.md
+│   ├── GUIA_DIAGNOSTICO_GTM_SERVER_SIDE.md
+│   └── GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md
+├── troubleshooting/     # Problemas e soluções
+│   ├── TROUBLESHOOTING.md
+│   ├── PROBLEMA_FBC_ANTIGO_LEAD_NOVO.md
+│   ├── ANALISE_FBC_REAL_OU_FAKE.md
+│   └── ...
+└── reference/           # Referências rápidas
+    ├── VARIAVEIS_AMBIENTE.md
+    ├── CHECKLIST_IMPLEMENTACAO_RAPIDA.md
+    └── ...
+```
+
+### **📖 Guias Essenciais:**
+
+1. **[`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md`](./docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md)**
+   - Guia completo do DataLayer e GTM Server-Side
+   - Estrutura de eventos
+   - Configuração passo a passo
+   - Validação de fbc no Purchase
+
+2. **[`docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
    - Guia completo de implementação (800+ linhas)
    - Arquitetura e fluxo detalhados
    - Instalação passo a passo
-   - Configuração de variáveis
-   - Estrutura de arquivos
-   - Implementação por camada
-   - Testes e validação
-   - Deploy em produção
    - ⏱️ Tempo de leitura: 30-40 minutos
 
-3. **[`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md)**
+3. **[`docs/troubleshooting/TROUBLESHOOTING.md`](./docs/troubleshooting/TROUBLESHOOTING.md)**
    - Problemas comuns e soluções
    - FAQ completo
    - Debug de Vercel KV, Meta Pixel, Webhook
-   - DQS e EQM troubleshooting
-   - GTM Server-Side e CAPIG
-   - Comandos úteis
 
-4. **[`VARIAVEIS_AMBIENTE.md`](./VARIAVEIS_AMBIENTE.md)**
+4. **[`docs/reference/VARIAVEIS_AMBIENTE.md`](./docs/reference/VARIAVEIS_AMBIENTE.md)**
    - Configuração de variáveis de ambiente
    - Pixel IDs e Access Tokens
-   - CAPIG/Stape URLs
    - Checklist de configuração
 
 ---
@@ -77,12 +91,13 @@ vercel --prod
 
 ### **4. Ler Documentação:**
 ```
-📖 GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md (guia completo)
-📖 TROUBLESHOOTING.md (problemas comuns)
-📖 VARIAVEIS_AMBIENTE.md (configuração)
+📖 docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md (DataLayer)
+📖 docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md (guia completo)
+📖 docs/troubleshooting/TROUBLESHOOTING.md (problemas comuns)
+📖 docs/reference/VARIAVEIS_AMBIENTE.md (configuração)
 ```
 
-**Documentação consolidada e organizada! 🎯**
+**Documentação organizada seguindo padrão dev! 🎯**
 
 ---
 
@@ -299,23 +314,25 @@ src/
 
 ## 💡 Próximos Passos
 
-1. ✅ Ler **[`GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
-2. ✅ Configurar variáveis (Vercel)
-3. ✅ Conectar Vercel KV
-4. ✅ Fazer Lead no site
-5. ✅ Testar webhook (cURL)
-6. ✅ Verificar Meta Events Manager
-7. ✅ Modo produção (comentar test_code)
-8. ✅ Monitorar métricas!
+1. ✅ Ler **[`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md`](./docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md)**
+2. ✅ Ler **[`docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)**
+3. ✅ Configurar variáveis (ver [`docs/reference/VARIAVEIS_AMBIENTE.md`](./docs/reference/VARIAVEIS_AMBIENTE.md))
+4. ✅ Conectar Vercel KV
+5. ✅ Fazer Lead no site
+6. ✅ Testar webhook (cURL)
+7. ✅ Verificar Meta Events Manager
+8. ✅ Modo produção (comentar test_code)
+9. ✅ Monitorar métricas!
 
 ---
 
 ## 📞 Suporte
 
 ### **Documentação:**
-- **Guia Completo:** [`GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)
-- **Troubleshooting:** [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) ← **Problemas? Leia aqui!**
-- **Variáveis:** [`VARIAVEIS_AMBIENTE.md`](./VARIAVEIS_AMBIENTE.md)
+- **DataLayer:** [`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md`](./docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md)
+- **Guia Completo:** [`docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./docs/guides/GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)
+- **Troubleshooting:** [`docs/troubleshooting/TROUBLESHOOTING.md`](./docs/troubleshooting/TROUBLESHOOTING.md) ← **Problemas? Leia aqui!**
+- **Variáveis:** [`docs/reference/VARIAVEIS_AMBIENTE.md`](./docs/reference/VARIAVEIS_AMBIENTE.md)
 
 ### **Links Úteis:**
 - **Meta Docs:** https://developers.facebook.com/docs/marketing-api/conversions-api
@@ -332,13 +349,15 @@ src/
 
 ## ⚠️ IMPORTANTE:
 
-**📖 DOCUMENTAÇÃO CONSOLIDADA EM 4 ARQUIVOS:**
+**📖 DOCUMENTAÇÃO ORGANIZADA EM `docs/`:**
 
-1. **[`README.md`](./README.md)** - Este arquivo (overview)
-2. **[`GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md`](./GUIA_IMPLEMENTACAO_COMPLETO_DO_ZERO.md)** - Guia completo (800+ linhas)
-3. **[`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md)** - Problemas e soluções
-4. **[`VARIAVEIS_AMBIENTE.md`](./VARIAVEIS_AMBIENTE.md)** - Configuração
+```
+docs/
+├── guides/          # Guias principais
+├── troubleshooting/ # Problemas e soluções
+└── reference/       # Referências rápidas
+```
 
-**Tudo organizado | Fácil de navegar | Implementar em 7-13h**
+**Estrutura limpa | Padrão dev | Fácil de navegar | Implementar em 7-13h**
 
-**COMECE PELO GUIA COMPLETO! ✅**
+**COMECE POR:** [`docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md`](./docs/guides/GUIA_COMPLETO_IMPLEMENTACAO_DATALAYER.md) ✅

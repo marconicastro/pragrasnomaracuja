@@ -1023,7 +1023,7 @@ export async function sendPurchaseToGTM(
     console.log('🔧 Client Name:', clientName);
     
     // ✅ Validar e preparar fbc antes de criar user_data
-    // Seguindo GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md
+    // Seguindo GUIA_COMPLETO_IMPLEMENTACAO_FBC_PURCHASE_WEBHOOK.md - Passo 5
     let validatedFbc: string | undefined = undefined;
     if (userData.fbc) {
       console.log('🔍 DEBUG fbc antes de validar:', {
