@@ -331,11 +331,34 @@ export default function App() {
       console.log('📍 Geolocalização FINAL que será salva no KV:', geoData);
       console.log('⚠️ CRÍTICO: Se ainda estiver undefined, DQS será 92 (ao invés de 98)!');
       
+      // ✅ CRÍTICO: Verificar se há fbclid na URL (clique recente)
+      // Se houver, criar novo fbc baseado no fbclid atual (ao invés de usar cookie antigo)
+      let fbcToUse = metaCookies.fbc;
+      const urlParams = new URLSearchParams(window.location.search);
+      const fbclidFromUrl = urlParams.get('fbclid');
+      
+      if (fbclidFromUrl && fbclidFromUrl.length >= 20) {
+        // ✅ Criar novo fbc baseado no fbclid da URL (clique atual)
+        // Formato: fb.1.{timestamp}.{fbclid}
+        const timestamp = Math.floor(Date.now() / 1000); // Timestamp em segundos
+        fbcToUse = `fb.1.${timestamp}.${fbclidFromUrl}`;
+        console.log('✅ Novo fbc criado a partir do fbclid da URL (clique atual):', {
+          fbclid: fbclidFromUrl.substring(0, 20) + '...',
+          fbc: fbcToUse.substring(0, 50) + '...',
+          timestamp
+        });
+      } else if (metaCookies.fbc) {
+        console.log('ℹ️ Usando fbc do cookie (sem fbclid na URL):', {
+          fbc: metaCookies.fbc.substring(0, 50) + '...'
+        });
+      }
+      
       // 🔍 DEBUG: Log do fbc antes de enviar
       console.log('🔍 DEBUG fbc antes de enviar para save-tracking:', {
-        hasFbc: !!metaCookies.fbc,
-        fbcLength: metaCookies.fbc?.length || 0,
-        fbcPreview: metaCookies.fbc ? metaCookies.fbc.substring(0, 50) + '...' : 'null',
+        hasFbc: !!fbcToUse,
+        fbcLength: fbcToUse?.length || 0,
+        fbcPreview: fbcToUse ? fbcToUse.substring(0, 50) + '...' : 'null',
+        hasFbclidInUrl: !!fbclidFromUrl,
         email: formData.email
       });
       
@@ -345,7 +368,7 @@ export default function App() {
         body: JSON.stringify({
           email: formData.email,
           fbp: metaCookies.fbp,
-          fbc: metaCookies.fbc || undefined, // ✅ Garantir que undefined não vire string 'undefined'
+          fbc: fbcToUse || undefined, // ✅ Usar fbc criado ou do cookie
           firstName: trackingUserData.firstName,
           lastName: trackingUserData.lastName,
           phone: trackingUserData.phone,
